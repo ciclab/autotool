@@ -1,4 +1,4 @@
-#ifndef HASH_H
+﻿#ifndef HASH_H
 #define HASH_H 1
 #include <cstdlib>
 #include <string>

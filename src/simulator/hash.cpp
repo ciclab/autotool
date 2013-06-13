@@ -1,4 +1,4 @@
-/* An entry in a hash table.  */
+﻿/* An entry in a hash table.  */
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
