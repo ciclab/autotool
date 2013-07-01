@@ -146,10 +146,10 @@ class triple
 public:
   string code;
   string binary;
-  string doo;
+  vector<Asem *> doo;
   vector<int> off_in_code;
   vector<int> off_in_binary;
-  triple(string c,string b,string d){code=c,binary=b,doo=d;};
+  triple(string c,string b){code=c,binary=b;};
   triple(){};
 };
 vector<vector<triple> > unfolded_list;
@@ -210,17 +210,6 @@ Asem *get_asem(string name)
 }
 int unfold(Asem &asem);
 
-int unfold_enum(const Asem &asem)
-{
-  cout<<asem.ivec[0].name<<endl;
-  return 0;
-}
-int unfold_type(const Asem &asem)
-{
-  cout<<asem.ivec[0].name<<endl;
-  return 0;
-}
-
 // 每个变量已经定好取值后计算code，binary，do并保存到r中
 void eval_unfold(vector<string> &var_name,
 		 vector<vector<string> >&var_choose_name,
@@ -228,7 +217,7 @@ void eval_unfold(vector<string> &var_name,
 		 vector<pair<int,int> > &var_choosed_val,
 		 Asem &code,
 		 Asem &binary,
-		 Asem &doo,
+		 Asem * doo,
 		 vector<triple> &r)
 {
   // 记录变量在code中出现的位置，目前认为一个变量在code中只出现一次
@@ -320,8 +309,18 @@ void eval_unfold(vector<string> &var_name,
 	  r[k].off_in_binary.push_back(unfolded_list[a][b].off_in_binary[j]+ob);
 	}
     }
-  // 处理do描述
-      //for(int i=1;i<
+  //  处理do描述
+  for(int i=1;i<var_val.size();++i)
+    {
+      int a=var_val[i][var_choosed_val[i].first];
+      int b=var_choosed_val[i].second;
+      if(unfolded_list[a][b].doo.size()>0)
+	r[k].doo.insert(r[k].doo.end(),
+			unfolded_list[a][b].doo.begin(),
+			unfolded_list[a][b].doo.end());
+    }
+  if(doo)
+    r[k].doo.push_back(doo);
 }
 void dfs_unfold_instr(vector<string> &var_name, // 变量名字
 		      vector<vector<string> > &var_choose_name, // 变量可选的值的名字
@@ -329,7 +328,7 @@ void dfs_unfold_instr(vector<string> &var_name, // 变量名字
 		      vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
 		      Asem &code,				// 待展开的code对应asem
 		      Asem &binary,				// 待展开的binary对应asem
-		      Asem &doo,				// 待展开do对应的asem
+		      Asem * doo,				// 待展开do对应的asem
 		      int lev,					// 当前枚举到第lev个变量
 		      vector<triple> &r)			// 保存展开结果
 {
@@ -363,6 +362,7 @@ string num2string(int v,int w)
     }
   return r;
 }
+
 // 对enum类型描述展开
 // 类似(enum_name ('aaa' 'xxx') ...)
 // 枚举类型每一项可以是二元组，表示名字和对应的code，binary根据
@@ -373,6 +373,16 @@ int unfold_enum(Asem &asem)
   int k=unfolded_list.size();
   unfolded_list.resize(k+1);
 
+  //发现如果展开所有的enum结果可能很大，所以改成不对enum展开到
+#define ENUM_NOT_UNFOLDED 1
+
+#ifdef ENUM_NOT_UNFOLDED
+  cout<<"enum_"<<asem.ivec[0].name<<":"<<endl;
+  string binary;
+  for(int i=0;i<asem.ivec.size()-1;++i)
+    binary+="-";
+  unfolded_list[k].push_back(triple(asem.ivec[0].name,binary));
+#endif
   for(int i=1;i<asem.ivec.size();++i)
     {
       if(asem.ivec[i].type==type_is_vector)
@@ -381,12 +391,20 @@ int unfold_enum(Asem &asem)
 	  assert(asem.ivec[i].ivec.size()==2 && 
 		 asem.ivec[i].ivec[0].type==type_is_string2 && 
 		 asem.ivec[i].ivec[1].type==type_is_string2);
-	  unfolded_list[k].push_back(triple(asem.ivec[i].ivec[1].name,num2string(i-1,asem.ivec.size()-1),(string)""));
+	  
+#ifndef ENUM_NOT_UNFOLDED
+	  unfolded_list[k].push_back(triple(asem.ivec[i].ivec[1].name,num2string(i-1,asem.ivec.size()-1)));
+#else
+	  // TODO 产生这个枚举相应的lex规则和处理函数
+#endif
 	}
       else
 	{
+#ifndef ENUM_NOT_UNFOLDED
 	  assert(asem.ivec[i].type==type_is_string2);
-	  unfolded_list[k].push_back(triple(asem.ivec[i].name,num2string(i-1,asem.ivec.size()-1),(string)""));
+	  unfolded_list[k].push_back(triple(asem.ivec[i].name,num2string(i-1,asem.ivec.size()-1)));
+#endif
+	  // TODO 产生这个枚举相应的lex规则和处理函数
 	}
     }
   return k;
@@ -400,6 +418,7 @@ int string2num(string s)
     v=(int)(s[i]-'0')+v*10;
   return v;
 }
+
 // 处理type描述
 // (name (width num) (flag xxx) )
 // 生成的code是"name_width_xxx"
@@ -425,7 +444,7 @@ int unfold_type(Asem &asem)
   unfolded_list[k].push_back(triple((string)"type_"+asem.ivec[0].name+
 				    (string)"_"+tmpw.ivec[1].name+
 				    (string)"_"+tmpf.ivec[1].name,
-				    binary,(string)""));
+				    binary));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   return k;
@@ -479,8 +498,8 @@ int unfold_instr(Asem &asem)
   // 保存待展开instruction项的binary,code,do的asem地址
   Asem & code=*asem.find("code");
   Asem & binary=*asem.find("binary");
-  Asem & doo=*asem.find("do");
-  assert((&code!=0) && (&binary!=0) && (&doo!=0));
+  Asem * doo=asem.find("do");
+  assert((&code!=0) && (&binary!=0) && (doo!=NULL));
 
   // 在unfolded_list新增加一项
   int k=unfolded_list.size();
@@ -555,7 +574,13 @@ int main(){
   assert(hc.find(instr)!=0);
   rule=*(Asem*)hc.find(instr);
   
-  unfold(rule);
+  //查看结果
+  int allrule=unfold(rule);
+  cout<<unfolded_list[allrule].size()<<endl;
+  freopen("out.txt","w",stdout);
+  for(int i=0;i<unfolded_list[allrule].size();++i)
+    cout<<i<<endl<<"\tcode: "<<unfolded_list[allrule][i].code<<endl
+	<<"\tbinary: "<<unfolded_list[allrule][i].binary<<endl;
 
   return 0;
 }
