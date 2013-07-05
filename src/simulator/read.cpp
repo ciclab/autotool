@@ -1,19 +1,22 @@
-ï»¿#include<iostream>
+#include<iostream>
+#include <fstream>
 #include<cstdio>
 #include<vector>
 #include<string>
 #include "hash.h"
 #include <utility>
 #include <assert.h>
-using std::vector;
+#include "ir/ir.cpp"
+#include "ir/wire.h"
+#include "ir/instruction.h"
 using namespace std;
-//è¡¨ç¤ºAsemçš„ivecæœ‰æ•ˆ
+//±íÊ¾AsemµÄivecÓĞĞ§
 #define type_is_vector 0
 
-//è¡¨ç¤ºAsemçš„nameæœ‰æ•ˆ
-//è¡¨ç¤ºæ²¡æœ‰å¼•å·çš„stringï¼Œå¯èƒ½æ˜¯å…³é”®è¯ï¼Œæ“ä½œç¬¦ç­‰
+//±íÊ¾AsemµÄnameÓĞĞ§
+//±íÊ¾Ã»ÓĞÒıºÅµÄstring£¬¿ÉÄÜÊÇ¹Ø¼ü´Ê£¬²Ù×÷·ûµÈ
 #define type_is_string1 1
-//è¡¨ç¤ºæœ‰å¼•å·çš„string
+//±íÊ¾ÓĞÒıºÅµÄstring
 #define type_is_string2 2
 string reserved[] ={
   "rule",
@@ -22,7 +25,7 @@ string reserved[] ={
   "register","like","override","alias","function_unit",
   "instruction","top","select","code","do","binary","switch"};
 
-// å“ˆå¸Œè¡¨ hash controller
+// ¹şÏ£±í hash controller
 class hash_control hc;
 
 class Asem{
@@ -33,29 +36,32 @@ public:
   Asem * find(const string &name);
 };
 
-// æŸ¥æ‰¾å½“å‰vectorä¸­åå­—æ˜¯çš„nameé‚£ä¸€é¡¹
+// ²éÕÒµ±Ç°vectorÖĞÃû×ÖÊÇµÄnameÄÇÒ»Ïî
 Asem * Asem::find(const string &name)
 {
   if(this->type==type_is_vector)
-    for(int i=1;i<this->ivec.size();++i)
+    for(int i=0;i<this->ivec.size();++i)
       if(this->ivec[i].type==type_is_vector &&
 	 this->ivec[i].ivec[0].type==type_is_string1 &&
 	 name==this->ivec[i].ivec[0].name)
 	return &(this->ivec[i]);
+  cout<<name<<endl;
+  assert(0);
+  return NULL;
 }
 
 void gen(Asem &asem){
   char c1;
   while((c1=getchar())!=EOF){
     if(c1==')') return;
-    //ä¸€ä¸ªvectorå¼€å§‹
+    //Ò»¸övector¿ªÊ¼
     else if(c1=='('){
       Asem asem_1;
       asem_1.type=type_is_vector;
       asem.ivec.push_back(asem_1);
       gen(asem.ivec[asem.ivec.size()-1]);
     }
-    //å¸¦å•å¼•å·çš„string
+    //´øµ¥ÒıºÅµÄstring
     else if(c1=='\''){
       Asem asem_2;
       asem_2.type=type_is_string2;
@@ -65,7 +71,7 @@ void gen(Asem &asem){
 	asem_2.name+=c2;
       asem.ivec.push_back(asem_2);
     }
-    //æ™®é€šstring
+    //ÆÕÍ¨string
     else if(c1!=' '&&c1!='\n'){
       Asem asem_3;
       asem_3.type=type_is_string1;
@@ -110,10 +116,10 @@ void display(const Asem &asem,int lev){
   }
 }
 
-// é€’å½’çš„æ’å…¥hashè¡¨
+// µİ¹éµÄ²åÈëhash±í
 void dfs_insert_hash(const Asem &asem,string pwd)
 {
-  // å¦‚æœæ˜¯å®šä¹‰çš„å˜é‡æˆ–è€…æ˜¯ä¿ç•™è¯
+  // Èç¹ûÊÇ¶¨ÒåµÄ±äÁ¿»òÕßÊÇ±£Áô´Ê
   pwd+=".";
   if(asem.ivec[0].type==type_is_string1)
     {
@@ -123,7 +129,7 @@ void dfs_insert_hash(const Asem &asem,string pwd)
 	 asem.ivec[0].name=="[]")
 	return ;
       pwd+=asem.ivec[0].name;
-      // ä¸åº”è¯¥æœ‰é‡å¤å®šä¹‰
+      // ²»Ó¦¸ÃÓĞÖØ¸´¶¨Òå
       assert(NULL==
 	     hc.insert(pwd.c_str(),(int)(&asem)));
       assert(sizeof(int)==sizeof(&asem));
@@ -138,9 +144,9 @@ void dfs_insert_hash(const Asem &asem,string pwd)
 	  dfs_insert_hash(asem.ivec[i],pwd);
     }
 }
-// ç”¨äºæŸ¥æ‰¾å·²ç»å±•å¼€çš„å†…å®¹
+// ÓÃÓÚ²éÕÒÒÑ¾­Õ¹¿ªµÄÄÚÈİ
 hash_control hc_unfold;
-// è¡¨æ•°æ®ç»“æ„ ç”¨äºä¿å­˜æ¨¡æ‹Ÿå™¨ è‡ªåŠ¨ç”Ÿæˆæ—¶å±•å¼€çš„å†…å®¹
+// ±íÊı¾İ½á¹¹ ÓÃÓÚ±£´æÄ£ÄâÆ÷ ×Ô¶¯Éú³ÉÊ±Õ¹¿ªµÄÄÚÈİ
 class triple
 {
 public:
@@ -156,12 +162,12 @@ vector<vector<triple> > unfolded_list;
 
 string get_full_name(string name,string pwd)
 {
-  // æœ€çŸ­å¯èƒ½çš„å…¨è·¯å¾„
+  // ×î¶Ì¿ÉÄÜµÄÈ«Â·¾¶
   int minl=name.length()+3;
   name=pwd+"."+name;
-  //  æ‰¾...a.b..c.dæ—¶ï¼Œå…ˆæ‰¾...a.b..c.d
-  // å¦‚æœæ²¡æœ‰,åˆ™åˆ é™¤c.,æ‰¾...a..b..d
-  // æ²¡æœ‰,ç»§ç»­æ‰¾...a..b.d > ...a..d > ...a.d > ...d
+  //  ÕÒ...a.b..c.dÊ±£¬ÏÈÕÒ...a.b..c.d
+  // Èç¹ûÃ»ÓĞ,ÔòÉ¾³ıc.,ÕÒ...a..b..d
+  // Ã»ÓĞ,¼ÌĞøÕÒ...a..b.d > ...a..d > ...a.d > ...d
   for(;hc.find(name)==0 && name.length()>=minl;)
     {
       int l=name.length()-1;
@@ -172,7 +178,7 @@ string get_full_name(string name,string pwd)
 	;
       name.erase(l+1,t-l);
     }
-  // å‡ºé”™è¿”å›ç©ºå­—ç¬¦ä¸²
+  // ³ö´í·µ»Ø¿Õ×Ö·û´®
   if(name.length()<minl)
     return "";
   return name;
@@ -195,8 +201,8 @@ bool is_enum(string name)
 {
   return (hc.find((string)"...enum."+name)!=0);
 }
-// è¿”å›nameå¯¹åº”çš„é‚£ä¸€é¡¹asemåœ°å€ï¼Œç°åœ¨çš„å®ç°æ˜¯é¦–å…ˆå‡è®¾æ˜¯instructionï¼Œ
-// ç„¶åæ˜¯typeæœ€åæ˜¯enumã€‚å¯¹è¿™äº›å¯èƒ½ä¾æ¬¡æŸ¥æ‰¾
+// ·µ»Øname¶ÔÓ¦µÄÄÇÒ»ÏîasemµØÖ·£¬ÏÖÔÚµÄÊµÏÖÊÇÊ×ÏÈ¼ÙÉèÊÇinstruction£¬
+// È»ºóÊÇtype×îºóÊÇenum¡£¶ÔÕâĞ©¿ÉÄÜÒÀ´Î²éÕÒ
 Asem *get_asem(string name)
 {
   int tmp=hc.find((string)"...instruction."+name);
@@ -210,7 +216,7 @@ Asem *get_asem(string name)
 }
 int unfold(Asem &asem);
 
-// æ¯ä¸ªå˜é‡å·²ç»å®šå¥½å–å€¼åè®¡ç®—codeï¼Œbinaryï¼Œdoå¹¶ä¿å­˜åˆ°rä¸­
+// Ã¿¸ö±äÁ¿ÒÑ¾­¶¨ºÃÈ¡Öµºó¼ÆËãcode£¬binary£¬do²¢±£´æµ½rÖĞ
 void eval_unfold(vector<string> &var_name,
 		 vector<vector<string> >&var_choose_name,
 		 vector<vector<int> >&var_val,
@@ -220,43 +226,43 @@ void eval_unfold(vector<string> &var_name,
 		 Asem * doo,
 		 vector<triple> &r)
 {
-  // è®°å½•å˜é‡åœ¨codeä¸­å‡ºç°çš„ä½ç½®ï¼Œç›®å‰è®¤ä¸ºä¸€ä¸ªå˜é‡åœ¨codeä¸­åªå‡ºç°ä¸€æ¬¡
+  // ¼ÇÂ¼±äÁ¿ÔÚcodeÖĞ³öÏÖµÄÎ»ÖÃ£¬Ä¿Ç°ÈÏÎªÒ»¸ö±äÁ¿ÔÚcodeÖĞÖ»³öÏÖÒ»´Î
   vector<int> var_off_in_code;
-  // è®°å½•å˜é‡åœ¨binaryä¸­å‡ºç°çš„ä½ç½®ï¼Œç›®å‰è®¤ä¸ºä¸€ä¸ªå˜é‡åœ¨binaryä¸­åªå‡ºç°ä¸€æ¬¡
+  // ¼ÇÂ¼±äÁ¿ÔÚbinaryÖĞ³öÏÖµÄÎ»ÖÃ£¬Ä¿Ç°ÈÏÎªÒ»¸ö±äÁ¿ÔÚbinaryÖĞÖ»³öÏÖÒ»´Î
   vector<int> var_off_in_bin;
 
   var_off_in_code.resize(var_name.size());
   var_off_in_bin.resize(var_name.size());
 
-  // rä¸­æ–°å¢ä¸€é¡¹ä¿ç•™ç»“æœ
+  // rÖĞĞÂÔöÒ»Ïî±£Áô½á¹û
   int k=r.size();
   r.resize(k+1);
 
-  // å¯¹codeå’Œbinaryçš„æ±‚å€¼åº”è¯¥å¯ä»¥å†™æˆå‡½æ•°
-  // æ±‚å‡ºcode
+  // ¶ÔcodeºÍbinaryµÄÇóÖµÓ¦¸Ã¿ÉÒÔĞ´³Éº¯Êı
+  // Çó³öcode
   assert(code.ivec[0].name==(string)"code");
   for(int i=1;i<code.ivec.size();++i)
     {
       if(code.ivec[i].type==type_is_string2)
-	{// æ˜¯å¸¦å¼•å·çš„string
+	{// ÊÇ´øÒıºÅµÄstring
 	  r[k].code+=code.ivec[i].name;
 	}
       else if(code.ivec[i].type==type_is_string1)
 	{
-	  // string1çš„å†…å®¹ç›®å‰åªèƒ½æ˜¯ä¸´æ—¶å˜é‡çš„åå­—
+	  // string1µÄÄÚÈİÄ¿Ç°Ö»ÄÜÊÇÁÙÊ±±äÁ¿µÄÃû×Ö
 	  int j=0;
-	  // æ‰¾åˆ°å¯¹åº”çš„å˜é‡åœ¨var_listçš„ç´¢å¼•ï¼Œç›®å‰æ˜¯é¡ºåºæŸ¥æ‰¾
+	  // ÕÒµ½¶ÔÓ¦µÄ±äÁ¿ÔÚvar_listµÄË÷Òı£¬Ä¿Ç°ÊÇË³Ğò²éÕÒ
 	  for(;j<var_name.size() && var_name[j]!=code.ivec[i].name;++j)
 	    ;
 	  assert(j<var_name.size());
 
-	  // è®°å½•æ‰¾åˆ°çš„å˜é‡åœ¨codeä¸­çš„åç§»
+	  // ¼ÇÂ¼ÕÒµ½µÄ±äÁ¿ÔÚcodeÖĞµÄÆ«ÒÆ
 	  var_off_in_code[j]=r[k].code.length();
 	  r[k].code+=unfolded_list[var_val[j][var_choosed_val[j].first]][var_choosed_val[j].second].code;
 	}
       else assert(0);
     }
-  // æ±‚å‡ºbinary
+  // Çó³öbinary
   for(int i=1;i<binary.ivec.size();++i)
     {
       if(binary.ivec[i].type==type_is_string2)
@@ -275,28 +281,28 @@ void eval_unfold(vector<string> &var_name,
 	}
       else if(binary.ivec[i].type==type_is_vector)
 	{
-	  // ç›®å‰åªå¯èƒ½æ˜¯switchè¯­å¥
+	  // Ä¿Ç°Ö»¿ÉÄÜÊÇswitchÓï¾ä
 	  assert(binary.ivec[i].ivec[0].name==(string)"switch");
 	  
-	  // æ‰¾åˆ°switchä¸­æŒ‡å®šçš„å˜é‡åœ¨var_nameä¸­çš„åºå·
+	  // ÕÒµ½switchÖĞÖ¸¶¨µÄ±äÁ¿ÔÚvar_nameÖĞµÄĞòºÅ
 	  int j=0;
 	  for(;j<var_name.size() && var_name[j]!=binary.ivec[i].ivec[1].name;++j)
 	    ;
 	  assert(j<var_name.size());
 
 	  int z=2;
-	  // éå†switchä¸­æ¯ä¸€ä¸ªé€‰é¡¹ï¼Œæ‰¾åˆ°å½“å‰åŒ¹é…çš„é‚£ä¸€é¡¹
+	  // ±éÀúswitchÖĞÃ¿Ò»¸öÑ¡Ïî£¬ÕÒµ½µ±Ç°Æ¥ÅäµÄÄÇÒ»Ïî
 	  for(;z<binary.ivec[i].ivec.size() &&
 		var_choose_name[j][var_choosed_val[j].first]!=binary.ivec[i].ivec[z].name;z+=2)
 	    assert(binary.ivec[i].ivec[z].type==type_is_string1);
 	  assert(z+1<binary.ivec[i].ivec.size());
 
-	  // ç°åœ¨è®¤ä¸ºswitchåé¢çš„å€¼åªæ˜¯å¸¸é‡stringï¼Œä»¥ååº”è¯¥å¤„ç†å…¶ä»–æƒ…å†µ
+	  // ÏÖÔÚÈÏÎªswitchºóÃæµÄÖµÖ»ÊÇ³£Á¿string£¬ÒÔºóÓ¦¸Ã´¦ÀíÆäËûÇé¿ö
 	  assert(binary.ivec[i].ivec[z+1].type==type_is_string2);
 	  r[k].binary+=binary.ivec[i].ivec[z+1].name;
 	}
     }
-  // è®¡ç®—æ–°ç”Ÿæˆçš„code offsetå’Œbinary offset ä¿¡æ¯
+  // ¼ÆËãĞÂÉú³ÉµÄcode offsetºÍbinary offset ĞÅÏ¢
   for(int i=0;i<var_val.size();++i)
     {
       int a=var_val[i][var_choosed_val[i].first];
@@ -309,28 +315,26 @@ void eval_unfold(vector<string> &var_name,
 	  r[k].off_in_binary.push_back(unfolded_list[a][b].off_in_binary[j]+ob);
 	}
     }
-  //  å¤„ç†doæè¿°
-  for(int i=1;i<var_val.size();++i)
+  //  ´¦ÀídoÃèÊö
+  for(int i=0;i<var_val.size();++i)
     {
       int a=var_val[i][var_choosed_val[i].first];
       int b=var_choosed_val[i].second;
-      if(unfolded_list[a][b].doo.size()>0)
-	r[k].doo.insert(r[k].doo.end(),
-			unfolded_list[a][b].doo.begin(),
-			unfolded_list[a][b].doo.end());
+      for(int j=0;j<unfolded_list[a][b].doo.size();++j)
+	r[k].doo.push_back(unfolded_list[a][b].doo[j]);
     }
   if(doo)
     r[k].doo.push_back(doo);
 }
-void dfs_unfold_instr(vector<string> &var_name, // å˜é‡åå­—
-		      vector<vector<string> > &var_choose_name, // å˜é‡å¯é€‰çš„å€¼çš„åå­—
-		      vector<vector<int> > &var_val,		// å˜é‡å¯é€‰å€¼å¯¹åº”unfolded_listçš„ç´¢å¼•
-		      vector<pair<int,int> > &var_choosed_val,	// å˜é‡å–å€¼çš„æƒ…å†µ
-		      Asem &code,				// å¾…å±•å¼€çš„codeå¯¹åº”asem
-		      Asem &binary,				// å¾…å±•å¼€çš„binaryå¯¹åº”asem
-		      Asem * doo,				// å¾…å±•å¼€doå¯¹åº”çš„asem
-		      int lev,					// å½“å‰æšä¸¾åˆ°ç¬¬levä¸ªå˜é‡
-		      vector<triple> &r)			// ä¿å­˜å±•å¼€ç»“æœ
+void dfs_unfold_instr(vector<string> &var_name, // ±äÁ¿Ãû×Ö
+		      vector<vector<string> > &var_choose_name, // ±äÁ¿¿ÉÑ¡µÄÖµµÄÃû×Ö
+		      vector<vector<int> > &var_val,		// ±äÁ¿¿ÉÑ¡Öµ¶ÔÓ¦unfolded_listµÄË÷Òı
+		      vector<pair<int,int> > &var_choosed_val,	// ±äÁ¿È¡ÖµµÄÇé¿ö
+		      Asem &code,				// ´ıÕ¹¿ªµÄcode¶ÔÓ¦asem
+		      Asem &binary,				// ´ıÕ¹¿ªµÄbinary¶ÔÓ¦asem
+		      Asem * doo,				// ´ıÕ¹¿ªdo¶ÔÓ¦µÄasem
+		      int lev,					// µ±Ç°Ã¶¾Ùµ½µÚlev¸ö±äÁ¿
+		      vector<triple> &r)			// ±£´æÕ¹¿ª½á¹û
 {
   if(lev>=var_name.size())
     eval_unfold(var_name,var_choose_name,var_val,var_choosed_val,
@@ -338,11 +342,11 @@ void dfs_unfold_instr(vector<string> &var_name, // å˜é‡åå­—
   else
     for(int i=0;i<var_val[lev].size();++i)
       {
-	// ç¬¬levä¸ªå˜é‡é€‰æ‹©ç¬¬iä¸ªå€¼
+	// µÚlev¸ö±äÁ¿Ñ¡ÔñµÚi¸öÖµ
 	var_choosed_val[lev].first=i;
 	for(int j=0;j<unfolded_list[var_val[lev][i]].size();++j)
 	  {
-	    // ç¬¬iä¸ªå€¼ä¸­ç¬¬jä¸ªå±•å¼€é¡¹
+	    // µÚi¸öÖµÖĞµÚj¸öÕ¹¿ªÏî
 	    var_choosed_val[lev].second=j;
 	    dfs_unfold_instr(var_name,var_choose_name,var_val,var_choosed_val,
 			     code,binary,doo,lev+1,r);
@@ -350,7 +354,7 @@ void dfs_unfold_instr(vector<string> &var_name, // å˜é‡åå­—
       }
 }
 
-// è¿”å›vçš„äºŒè¿›åˆ¶ï¼Œå®½åº¦èƒ½è¡¨ç¤ºwé¡¹ï¼ˆä»0å¼€å§‹ï¼‰
+// ·µ»ØvµÄ¶ş½øÖÆ£¬¿í¶ÈÄÜ±íÊ¾wÏî£¨´Ó0¿ªÊ¼£©
 string num2string(int v,int w)
 {
   string r;
@@ -363,31 +367,33 @@ string num2string(int v,int w)
   return r;
 }
 
-// å¯¹enumç±»å‹æè¿°å±•å¼€
-// ç±»ä¼¼(enum_name ('aaa' 'xxx') ...)
-// æšä¸¾ç±»å‹æ¯ä¸€é¡¹å¯ä»¥æ˜¯äºŒå…ƒç»„ï¼Œè¡¨ç¤ºåå­—å’Œå¯¹åº”çš„codeï¼Œbinaryæ ¹æ®
-// å®ƒçš„ä½ç½®å†³å®š
+// ¶ÔenumÀàĞÍÃèÊöÕ¹¿ª
+// ÀàËÆ(enum_name ('aaa' 'xxx') ...)
+// Ã¶¾ÙÀàĞÍÃ¿Ò»Ïî¿ÉÒÔÊÇ¶şÔª×é£¬±íÊ¾Ãû×ÖºÍ¶ÔÓ¦µÄcode£¬binary¸ù¾İ
+// ËüµÄÎ»ÖÃ¾ö¶¨
 int unfold_enum(Asem &asem)
 {
-  // æ–°å¢ä¸€é¡¹
+  // ĞÂÔöÒ»Ïî
   int k=unfolded_list.size();
   unfolded_list.resize(k+1);
 
-  //å‘ç°å¦‚æœå±•å¼€æ‰€æœ‰çš„enumç»“æœå¯èƒ½å¾ˆå¤§ï¼Œæ‰€ä»¥æ”¹æˆä¸å¯¹enumå±•å¼€åˆ°
+  //·¢ÏÖÈç¹ûÕ¹¿ªËùÓĞµÄenum½á¹û¿ÉÄÜºÜ´ó£¬ËùÒÔ¸Ä³É²»¶ÔenumÕ¹¿ªµ½
 #define ENUM_NOT_UNFOLDED 1
 
 #ifdef ENUM_NOT_UNFOLDED
-  cout<<"enum_"<<asem.ivec[0].name<<":"<<endl;
+  //cout<<"enum_"<<asem.ivec[0].name<<":"<<endl;
   string binary;
   for(int i=0;i<asem.ivec.size()-1;++i)
     binary+="-";
   unfolded_list[k].push_back(triple(asem.ivec[0].name,binary));
+  unfolded_list[k][0].off_in_code.push_back(0);
+  unfolded_list[k][0].off_in_binary.push_back(0);
 #endif
   for(int i=1;i<asem.ivec.size();++i)
     {
       if(asem.ivec[i].type==type_is_vector)
 	{
-	  // å¦‚æœæ˜¯ivecé‚£ä¹ˆåªæœ‰ä¸¤ä¸ªå…ƒç´ ,ä¸”éƒ½æ˜¯æœ‰å¼•å·çš„string
+	  // Èç¹ûÊÇivecÄÇÃ´Ö»ÓĞÁ½¸öÔªËØ,ÇÒ¶¼ÊÇÓĞÒıºÅµÄstring
 	  assert(asem.ivec[i].ivec.size()==2 && 
 		 asem.ivec[i].ivec[0].type==type_is_string2 && 
 		 asem.ivec[i].ivec[1].type==type_is_string2);
@@ -395,7 +401,7 @@ int unfold_enum(Asem &asem)
 #ifndef ENUM_NOT_UNFOLDED
 	  unfolded_list[k].push_back(triple(asem.ivec[i].ivec[1].name,num2string(i-1,asem.ivec.size()-1)));
 #else
-	  // TODO äº§ç”Ÿè¿™ä¸ªæšä¸¾ç›¸åº”çš„lexè§„åˆ™å’Œå¤„ç†å‡½æ•°
+	  // TODO ²úÉúÕâ¸öÃ¶¾ÙÏàÓ¦µÄlex¹æÔòºÍ´¦Àíº¯Êı
 #endif
 	}
       else
@@ -404,28 +410,28 @@ int unfold_enum(Asem &asem)
 	  assert(asem.ivec[i].type==type_is_string2);
 	  unfolded_list[k].push_back(triple(asem.ivec[i].name,num2string(i-1,asem.ivec.size()-1)));
 #endif
-	  // TODO äº§ç”Ÿè¿™ä¸ªæšä¸¾ç›¸åº”çš„lexè§„åˆ™å’Œå¤„ç†å‡½æ•°
+	  // TODO ²úÉúÕâ¸öÃ¶¾ÙÏàÓ¦µÄlex¹æÔòºÍ´¦Àíº¯Êı
 	}
     }
   return k;
 }
-// æŠŠstringè½¬æˆint
+// °Ñstring×ª³Éint
 int string2num(string s)
 {
   int v(0);
-  // æ²¡è€ƒè™‘æº¢å‡ºæƒ…å†µ
+  // Ã»¿¼ÂÇÒç³öÇé¿ö
   for(int i=0;i<s.length();++i)
     v=(int)(s[i]-'0')+v*10;
   return v;
 }
 
-// å¤„ç†typeæè¿°
+// ´¦ÀítypeÃèÊö
 // (name (width num) (flag xxx) )
-// ç”Ÿæˆçš„codeæ˜¯"name_width_xxx"
-// ç”Ÿæˆçš„binaryæ˜¯"-..."(å…±widthä¸ª"-")
+// Éú³ÉµÄcodeÊÇ"name_width_xxx"
+// Éú³ÉµÄbinaryÊÇ"-..."(¹²width¸ö"-")
 int unfold_type(Asem &asem)
 {
-  // typeå®šä¹‰æœ‰3ä¸ªéƒ¨åˆ†
+  // type¶¨ÒåÓĞ3¸ö²¿·Ö
   assert(asem.ivec.size()==3);
 
   Asem & tmpw=*asem.find("width");
@@ -449,89 +455,90 @@ int unfold_type(Asem &asem)
   unfolded_list[k][0].off_in_binary.push_back(0);
   return k;
 }
-// å¯¹instructionå±•å¼€
+// ¶ÔinstructionÕ¹¿ª
 int unfold_instr(Asem &asem)
 {
-  // å˜é‡å
+  // ±äÁ¿Ãû
   vector<string> var_name;
-  // å˜é‡å¯é€‰çš„å€¼(å¯èƒ½æ˜¯å…¶å®ƒinstructionæˆ–è€…æ˜¯typeæˆ–è€…æ˜¯enum)
+  // ±äÁ¿¿ÉÑ¡µÄÖµ(¿ÉÄÜÊÇÆäËüinstruction»òÕßÊÇtype»òÕßÊÇenum)
   vector<vector<string> >var_choose_name;
-  // å˜é‡é€‰ä¸åŒå€¼å¯¹åº”çš„åœ¨unfolded_listä¸­çš„ç´¢å¼•
+  // ±äÁ¿Ñ¡²»Í¬Öµ¶ÔÓ¦µÄÔÚunfolded_listÖĞµÄË÷Òı
   vector<vector<int> > var_val;
 
-  // æ‰¾åˆ°æ‰€æœ‰å˜é‡å®šä¹‰ è¿™é‡Œè®¤ä¸ºæ˜¯è¿™ä¸ªæ ·å­çš„ï¼š
-  // ï¼ˆ= a b c ...ï¼‰
-  // è¡¨ç¤ºaå¯ä»¥æ˜¯bæˆ–cæˆ–...
-  // å‡è®¾å˜é‡å®šä¹‰å¾ˆç®€å•,æ²¡æœ‰åµŒå¥—å’Œé€’å½’
-  // æ‰€æœ‰å˜é‡å®šä¹‰åœ¨å½“å‰instructionæè¿°çš„æœ€å¤–é¢ä¸€å±‚
+  // ÕÒµ½ËùÓĞ±äÁ¿¶¨Òå ÕâÀïÈÏÎªÊÇÕâ¸öÑù×ÓµÄ£º
+  // £¨= a b c ...£©
+  // ±íÊ¾a¿ÉÒÔÊÇb»òc»ò...
+  // ¼ÙÉè±äÁ¿¶¨ÒåºÜ¼òµ¥,Ã»ÓĞÇ¶Ì×ºÍµİ¹é
+  // ËùÓĞ±äÁ¿¶¨ÒåÔÚµ±Ç°instructionÃèÊöµÄ×îÍâÃæÒ»²ã
   for(int i=1;i<asem.ivec.size();++i)
     if(asem.ivec[i].ivec[0].name==(string)"=")
-      {// è¿™ä¸€é¡¹æ˜¯å˜é‡å®šä¹‰
-	// è¿™æ˜¯ç¬¬kä¸ªå˜é‡
+      {// ÕâÒ»ÏîÊÇ±äÁ¿¶¨Òå
+	// ÕâÊÇµÚk¸ö±äÁ¿
 	int k=var_name.size();
 	var_name.resize(k+1);
 	var_choose_name.resize(k+1);
 	var_val.resize(k+1);
 
-	// ä¿å­˜å˜é‡åa
+	// ±£´æ±äÁ¿Ãûa
 	var_name[k]=asem.ivec[i].ivec[1].name;
-	// jä»2å¼€å§‹,æ˜¯ç¬¬ä¸€ä¸ªå¯é€‰çš„å€¼
+	// j´Ó2¿ªÊ¼,ÊÇµÚÒ»¸ö¿ÉÑ¡µÄÖµ
 	for(int j=2;j<asem.ivec[i].ivec.size();++j)
 	  {
 	    const string &name=asem.ivec[i].ivec[j].name;
-	    // ä¿å­˜å¯é€‰çš„å€¼çš„åå­—
+	    // ±£´æ¿ÉÑ¡µÄÖµµÄÃû×Ö
 	    var_choose_name[k].push_back(name);
-	    // å¦‚æœå˜é‡å¯¹åº”çš„æ˜¯ä¸€ä¸ªinstruction æˆ–è€…æ˜¯typeæˆ–è€…æ˜¯æšä¸¾ é€’å½’åœ°å±•å¼€å…ˆ
+	    // Èç¹û±äÁ¿¶ÔÓ¦µÄÊÇÒ»¸öinstruction »òÕßÊÇtype»òÕßÊÇÃ¶¾Ù µİ¹éµØÕ¹¿ªÏÈ
 	    if(is_instr(name) || is_type(name) || is_enum(name))
 	      {
 		int val=unfold(*get_asem(name));
-		// ä¿å­˜å±•å¼€çš„ç´¢å¼•
+		// ±£´æÕ¹¿ªµÄË÷Òı
 		var_val[k].push_back(val);
 	      }
 	    else
-	      {// ä¸ç„¶æŠ¥é”™
+	      {// ²»È»±¨´í
 		assert(0);
 	      }
 	  }
       }
 
-  // ä¿å­˜å¾…å±•å¼€instructioné¡¹çš„binary,code,doçš„asemåœ°å€
+  // ±£´æ´ıÕ¹¿ªinstructionÏîµÄbinary,code,doµÄasemµØÖ·
   Asem & code=*asem.find("code");
   Asem & binary=*asem.find("binary");
   Asem * doo=asem.find("do");
   assert((&code!=0) && (&binary!=0) && (doo!=NULL));
 
-  // åœ¨unfolded_listæ–°å¢åŠ ä¸€é¡¹
+  // ÔÚunfolded_listĞÂÔö¼ÓÒ»Ïî
   int k=unfolded_list.size();
   unfolded_list.resize(k+1);
 
-  // ä¿å­˜å½“å‰å˜é‡å–çš„å€¼ï¼ŒäºŒå…ƒç»„è¡¨ç¤ºï¼š
+  // ±£´æµ±Ç°±äÁ¿È¡µÄÖµ£¬¶şÔª×é±íÊ¾£º
   // (= a b c)
-  // ç¬¬ä¸€é¡¹è¡¨ç¤ºaå–bè¿˜æ˜¯c
-  // ç¬¬äºŒé¡¹è¡¨ç¤ºå–bæˆ–æ˜¯cä¸­çš„ç¬¬å‡ æ¡ï¼ˆbå’Œcå·²è¢«å±•å¼€ï¼Œå¯èƒ½æœ‰å¤šæ¡å¯é€‰é¡¹ï¼‰
+  // µÚÒ»Ïî±íÊ¾aÈ¡b»¹ÊÇc
+  // µÚ¶şÏî±íÊ¾È¡b»òÊÇcÖĞµÄµÚ¼¸Ìõ£¨bºÍcÒÑ±»Õ¹¿ª£¬¿ÉÄÜÓĞ¶àÌõ¿ÉÑ¡Ïî£©
   vector<pair<int,int> > var_choosed_val;
   var_choosed_val.resize(var_name.size());
-  // é’ˆå¯¹å˜é‡å–ä¸åŒå€¼çš„æ—¶å€™å¾—åˆ°å±•å¼€çš„codeï¼Œbinaryå’Œdo
+  // Õë¶Ô±äÁ¿È¡²»Í¬ÖµµÄÊ±ºòµÃµ½Õ¹¿ªµÄcode£¬binaryºÍdo
   dfs_unfold_instr(var_name,var_choose_name,var_val,var_choosed_val,
 		   code,binary,doo,0,unfolded_list[k]);
   return k;
 }
 
-// å±•å¼€ä¸€ä¸ªæè¿°ï¼ŒåŒ…æ‹¬æšä¸¾ï¼ŒæŒ‡ä»¤ï¼Œç±»å‹
+
+// Õ¹¿ªÒ»¸öÃèÊö£¬°üÀ¨Ã¶¾Ù£¬Ö¸Áî£¬ÀàĞÍ
 int unfold(Asem &asem)
 {
   string & name=asem.ivec[0].name;
 
-  // å¦‚æœå·²ç»å±•å¼€è¿‡
+  // Èç¹ûÒÑ¾­Õ¹¿ª¹ı
   if(hc_unfold.find(name)!=0)
     {
-      return hc_unfold.find(name)-1; // ç”±äºåŠ å…¥hashè¡¨çš„æ—¶å€™åŠ è¿‡1
+      return hc_unfold.find(name)-1; // ÓÉÓÚ¼ÓÈëhash±íµÄÊ±ºò¼Ó¹ı1
     }
 
-  cout<<"unfolding:"<<name<<endl;
+  //cout<<"unfolding:"<<name<<endl;
 
   int r;
-  // å¯¹ä¸åŒçš„ç±»å‹åˆ†åˆ«å±•å¼€
+  // ¶Ô²»Í¬µÄÀàĞÍ·Ö±ğÕ¹¿ª
   if(is_instr(name))
     r=unfold_instr(asem);
   else if(is_enum(name))
@@ -539,29 +546,34 @@ int unfold(Asem &asem)
   else if(is_type(name))
     r=unfold_type(asem);
   else assert(0);
-  cout<<"done:"<<name<<endl;
-  // åŠ å…¥hashè¡¨ï¼Œç”±äºrå¯èƒ½æ˜¯0ï¼Œè€Œhash.findè¿”å›0è¡¨ç¤ºæ²¡æœ‰æ‰¾åˆ°
+  //cout<<"done:"<<name<<endl;
+  // ¼ÓÈëhash±í£¬ÓÉÓÚr¿ÉÄÜÊÇ0£¬¶øhash.find·µ»Ø0±íÊ¾Ã»ÓĞÕÒµ½
   hc_unfold.insert(name,r+1);
   return r;
 }
-
+int string2int(string & s)
+{
+  int r(0);
+  for(int i=0;i<s.length();++i)
+    r=r*10+s[i]-'0';
+  return r;
+}
 int main(){
   freopen("in.txt","r",stdin);
   Asem asem;
 
   asem.type=type_is_vector;
-  // è¯»å…¥æ–‡ä»¶
+  // ¶ÁÈëÎÄ¼ş
   gen(asem);
   // display(asem,0);
 
-  // æŠŠä¿ç•™å­—åŠ å…¥hashè¡¨
+  // °Ñ±£Áô×Ö¼ÓÈëhash±í
   for(int i=0;i<sizeof(reserved)/sizeof(reserved[0]);++i)
     hc.insert(reserved[i].c_str(),(int)(void*)reserved);
   
-  // æ’å…¥hashè¡¨
+  // ²åÈëhash±í
   dfs_insert_hash(asem,"");
-
-  // instructioné‡Œå¿…é¡»æœ‰é¡¶å±‚è§„åˆ™
+  // instructionÀï±ØĞëÓĞ¶¥²ã¹æÔò
   string instr="...instruction.top";
   assert(hc.find(instr)!=0);
   Asem &rule=*(Asem*)hc.find(instr);
@@ -569,18 +581,55 @@ int main(){
 	 rule.ivec.size()==2
 	 && rule.ivec[1].type==type_is_string1);
 
-  // å¾—åˆ°é¡¶å±‚è§„åˆ™å
+  // µÃµ½¶¥²ã¹æÔòÃû
   instr="...instruction."+rule.ivec[1].name;
   assert(hc.find(instr)!=0);
   rule=*(Asem*)hc.find(instr);
-  
-  //æŸ¥çœ‹ç»“æœ
+  //²é¿´½á¹û
   int allrule=unfold(rule);
   cout<<unfolded_list[allrule].size()<<endl;
-  freopen("out.txt","w",stdout);
+  fstream out_txt("out.txt");
+  hash_control tmp;
   for(int i=0;i<unfolded_list[allrule].size();++i)
-    cout<<i<<endl<<"\tcode: "<<unfolded_list[allrule][i].code<<endl
-	<<"\tbinary: "<<unfolded_list[allrule][i].binary<<endl;
+    {
+      out_txt<<i<<endl<<"\tcode: "<<unfolded_list[allrule][i].code<<endl
+	  <<"\tbinary: "<<unfolded_list[allrule][i].binary<<endl;
+//       cout<<"do :";
+//       for(int j=0;j<unfolded_list[allrule][i].doo.size();++j)
+// 	{
+// 	  cout<<unfolded_list[allrule][i].doo[j]<<' ';
+// 	  display(*unfolded_list[allrule][i].doo[j],1);
+// 	}
+//       cout<<endl;
+    }
+  //½ÓÏÂÀ´ÊÇÊä³öµ½Îªir
+  //´¦ÀíwireÃèÊö
+  Ir ir;
+  Asem &asem_wire=*asem.ivec[0].find((string)"wire");
+  assert(asem_wire.type==type_is_vector);
+  Asem &asem_type=*asem.ivec[0].find((string)"type");
+  assert(asem_type.type==type_is_vector);
+  for(int i=1;i<asem_wire.ivec.size();++i)
+    {
+      string wire_type_name=(*asem_wire.ivec[i].find((string)"width")).ivec[1].name;
+      //TODO Ã»ÓĞ¼ì²étype¶ÔÓ¦µÄÊı¾İÀàĞÍÓ¦¸ÃÊÇÎŞ·ûºÅ£¬²éÕÒ¹ı³Ì¼ÓÈë³ö´í¼ì²é
+      int wire_width=string2int((*(*(asem_type.find(wire_type_name))).find((string) "width")).ivec[1].name);
+      ir.add_wire(Wire(asem_wire.ivec[i].ivec[0].name,wire_width));
+    }
+  ofstream out2_txt("out2.txt");
+  ir.output_wire(out2_txt);
 
+  // °ÑcodeºÍbinary¼ÓÈëµ½irÀï
+  for(vector<triple>::iterator ite=unfolded_list[allrule].begin();
+      ite!=unfolded_list[allrule].end();++ite)
+    {
+      vector<pp> tmp;
+      for(int i=0;i<ite->off_in_code.size();++i)
+	tmp.push_back(pp(ite->off_in_code[i],ite->off_in_binary[i]));
+      ir.add_instruction(Instruction(ite->code,
+				     ite->binary,
+				     tmp));
+    }
+  ir.output_instruction_set(out2_txt);
   return 0;
 }
