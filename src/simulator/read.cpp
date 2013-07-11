@@ -6,6 +6,7 @@
 #include "hash.h"
 #include <utility>
 #include <assert.h>
+#include <ctype.h>
 #include "ir/ir.cpp"
 #include "ir/wire.h"
 #include "ir/instruction.h"
@@ -45,13 +46,13 @@ Asem * Asem::find(const string &name)
 	 this->ivec[i].ivec[0].type==type_is_string1 &&
 	 name==this->ivec[i].ivec[0].name)
 	return &(this->ivec[i]);
-  cout<<name<<endl;
+  cout<<"Cannot find "<<name<<endl;
   assert(0);
   return NULL;
 }
 
 void gen(Asem &asem){
-  char c1;
+  int c1;
   while((c1=getchar())!=EOF){
     if(c1==')') return;
     //一个vector开始
@@ -65,26 +66,24 @@ void gen(Asem &asem){
     else if(c1=='\''){
       Asem asem_2;
       asem_2.type=type_is_string2;
-      char c2;
-			
-      while((c2=getchar())!=EOF&&c2!='\'')
+      int c2;
+      while((c2=getchar())!=EOF && c2!='\'')
 	asem_2.name+=c2;
       asem.ivec.push_back(asem_2);
     }
     //普通string
-    else if(c1!=' '&&c1!='\n'){
+    else if(isgraph(c1)){
       Asem asem_3;
       asem_3.type=type_is_string1;
       asem_3.name=c1;
-      char c3;
-
-      while((c3=getchar())!=EOF&&c3!=' '&&c3!='\n'&&c3!=')') 
+      int c3;
+      while((c3=getchar())!=EOF && (c3==(int)']' || isalnum(c3) || c3=='_' || c3=='['
+				    /*TODO 这里应该也用isgraph,但是会出现奇怪的效果，暂时列举]*/))
 	asem_3.name+=c3;
       asem.ivec.push_back(asem_3);
-      if(c3==')')
+      if(c3==')' || c3==EOF)
 	return ;
     }
-		
   }
 }
 
@@ -117,7 +116,7 @@ void display(const Asem &asem,int lev){
 }
 
 // 递归的插入hash表
-void dfs_insert_hash(const Asem &asem,string pwd)
+void dfs_insert_hash(Asem &asem,string pwd)
 {
   // 如果是定义的变量或者是保留词
   pwd+=".";
@@ -130,9 +129,9 @@ void dfs_insert_hash(const Asem &asem,string pwd)
 	return ;
       pwd+=asem.ivec[0].name;
       // 不应该有重复定义
-      assert(NULL==
-	     hc.insert(pwd.c_str(),(int)(&asem)));
-      assert(sizeof(int)==sizeof(&asem));
+      cout<<pwd<<endl;
+      assert(NULL==hc.insert(pwd.c_str(),(void*)&asem));
+      //assert(sizeof(int)==sizeof(&asem));
       for(int i=1;i<asem.ivec.size();++i)
 	if(asem.ivec[i].type==type_is_vector)
 	  dfs_insert_hash(asem.ivec[i],pwd);
@@ -205,11 +204,11 @@ bool is_enum(string name)
 // 然后是type最后是enum。对这些可能依次查找
 Asem *get_asem(string name)
 {
-  int tmp=hc.find((string)"...instruction."+name);
-  if(tmp==0)
+  void *tmp=hc.find((string)"...instruction."+name);
+  if(tmp==NULL)
     {
       tmp=hc.find((string)"...type."+name);
-      if(tmp==0)
+      if(tmp==NULL)
 	tmp=hc.find((string)"...enum."+name);
     }
   return (Asem*)tmp;
@@ -225,7 +224,7 @@ int analyze_do_expr(Asem expr)
     {
       // 因该是一个变量
     }
-  else if(expr.type==type_is_ivec)
+  else if(expr.type==type_is_vector)
     {
       // 因该是一个表达式
     }
@@ -336,11 +335,11 @@ void eval_unfold(vector<string> &var_name,
   if(doo)
     {
       //r[k].doo.push_back(doo);
-      for(Asem::iterator ite=(*doo).ivec.begin();ite!=(*doo).ivec.end();++ite)
+      for(vector<Asem>::iterator ite=(*doo).ivec.begin();ite!=(*doo).ivec.end();++ite)
 	{
 	  // 最外层是stage描述
-	  assert(ite->type==type_is_ivec);
-	  if(
+	  //assert(ite->type==type_is_vector);
+	  //if(
 	  //r[k].doo.push_back(analyze_do_expr((*doo).ivec[i]));
 	}
     }
@@ -559,10 +558,10 @@ int unfold(Asem &asem)
   // 如果已经展开过
   if(hc_unfold.find(name)!=0)
     {
-      return hc_unfold.find(name)-1; // 由于加入hash表的时候加过1
+      return (long long)hc_unfold.find(name)-1; // 由于加入hash表的时候加过1
     }
 
-  //cout<<"unfolding:"<<name<<endl;
+  cout<<"unfolding:"<<name<<endl;
 
   int r;
   // 对不同的类型分别展开
@@ -573,9 +572,10 @@ int unfold(Asem &asem)
   else if(is_type(name))
     r=unfold_type(asem);
   else assert(0);
-  //cout<<"done:"<<name<<endl;
+
+  cout<<"done:"<<name<<endl;
   // 加入hash表，由于r可能是0，而hash.find返回0表示没有找到
-  hc_unfold.insert(name,r+1);
+  hc_unfold.insert(name,(void*)(r+1));
   return r;
 }
 int string2int(string & s)
@@ -592,26 +592,25 @@ int main(){
   asem.type=type_is_vector;
   // 读入文件
   gen(asem);
-  // display(asem,0);
-
+  display(asem,0);
   // 把保留字加入hash表
   for(int i=0;i<sizeof(reserved)/sizeof(reserved[0]);++i)
-    hc.insert(reserved[i].c_str(),(int)(void*)reserved);
+    hc.insert(reserved[i].c_str(),(void*)reserved);
   
   // 插入hash表
   dfs_insert_hash(asem,"");
-  // instruction里必须有顶层规则
-  string instr="...instruction.top";
-  assert(hc.find(instr)!=0);
-  Asem &rule=*(Asem*)hc.find(instr);
-  assert(rule.type==type_is_vector && 
-	 rule.ivec.size()==2
-	 && rule.ivec[1].type==type_is_string1);
 
-  // 得到顶层规则名
-  instr="...instruction."+rule.ivec[1].name;
-  assert(hc.find(instr)!=0);
-  rule=*(Asem*)hc.find(instr);
+  // instruction里必须有顶层规则
+  //string instr="...instruction.top";
+  //assert(hc.find(instr)!=0);
+  //找到instruction那一项
+  Asem &instruction=*(asem.ivec[0].find((string)"instruction"));
+
+  //找到instruction中的top
+  Asem &top=*(instruction.find((string)"top"));
+  cout<<top.ivec[1].name<<endl;
+  Asem &rule=*instruction.find(top.ivec[1].name);
+
   //查看结果
   int allrule=unfold(rule);
   cout<<unfolded_list[allrule].size()<<endl;
