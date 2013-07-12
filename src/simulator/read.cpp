@@ -129,7 +129,6 @@ void dfs_insert_hash(Asem &asem,string pwd)
 	return ;
       pwd+=asem.ivec[0].name;
       // 不应该有重复定义
-      cout<<pwd<<endl;
       assert(NULL==hc.insert(pwd.c_str(),(void*)&asem));
       //assert(sizeof(int)==sizeof(&asem));
       for(int i=1;i<asem.ivec.size();++i)
@@ -143,6 +142,9 @@ void dfs_insert_hash(Asem &asem,string pwd)
 	  dfs_insert_hash(asem.ivec[i],pwd);
     }
 }
+
+//用于保存do的数据结构
+vector<Asem*> do_list;
 // 用于查找已经展开的内容
 hash_control hc_unfold;
 // 表数据结构 用于保存模拟器 自动生成时展开的内容
@@ -334,12 +336,27 @@ void eval_unfold(vector<string> &var_name,
   // 代换do表述中变量的do
   if(doo)
     {
-      //r[k].doo.push_back(doo);
-      for(vector<Asem>::iterator ite=(*doo).ivec.begin();ite!=(*doo).ivec.end();++ite)
+      for(vector<Asem>::iterator ite=(*doo).ivec.begin()+1;ite!=(*doo).ivec.end();++ite)
 	{
-	  // 最外层是stage描述
-	  //assert(ite->type==type_is_vector);
-	  //if(
+	  if(ite->type==type_is_string1)
+	    {
+	      //应该是变量
+	      int i=0;
+	      for(;i<var_name.size();++i)
+		if(var_name[i]==ite->name)
+		  break;
+	      //把那个变量对应doo压入
+	      vector<int> &tmp=unfolded_list[var_val[i][var_choosed_val[i].first]][var_choosed_val[i].second].doo;
+	      for(int j=0;j<tmp.size();++j)
+		r[k].doo.push_back(tmp[j]);
+	    }
+	  else if(ite->type==type_is_vector)
+	    {
+	      r[k].doo.push_back(do_list.size());
+	      do_list.push_back(&(*ite));
+	    }
+	  else assert(0);
+
 	  //r[k].doo.push_back(analyze_do_expr((*doo).ivec[i]));
 	}
     }
@@ -561,7 +578,7 @@ int unfold(Asem &asem)
       return (long long)hc_unfold.find(name)-1; // 由于加入hash表的时候加过1
     }
 
-  cout<<"unfolding:"<<name<<endl;
+  //cout<<"unfolding:"<<name<<endl;
 
   int r;
   // 对不同的类型分别展开
@@ -573,7 +590,7 @@ int unfold(Asem &asem)
     r=unfold_type(asem);
   else assert(0);
 
-  cout<<"done:"<<name<<endl;
+  //cout<<"done:"<<name<<endl;
   // 加入hash表，由于r可能是0，而hash.find返回0表示没有找到
   hc_unfold.insert(name,(void*)(r+1));
   return r;
@@ -592,7 +609,8 @@ int main(){
   asem.type=type_is_vector;
   // 读入文件
   gen(asem);
-  display(asem,0);
+  //display(asem,0);
+
   // 把保留字加入hash表
   for(int i=0;i<sizeof(reserved)/sizeof(reserved[0]);++i)
     hc.insert(reserved[i].c_str(),(void*)reserved);
@@ -608,7 +626,6 @@ int main(){
 
   //找到instruction中的top
   Asem &top=*(instruction.find((string)"top"));
-  cout<<top.ivec[1].name<<endl;
   Asem &rule=*instruction.find(top.ivec[1].name);
 
   //查看结果
@@ -620,14 +637,15 @@ int main(){
     {
       out_txt<<i<<endl<<"\tcode: "<<unfolded_list[allrule][i].code<<endl
 	  <<"\tbinary: "<<unfolded_list[allrule][i].binary<<endl;
-//       cout<<"do :";
-//       for(int j=0;j<unfolded_list[allrule][i].doo.size();++j)
-// 	{
-// 	  cout<<unfolded_list[allrule][i].doo[j]<<' ';
-// 	  display(*unfolded_list[allrule][i].doo[j],1);
-// 	}
-//       cout<<endl;
+      out_txt<<"do: "<<endl;
+      for(int i=0;i<unfolded_list[allrule][i].doo.size();++i)
+	out_txt<<unfolded_list[allrule][i].doo[i]<<' ';
+      out_txt<<endl;
+      for(int i=0;i<unfolded_list[allrule][i].off_in_code.size();++i)
+	out_txt<<unfolded_list[allrule][i].off_in_code[i]<<' '<<unfolded_list[allrule][i].off_in_binary[i]<<' ';
+      out_txt<<endl;
     }
+
   //接下来是输出到为ir
   //处理wire描述
   Ir ir;
@@ -652,9 +670,7 @@ int main(){
       vector<pp> tmp;
       for(int i=0;i<ite->off_in_code.size();++i)
 	tmp.push_back(pp(ite->off_in_code[i],ite->off_in_binary[i]));
-      ir.add_instruction(Instruction(ite->code,
-				     ite->binary,
-				     tmp));
+      ir.add_instruction(ite->code,ite->binary,ite->doo,tmp);
     }
   ir.output_instruction_set(out2_txt);
   return 0;

@@ -13,7 +13,7 @@ private:
 public:
   void add_wire(Wire w);
   void output_wire(ofstream &fout);
-  void add_instruction(Instruction instr);
+  void add_instruction(string &c,string &b,vector<int> &d,vector<pp> &off);
   void output_instruction_set(ofstream &fout);
 };
 
@@ -26,14 +26,21 @@ void Ir::output_instruction_set(ofstream &fout)
       fout<<"("<<ite->get_code()<<" "<<ite->get_binary()<<" ";
       for(int i=0;i<ite->get_off_size();++i)
 	fout<<ite->get_off(i).first<<' '<<ite->get_off(i).second<<' ';
+      for(int i=0;i<ite->get_do_size();++i)
+	fout<<ite->get_do(i)<<' ';
       fout<<")"<<endl;
     }
   fout<<")"<<endl;
 }
 
-void Ir::add_instruction(Instruction instr)
+void Ir::add_instruction(string &c,string &b,vector<int> &d,vector<pp> &off)
 {
-  instruction_set.push_back(instr);
+  int t=instruction_set.size();
+  instruction_set.resize(t+1);
+  instruction_set[t].set_code(c);
+  instruction_set[t].set_binary(b);
+  instruction_set[t].set_do(d);
+  instruction_set[t].set_off(off);
 }
 
 void Ir::add_wire(Wire w)

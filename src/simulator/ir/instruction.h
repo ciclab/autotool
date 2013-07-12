@@ -11,11 +11,17 @@ private:
   string code;
   string binary;
   vector<pp> off;
+  vector<int> doo;
 public:
-  Instruction(string c,string b,vector<pp> &o);
+  void set_code(string &code);
+  void set_binary(string &b);
+  void set_off(vector<pp> &o);
+  void set_do(vector<int> &d);
   string get_code();
   string get_binary();
   int get_off_size();
+  int get_do_size();
+  int get_do(int id);
   pp get_off(int id);
 };
 #endif
