@@ -13,7 +13,7 @@ private:
 public:
   void add_wire(Wire w);
   void output_wire(ofstream &fout);
-  void add_instruction(string &c,string &b,vector<int> &d,vector<pp> &off);
+  void add_instruction(string &c,string &b,vector<int> &d,vector<pp> &off,vector<string> &enum_var);
   void output_instruction_set(ofstream &fout);
 };
 
@@ -26,6 +26,8 @@ void Ir::output_instruction_set(ofstream &fout)
       fout<<"("<<ite->get_code()<<" "<<ite->get_binary()<<" ";
       for(int i=0;i<ite->get_off_size();++i)
 	fout<<ite->get_off(i).first<<' '<<ite->get_off(i).second<<' ';
+      for(int i=0;i<ite->get_enum_var_size();++i)
+	fout<<ite->get_enum_var(i)<<' ';
       for(int i=0;i<ite->get_do_size();++i)
 	fout<<ite->get_do(i)<<' ';
       fout<<")"<<endl;
@@ -33,7 +35,7 @@ void Ir::output_instruction_set(ofstream &fout)
   fout<<")"<<endl;
 }
 
-void Ir::add_instruction(string &c,string &b,vector<int> &d,vector<pp> &off)
+void Ir::add_instruction(string &c,string &b,vector<int> &d,vector<pp> &off,vector<string> &enum_var)
 {
   int t=instruction_set.size();
   instruction_set.resize(t+1);
@@ -41,6 +43,7 @@ void Ir::add_instruction(string &c,string &b,vector<int> &d,vector<pp> &off)
   instruction_set[t].set_binary(b);
   instruction_set[t].set_do(d);
   instruction_set[t].set_off(off);
+  instruction_set[t].set_enum_var(enum_var);
 }
 
 void Ir::add_wire(Wire w)

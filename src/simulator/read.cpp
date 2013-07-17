@@ -77,7 +77,7 @@ void gen(Asem &asem){
       asem_3.type=type_is_string1;
       asem_3.name=c1;
       int c3;
-      while((c3=getchar())!=EOF && (c3==(int)']' || isalnum(c3) || c3=='_' || c3=='['
+      while((c3=getchar())!=EOF && (c3==(int)']' || isalnum(c3) || c3=='_' || c3=='[' || c3=='.'
 				    /*TODO 这里应该也用isgraph,但是会出现奇怪的效果，暂时列举]*/))
 	asem_3.name+=c3;
       asem.ivec.push_back(asem_3);
@@ -156,6 +156,7 @@ public:
   vector<int> doo;
   vector<int> off_in_code;
   vector<int> off_in_binary;
+  vector<string> enum_name;
   triple(string c,string b){code=c,binary=b;};
   triple(){};
 };
@@ -217,21 +218,60 @@ Asem *get_asem(string name)
 }
 int unfold(Asem &asem);
 
-// 分析do中的表达式，
-// 假设对变量do的引用只出现在最外层
-int analyze_do_expr(Asem expr)
+
+// TODO 代换switch中的变量，目前什么都没做
+void switch_chg(Asem & asem,
+		vector<string> &var_name,
+		vector<vector<string> >&var_choose_name,
+		vector<vector<int> >&var_val,
+		vector<pair<int,int> > &var_choosed_val
+		)
 {
-  
-  if(expr.type==type_is_string1)
+  if(asem.type==type_is_vector)
     {
-      // 因该是一个变量
+      if(asem.ivec.size()>0)
+	{
+	  if(asem.ivec[0].type==type_is_string1 && asem.ivec[0].name==(string)"switch")
+	    {
+	      // 找到switch语句
+	      // TODO 认为如果判断是含有变量名的表达式的话就是最简单的形式: (switch var_name ...)
+	      assert(asem.ivec.size()>1 && (asem.ivec.size()%2)==0);
+	      if(asem.ivec[1].type==type_is_string1)
+		{
+		  // 分成这个变量是var.value 和 var两种
+		  // 前一种对应变量是一个枚举类型
+		  int pos=asem.ivec[1].name.find(".value");
+		  if(pos!=string::npos)
+		    {
+		      // 第一种情况
+		      // 由于现在对enum类型的是不展开，所以在执行时再处理
+		      string var=asem.ivec[1].name.substr(0,pos);
+		      int i;
+		      for(i=0;i<var_name.size();++i)
+			if(var_name[i]==var)
+			  break;
+		      assert(i<var_name.size());
+		      asem.ivec[1].name=(string)"ENUM_"+var+(string)"_"+var_choose_name[i][0];
+		    }
+		  else
+		    {
+		      // TODO 现在没有对应描述,暂时不写
+		    }
+		}
+	      else assert(false);
+	    }
+	  else
+	    for(int i=0;i<asem.ivec.size();++i)
+	      switch_chg(asem.ivec[i],
+			 var_name,
+			 var_choose_name,
+			 var_val,
+			 var_choosed_val);
+	}
     }
-  else if(expr.type==type_is_vector)
-    {
-      // 因该是一个表达式
-    }
-  return 0;
-};
+}
+
+
 // 每个变量已经定好取值后计算code，binary，do并保存到r中
 void eval_unfold(vector<string> &var_name,
 		 vector<vector<string> >&var_choose_name,
@@ -329,6 +369,9 @@ void eval_unfold(vector<string> &var_name,
 	{
 	  r[k].off_in_code.push_back(unfolded_list[a][b].off_in_code[j]+oc);
 	  r[k].off_in_binary.push_back(unfolded_list[a][b].off_in_binary[j]+ob);
+	  if(unfolded_list[a][b].enum_name[j].length()>0)
+	    r[k].enum_name.push_back(var_name[i]+(string)"#"+unfolded_list[a][b].enum_name[j]);
+	  else r[k].enum_name.push_back((string)"");
 	}
     }
   // 处理do描述
@@ -336,6 +379,15 @@ void eval_unfold(vector<string> &var_name,
   // 代换do表述中变量的do
   if(doo)
     {
+      // 对可能出现的switch中的变量进行代换
+      switch_chg(*doo,
+		 var_name,
+		 var_choose_name,
+		 var_val,
+		 var_choosed_val);
+      // TODO 对if语句中的变量进行代换
+      //for(int i=0;i<var_name.size();++i)
+      //cout<<var_choosed_val[i].first<<' '<<var_choosed_val[i].second<<endl;
       for(vector<Asem>::iterator ite=(*doo).ivec.begin()+1;ite!=(*doo).ivec.end();++ite)
 	{
 	  if(ite->type==type_is_string1)
@@ -352,6 +404,7 @@ void eval_unfold(vector<string> &var_name,
 	    }
 	  else if(ite->type==type_is_vector)
 	    {
+	      // TODO 加入的do可能有重复，可以用hash优化
 	      r[k].doo.push_back(do_list.size());
 	      do_list.push_back(&(*ite));
 	    }
@@ -431,6 +484,7 @@ int unfold_enum(Asem &asem)
   unfolded_list[k].push_back(triple(asem.ivec[0].name,binary));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
+  unfolded_list[k][0].enum_name.push_back(asem.ivec[0].name);
 #endif
   for(int i=1;i<asem.ivec.size();++i)
     {
@@ -442,7 +496,9 @@ int unfold_enum(Asem &asem)
 		 asem.ivec[i].ivec[1].type==type_is_string2);
 	  
 #ifndef ENUM_NOT_UNFOLDED
-	  unfolded_list[k].push_back(triple(asem.ivec[i].ivec[1].name,num2string(i-1,asem.ivec.size()-1)));
+	  unfolded_list[k].push_back(triple((string)"#ENUM_"+
+					    asem.ivec[i].ivec[1].name,num2string(i-1,asem.ivec.size()-1)));
+	  cout<<"!!"<<asem.ivec[1].name<<endl;
 #else
 	  // TODO 产生这个枚举相应的lex规则和处理函数
 #endif
@@ -451,7 +507,8 @@ int unfold_enum(Asem &asem)
 	{
 #ifndef ENUM_NOT_UNFOLDED
 	  assert(asem.ivec[i].type==type_is_string2);
-	  unfolded_list[k].push_back(triple(asem.ivec[i].name,num2string(i-1,asem.ivec.size()-1)));
+	  unfolded_list[k].push_back(triple((string)"#ENUM_"+
+					    asem.ivec[i].name,num2string(i-1,asem.ivec.size()-1)));
 #endif
 	  // TODO 产生这个枚举相应的lex规则和处理函数
 	}
@@ -496,6 +553,7 @@ int unfold_type(Asem &asem)
 				    binary));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
+  unfolded_list[k][0].enum_name.push_back((string)"");
   return k;
 }
 // 对instruction展开
@@ -578,7 +636,7 @@ int unfold(Asem &asem)
       return (long long)hc_unfold.find(name)-1; // 由于加入hash表的时候加过1
     }
 
-  //cout<<"unfolding:"<<name<<endl;
+  cout<<"unfolding:"<<name<<endl;
 
   int r;
   // 对不同的类型分别展开
@@ -590,7 +648,7 @@ int unfold(Asem &asem)
     r=unfold_type(asem);
   else assert(0);
 
-  //cout<<"done:"<<name<<endl;
+  cout<<"done:"<<name<<endl;
   // 加入hash表，由于r可能是0，而hash.find返回0表示没有找到
   hc_unfold.insert(name,(void*)(r+1));
   return r;
@@ -670,8 +728,11 @@ int main(){
       vector<pp> tmp;
       for(int i=0;i<ite->off_in_code.size();++i)
 	tmp.push_back(pp(ite->off_in_code[i],ite->off_in_binary[i]));
-      ir.add_instruction(ite->code,ite->binary,ite->doo,tmp);
+      ir.add_instruction(ite->code,ite->binary,ite->doo,tmp,ite->enum_name);
     }
   ir.output_instruction_set(out2_txt);
+
+  
+  
   return 0;
 }
