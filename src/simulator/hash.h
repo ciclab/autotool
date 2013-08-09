@@ -34,10 +34,10 @@ TODO  Note this value can be reduced to 4051 by using the command line
 public:
 	hash_control(unsigned int table_size=65537);
 	~hash_control();
-	const char *insert (const string &key, int val /*[void *val]*/);
-	int find (const string &key);
-	int replace (const string &key, int value);
-	int erase (const string &key);
+	const char *insert (const string &key, void *val);
+	void * find (const string &key);
+	void * replace (const string &key, void * value);
+	void * erase (const string &key);
 };
 
 
