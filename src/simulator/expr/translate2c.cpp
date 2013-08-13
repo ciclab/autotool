@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <cassert>
+#include <cstdlib>
 using namespace std;
 // For Every Entry in Vector
 #define FEEV(a,s,b) for(int a=s;a<(b).size();++a)
@@ -99,11 +100,43 @@ public:
   void output_cond_var(string s);
   void output_rule_call(string);
   void output_if_beg();
+  void output_switch_beg();
   bool is_assignment();
   bool is_vec();
   bool is_string();
   bool is_if();
+  bool is_switch();
+  bool is_leftshift();
+  bool is_call();
+  string gen_tmp_var();
 };
+bool Expression::is_call()
+{
+  return (is_vec() && expr.size()>0 &&
+	  expr[0].is_string() &&
+	  expr[0].get_string()[0]=='#');
+}
+string Expression::gen_tmp_var()
+{
+  static int cnt=0;
+  static char buf[100];
+  itoa(cnt++,buf,16);
+  return (string)"tmp"+buf;
+}
+bool Expression::is_leftshift()
+{
+  return (is_vec() && expr[0].is_string() && 
+	  expr[0].get_string()==(string)"<<");
+}
+void Expression::output_switch_beg()
+{
+  out<<"switch";
+}
+bool Expression::is_switch()
+{
+  return (is_vec() && expr.size()>2 && expr[0].is_string() &&
+	  expr[0].get_string()==(string)"switch");
+}
 string Expression::get_string()
 {
   return statement;
@@ -193,6 +226,44 @@ string Expression::translate_statement(Varlist &vl)
       FEEV(i,2,expr)
 	expr[i].translate_statement(vl);
       output_if_end();
+      return NULL;
+    }
+  else if(is_switch())
+    {
+      output_switch_beg();
+      expr[1].translate_or_and_cond(" || ");
+      out<<"{";
+      FEEV(i,2,expr)
+	{
+	  out<<"case \'"<<expr[i].get_string()<<"\'";
+	  ++i;
+	  out<<": ";
+	  expr[i].translate_statement(vl);
+	  out<<endl;
+	}
+      out<<"}"<<endl;
+      return NULL;
+    }
+  else if(is_leftshift())
+    {
+      string tmpvar=gen_tmp_var();
+      out<<tmpvar<<"="<<expr[1].translate_statement(vl)<<"<<"\
+	 <<expr[2].translate_statement(vl)<<endl;
+      return tmpvar;
+    }
+  else if(is_call())
+    {
+      vector<string> tmp;
+      FEEV(i,1,expr)
+	tmp.push_back(expr[i].translate_statement(vl));
+      out<<expr[0].get_string()<<"(";
+      FEEV(i,0,tmp)
+	{
+	  if(i)
+	    out<<",";
+	  out<<tmp[i];
+	}
+      out<<")";
     }
 }
 void Expression::translate_function_name(string function_name)
