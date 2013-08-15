@@ -108,8 +108,14 @@ public:
   bool is_switch();
   bool is_leftshift();
   bool is_call();
+  bool is_idx();
   string gen_tmp_var();
 };
+bool Expression::is_idx()
+{
+  return (is_vec() && expr.size()>0 && expr[0].is_string () &&
+	  expr[0].get_string()==(string)"[]");
+}
 bool Expression::is_call()
 {
   return (is_vec() && expr.size()>0 &&
@@ -195,7 +201,8 @@ bool Expression::is_assignment()
 }
 void Expression::output_assignment(string to,string from)
 {
-  out<<to<<".bak="<<from<<".val;"<<endl;
+  //TODO 如果from和to都是wire的话，应该特殊处理。
+  out<<to<<".tmp="<<from<<".val;"<<endl;
 }
 string Expression::translate_statement(Varlist &vl)
 {
@@ -264,6 +271,10 @@ string Expression::translate_statement(Varlist &vl)
 	  out<<tmp[i];
 	}
       out<<")";
+    }
+  else if(is_idx())
+    {
+      return expr[1].translate_statement(vl)+(string)"["+expr[2].translate_statement(vl)+(string)"]";
     }
 }
 void Expression::translate_function_name(string function_name)
