@@ -279,6 +279,8 @@ void Asem::eval_unfold(vector<string> &var_name,
     {
       // copy content in do  description
       (*doo).dfs_copy_content(r[k].doo);
+      if((*doo).ivec.size()>2)
+	cout<<k<<' '<<(*doo).ivec[1].ivec.size()<<' '<<r[k].doo.ivec[1].ivec.size()<<endl;
       // 对可能出现的switch中的变量进行代换
       // (*doo).switch_chg(var_name,
       // 		 var_choose_name,

@@ -1,5 +1,5 @@
 #include "do_content.h"
-void do_content::output(fstream &fout)
+void do_content::output(ofstream &fout)
 {
   for(int i=0;i<ivec.size();++i){
     if(ivec[i].type==do_type_is_vector){

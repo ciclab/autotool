@@ -18,6 +18,6 @@ class do_content
   string str;
   int type;
   vector<do_content> ivec;
-  void output(fstream &fout);
+  void output(ofstream &fout);
 };
 #endif

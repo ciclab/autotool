@@ -55,7 +55,7 @@ class Asem{
   string name;
   int type;
   //用于保存do的数据结构
-  vector<Asem*> do_list;
+  //vector<Asem*> do_list;
   // 哈希表 hash controller
   
   bool is_instr(string name);

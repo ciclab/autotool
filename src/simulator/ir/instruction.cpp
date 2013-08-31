@@ -1,33 +1,26 @@
-#include <utility>
-#include <vector>
-#include <string>
-#include <cassert>
-#include <iostream>
-using namespace std;
-typedef pair<int,int> pp;
-class Instruction
+#include "instruction.h"
+// class doo
+// {
+// private:
+//   Asem arglist;
+//   Asem ent;
+// public:
+//   void set_arglist(Asem &al);
+//   void set_ent(Asem &et);
+// };
+// void doo::set_arglist(Asem &al)
+// {
+//   arglist=al;
+// }
+// void doo::set_ent(Asem &et)
+// {
+//   ent=et;
+// }
+
+void Instruction::output_do(ofstream & fout)
 {
-private:
-  string code;
-  string binary;
-  vector<pp> off;
-  vector<string> enum_var;
-  vector<int> doo;
-public:
-  void set_code(string &code);
-  void set_binary(string &b);
-  void set_off(vector<pp> &o);
-  void set_do(vector<int> &d);
-  void set_enum_var(vector<string> &ev);
-  string get_code();
-  string get_binary();
-  int get_off_size();
-  int get_do_size();
-  int get_do(int id);
-  int get_enum_var_size();
-  string get_enum_var(int id);
-  pp get_off(int id);
-};
+  doo.output(fout);
+}
 void Instruction::set_enum_var(vector<string> &ev)
 {
   enum_var=ev;
@@ -52,18 +45,18 @@ void Instruction::set_off(vector<pp> &o)
 {
   off=o;
 }
-void Instruction::set_do(vector<int> &d)
+void Instruction::set_do(do_content &d)
 {
   doo=d;
 }
-int Instruction::get_do_size()
-{
-  return doo.size();
-}
-int Instruction::get_do(int id)
-{
-  return doo[id];
-}
+// int Instruction::get_do_size()
+// {
+//   return doo.size();
+// }
+// int Instruction::get_do(int id)
+// {
+//   return doo[id];
+// }
 string Instruction::get_code()
 {
   return code;
@@ -83,4 +76,9 @@ pp Instruction::get_off(int id)
 {
   assert(id<get_off_size());
   return off[id];
+}
+
+void Instruction::set_arglist(vector<pair<string,string>  > &al)
+{
+  arglist=al;
 }
