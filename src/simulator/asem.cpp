@@ -277,38 +277,40 @@ void Asem::eval_unfold(vector<string> &var_name,
   // 代换do表述中变量的do
   if(doo)
     {
+      // copy content in do  description
+      (*doo).dfs_copy_content(r[k].doo);
       // 对可能出现的switch中的变量进行代换
-      (*doo).switch_chg(var_name,
-		 var_choose_name,
-		 var_val,
-		 var_choosed_val);
+      // (*doo).switch_chg(var_name,
+      // 		 var_choose_name,
+      // 		 var_val,
+      // 		 var_choosed_val);
       // TODO 对if语句中的变量进行代换
       //for(int i=0;i<var_name.size();++i)
       //cout<<var_choosed_val[i].first<<' '<<var_choosed_val[i].second<<endl;
-      for(vector<Asem>::iterator ite=(*doo).ivec.begin()+1;ite!=(*doo).ivec.end();++ite)
-	{
-	  if(ite->type==type_is_string1)
-	    {
-	      //应该是变量
-	      int i=0;
-	      for(;i<var_name.size();++i)
-		if(var_name[i]==ite->name)
-		  break;
-	      //把那个变量对应doo压入
-	      vector<int> &tmp=unfolded_list[var_val[i][var_choosed_val[i].first]][var_choosed_val[i].second].doo;
-	      for(int j=0;j<tmp.size();++j)
-		r[k].doo.push_back(tmp[j]);
-	    }
-	  else if(ite->type==type_is_vector)
-	    {
-	      // TODO 加入的do可能有重复，可以用hash优化
-	      r[k].doo.push_back(do_list.size());
-	      do_list.push_back(&(*ite));
-	    }
-	  else assert(0);
+      // for(vector<Asem>::iterator ite=(*doo).ivec.begin()+1;ite!=(*doo).ivec.end();++ite)
+      // 	{
+      // 	  if(ite->type==type_is_string1)
+      // 	    {
+      // 	      //应该是变量
+      // 	      int i=0;
+      // 	      for(;i<var_name.size();++i)
+      // 		if(var_name[i]==ite->name)
+      // 		  break;
+      // 	      //把那个变量对应doo压入
+      // 	      vector<int> &tmp=unfolded_list[var_val[i][var_choosed_val[i].first]][var_choosed_val[i].second].doo;
+      // 	      for(int j=0;j<tmp.size();++j)
+      // 		r[k].doo.push_back(tmp[j]);
+      // 	    }
+      // 	  else if(ite->type==type_is_vector)
+      // 	    {
+      // 	      // TODO 加入的do可能有重复，可以用hash优化
+      // 	      r[k].doo.push_back(do_list.size());
+      // 	      do_list.push_back(&(*ite));
+      // 	    }
+      // 	  else assert(0);
 
 	  //r[k].doo.push_back(analyze_do_expr((*doo).ivec[i]));
-	}
+	// }
     }
 
   //   for(int i=0;i<var_val.size();++i)
@@ -604,4 +606,20 @@ Asem * Asem::get_asem(string name)
 	tmp=hc.find((string)"...enum."+name);
     }
   return (Asem*)tmp;
+}
+
+void Asem::dfs_copy_content(do_content &dl)
+{
+  dl.type=type;
+  if(type==type_is_vector)
+    {
+      dl.ivec.resize(ivec.size());
+      for(int i=0;i<ivec.size();++i)
+	ivec[i].dfs_copy_content(dl.ivec[i]);
+    }
+  else if(type==type_is_string1 || type==type_is_string2)
+    {
+      dl.str=name;
+    }
+  else assert(0);
 }

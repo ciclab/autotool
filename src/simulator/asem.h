@@ -44,6 +44,7 @@ class Asem{
 		  vector<vector<int> >&var_val,
 		  vector<pair<int,int> > &var_choosed_val
 		  );
+  void dfs_copy_content(do_content &dl);
  public:
   /*TODO chang following member to private*/
   static hash_control & hc_unfold;
