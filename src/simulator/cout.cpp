@@ -1,171 +1,375 @@
-ll alu_opn_var_op.tmp
-ll alu_opn_var_op.val
-ll alu_instr_var_op.tmp
-ll alu_instr_var_op.val
-ll alu_left_opd_var_sel.tmp
-ll alu_left_opd_var_sel.val
-ll alu_instr_var_al.tmp
-ll alu_instr_var_al.val
-ll alu_right_opd_var_sel.tmp
-ll alu_right_opd_var_sel.val
-ll alu_instr_var_ar.tmp
-ll alu_instr_var_ar.val
-ll as_opn_var_op.tmp
-ll as_opn_var_op.val
-ll as_sh_instr_var_as.tmp
-ll as_sh_instr_var_as.val
-ll sh_opn_var_op.tmp
-ll sh_opn_var_op.val
-ll as_sh_instr_var_sh.tmp
-ll as_sh_instr_var_sh.val
-ll as_sh_instr_var_al.tmp
-ll as_sh_instr_var_al.val
-ll as_sh_instr_var_ar.tmp
-ll as_sh_instr_var_ar.val
-ll shift_instr_var_al.tmp
-ll shift_instr_var_al.val
-ll shift_instr_var_factor.tmp
-ll shift_instr_var_factor.val
-ll macc_instr_var_op.tmp
-ll macc_instr_var_op.val
-ll mult_left_opd_var_sel.tmp
-ll mult_left_opd_var_sel.val
-ll macc_instr_var_ml.tmp
-ll macc_instr_var_ml.val
-ll mult_right_opd_var_sel.tmp
-ll mult_right_opd_var_sel.val
-ll macc_instr_var_mr.tmp
-ll macc_instr_var_mr.val
-ll rnd_instr_var_op.tmp
-ll rnd_instr_var_op.val
-ll macc_rnd_nop_instr_var_subinstr.tmp
-ll macc_rnd_nop_instr_var_subinstr.val
-ll arith_instr_var_subinstr.tmp
-ll arith_instr_var_subinstr.val
-ll arith_mem_ind_instr_var_ar.tmp
-ll arith_mem_ind_instr_var_ar.val
-ll ind_mem_acc1_var_i.tmp
-ll ind_mem_acc1_var_i.val
-ll ind_mem_acc1_var_m.tmp
-ll ind_mem_acc1_var_m.val
-ll ind_mem_acc2_var_i.tmp
-ll ind_mem_acc2_var_i.val
-ll ind_mem_acc2_var_m.tmp
-ll ind_mem_acc2_var_m.val
-ll ind_mem_acc_var_subinstr.tmp
-ll ind_mem_acc_var_subinstr.val
-ll load_ind_instr_var_m.tmp
-ll load_ind_instr_var_m.val
-ll reg_sel_var_sel.tmp
-ll reg_sel_var_sel.val
-ll load_ind_instr_var_r.tmp
-ll load_ind_instr_var_r.val
-ll store_ind_instr_var_m.tmp
-ll store_ind_instr_var_m.val
-ll store_ind_instr_var_r.tmp
-ll store_ind_instr_var_r.val
-ll ind_mem_acc_dbl1_var_i.tmp
-ll ind_mem_acc_dbl1_var_i.val
-ll ind_mem_acc_dbl1_var_m.tmp
-ll ind_mem_acc_dbl1_var_m.val
-ll load_load_ind_instr_var_m1.tmp
-ll load_load_ind_instr_var_m1.val
-ll ind_mem_acc_dbl2_var_i.tmp
-ll ind_mem_acc_dbl2_var_i.val
-ll ind_mem_acc_dbl2_var_m.tmp
-ll ind_mem_acc_dbl2_var_m.val
-ll load_load_ind_instr_var_m2.tmp
-ll load_load_ind_instr_var_m2.val
-ll dbl_reg_sel_var_sel.tmp
-ll dbl_reg_sel_var_sel.val
-ll load_load_ind_instr_var_r1.tmp
-ll load_load_ind_instr_var_r1.val
-ll load_load_ind_instr_var_r2.tmp
-ll load_load_ind_instr_var_r2.val
-ll store_load_ind_instr_var_m1.tmp
-ll store_load_ind_instr_var_m1.val
-ll store_load_ind_instr_var_m2.tmp
-ll store_load_ind_instr_var_m2.val
-ll store_load_ind_instr_var_r1.tmp
-ll store_load_ind_instr_var_r1.val
-ll store_load_ind_instr_var_r2.tmp
-ll store_load_ind_instr_var_r2.val
-ll mem_ind_instr_var_subinstr.tmp
-ll mem_ind_instr_var_subinstr.val
-ll arith_mem_ind_instr_var_mi.tmp
-ll arith_mem_ind_instr_var_mi.val
-ll load_direct_var_r.tmp
-ll load_direct_var_r.val
-ll load_direct_var_ad.tmp
-ll load_direct_var_ad.val
-ll store_direct_var_r.tmp
-ll store_direct_var_r.val
-ll store_direct_var_ad.tmp
-ll store_direct_var_ad.val
-ll mem_dir_instr_var_subinstr.tmp
-ll mem_dir_instr_var_subinstr.val
-ll mem_sp_idx_imm_instr_var_r.tmp
-ll mem_sp_idx_imm_instr_var_r.val
-ll sp_idx_imm_acc_var_imm.tmp
-ll sp_idx_imm_acc_var_imm.val
-ll mem_sp_idx_imm_instr_var_m.tmp
-ll mem_sp_idx_imm_instr_var_m.val
-ll Iam_var_n.tmp
-ll Iam_var_n.val
-ll Ibm_var_n.tmp
-ll Ibm_var_n.val
-ll Mam_var_n.tmp
-ll Mam_var_n.val
-ll Mbm_var_n.tmp
-ll Mbm_var_n.val
-ll acu_regs_var_subinstr.tmp
-ll acu_regs_var_subinstr.val
-ll imm_load_addr_instr_var_r.tmp
-ll imm_load_addr_instr_var_r.val
-ll imm_load_addr_instr_var_c.tmp
-ll imm_load_addr_instr_var_c.val
-ll imm_load8se_var_r.tmp
-ll imm_load8se_var_r.val
-ll imm_load8se_var_c.tmp
-ll imm_load8se_var_c.val
-ll imm_load8hi_var_r.tmp
-ll imm_load8hi_var_r.val
-ll imm_load8hi_var_c.tmp
-ll imm_load8hi_var_c.val
-ll imm_load_data_instr_var_subinstr.tmp
-ll imm_load_data_instr_var_subinstr.val
-ll sp_mod_instr_var_imm.tmp
-ll sp_mod_instr_var_imm.val
-ll sp_mod_instr_var_SP.tmp
-ll sp_mod_instr_var_SP.val
-.tmp=.val;
-.tmp=.val;
-.tmp=.val;
-ll ptr_init_sp_instr_var_i.tmp
-ll ptr_init_sp_instr_var_i.val
-ll ptr_init_sp_instr_var_imm.tmp
-ll ptr_init_sp_instr_var_imm.val
-ll regs_var_subinstr.tmp
-ll regs_var_subinstr.val
-ll rmove_instr_var_rs.tmp
-ll rmove_instr_var_rs.val
-ll rmove_instr_var_rd.tmp
-ll rmove_instr_var_rd.val
-ll doloop_instr_var_r.tmp
-ll doloop_instr_var_r.val
-ll doloop_instr_var_end.tmp
-ll doloop_instr_var_end.val
-ll dir_abs_cond_branch_var_t.tmp
-ll dir_abs_cond_branch_var_t.val
-ll dir_abs_cond_branch_var_c.tmp
-ll dir_abs_cond_branch_var_c.val
-ll dir_abs_uncond_branch_var_t.tmp
-ll dir_abs_uncond_branch_var_t.val
-ll dir_abs_uncond_branch_var_c.tmp
-ll dir_abs_uncond_branch_var_c.val
-ll branch_instr_var_subinstr.tmp
-ll branch_instr_var_subinstr.val
-ll jsr_instr_var_target.tmp
-ll jsr_instr_var_target.val
-ll tctcore_var_subinstr.tmp
-ll tctcore_var_subinstr.val
+void alu_opn_func_do()
+{
+  if((stage.E1))
+    {
+    }
+}
+void alu_left_opd_func_do()
+{
+}
+void alu_right_opd_func_do()
+{
+}
+void alu_instr_func_do()
+{
+  if((stage.E1))
+    {
+    }
+}
+void as_opn_func_do()
+{
+  if(stage.E1)
+    {
+    }
+}
+void sh_opn_func_do()
+{
+  if(stage.E1)
+    {
+      (*(void (*))()sh_opn_AR)();
+      (*(void (*))()sh_opn_S)();
+      sh_opn_AR.tmp=sh_opn_S.val;
+      sh_opn_S.tmp=.val;
+    }
+}
+void as_sh_instr_func_do()
+{
+  if((stage.E1))
+    {
+    }
+}
+void shift_instr_func_do()
+{
+  if((stage.E1))
+    {
+      (*(void (*))()shift_instr_A)();
+      (*(void (*))()shift_instr_al)();
+      shift_instr_A.tmp=shift_instr_al.val;
+      (*(void (*))()shift_instr_C)();
+      shift_instr_C.tmp=.val;
+      (*(void (*))()shift_instr_alu)();
+      (*(void (*))()shift_instr_true)();
+      shift_instr_alu.tmp=shift_instr_true.val;
+      (*(void (*))()shift_instr_AR)();
+      (*(void (*))()shift_instr_S)();
+      shift_instr_AR.tmp=shift_instr_S.val;
+      shift_instr_S.tmp=.val;
+      (*(void (*))()shift_instr_sh)();
+      (*(void (*))()shift_instr_true)();
+      shift_instr_sh.tmp=shift_instr_true.val;
+    }
+}
+void mult_left_opd_func_do()
+{
+}
+void mult_right_opd_func_do()
+{
+}
+void macc_instr_func_do()
+{
+  if(stage.E1)
+    {
+    }
+  if(stage.E2)
+    {
+    }
+}
+void rnd_instr_func_do()
+{
+  if(stage.E2)
+    {
+    }
+}
+void arith_nop_func_do()
+{
+  if((stage.E1))
+    {
+    }
+}
+void macc_rnd_nop_instr_func_do()
+{
+  (*(void (*))()macc_rnd_nop_instr_subinstr)();
+}
+void arith_instr_func_do()
+{
+  (*(void (*))()arith_instr_subinstr)();
+}
+void ind_mem_acc1_func_do()
+{
+  if(stage.E1)
+    {
+    }
+  if(stage.E2)
+    {
+    }
+}
+void ind_mem_acc2_func_do()
+{
+  if(stage.E1)
+    {
+      (*(void (*))()ind_mem_acc2_acu2)();
+      (*(void (*))()ind_mem_acc2_true)();
+      ind_mem_acc2_acu2.tmp=ind_mem_acc2_true.val;
+    }
+}
+void ind_mem_acc_func_do()
+{
+  (*(void (*))()ind_mem_acc_subinstr)();
+}
+void reg_sel_func_do()
+{
+}
+void load_ind_instr_func_do()
+{
+  if(stage.E1)
+    {
+      (*(void (*))()load_ind_instr_r)();
+      (*(void (*))()load_ind_instr_XD)();
+      (*(void (*))()load_ind_instr_m)();
+      load_ind_instr_r.tmp=load_ind_instr_XD.val;
+      load_ind_instr_XD.tmp=load_ind_instr_m.val;
+    }
+}
+void store_ind_instr_func_do()
+{
+  if((or) || (stage.E1) || (stage.E2))
+    {
+      (*(void (*))()store_ind_instr_m)();
+      (*(void (*))()store_ind_instr_XD)();
+      (*(void (*))()store_ind_instr_r)();
+      store_ind_instr_m.tmp=store_ind_instr_XD.val;
+      store_ind_instr_XD.tmp=store_ind_instr_r.val;
+    }
+}
+void ind_mem_acc_dbl1_func_do()
+{
+  if(stage.E1)
+    {
+      (*(void (*))()ind_mem_acc_dbl1_idx1)();
+      ind_mem_acc_dbl1_idx1.tmp=.val;
+    }
+  if(stage.E2)
+    {
+    }
+}
+void ind_mem_acc_dbl2_func_do()
+{
+  if(stage.E1)
+    {
+      (*(void (*))()ind_mem_acc_dbl2_idx2)();
+      ind_mem_acc_dbl2_idx2.tmp=.val;
+    }
+  if((stage.E2))
+    {
+    }
+}
+void dbl_reg_sel_func_do()
+{
+}
+void load_load_ind_instr_func_do()
+{
+  if((or) || (stage.E1) || (stage.E2))
+    {
+    }
+}
+void store_load_ind_instr_func_do()
+{
+  if((or) || (stage.E1) || (stage.E2))
+    {
+      (*(void (*))()store_load_ind_instr_m1)();
+      (*(void (*))()store_load_ind_instr_XD)();
+      (*(void (*))()store_load_ind_instr_r1)();
+      store_load_ind_instr_m1.tmp=store_load_ind_instr_XD.val;
+      store_load_ind_instr_XD.tmp=store_load_ind_instr_r1.val;
+      (*(void (*))()store_load_ind_instr_r2)();
+      (*(void (*))()store_load_ind_instr_YD)();
+      (*(void (*))()store_load_ind_instr_m2)();
+      store_load_ind_instr_r2.tmp=store_load_ind_instr_YD.val;
+      store_load_ind_instr_YD.tmp=store_load_ind_instr_m2.val;
+    }
+}
+void move_nop_func_do()
+{
+  if(stage.E1)
+    {
+    }
+}
+void mem_ind_instr_func_do()
+{
+  (*(void (*))()mem_ind_instr_subinstr)();
+}
+void arith_mem_ind_instr_func_do()
+{
+  (*(void (*))()arith_mem_ind_instr_ar)();
+  (*(void (*))()arith_mem_ind_instr_mi)();
+}
+void load_direct_func_do()
+{
+  if((or) || (stage.E2) || (stage.E1))
+    {
+      (*(void (*))()load_direct_r)();
+      (*(void (*))()load_direct_XD)();
+      load_direct_r.tmp=load_direct_XD.val;
+      load_direct_XD.tmp=.val;
+    }
+}
+void store_direct_func_do()
+{
+  if((or) || (stage.E2) || (stage.E1))
+    {
+      (*(void (*))()store_direct_XD)();
+      (*(void (*))()store_direct_r)();
+      .tmp=store_direct_XD.val;
+      store_direct_XD.tmp=store_direct_r.val;
+    }
+}
+void mem_dir_instr_func_do()
+{
+  (*(void (*))()mem_dir_instr_subinstr)();
+}
+void sp_idx_imm_acc_func_do()
+{
+  if(stage.E1)
+    {
+    }
+}
+void mem_sp_idx_imm_instr_func_do()
+{
+  if((stage.E2))
+    {
+      (*(void (*))()mem_sp_idx_imm_instr_r)();
+      (*(void (*))()mem_sp_idx_imm_instr_XD)();
+      (*(void (*))()mem_sp_idx_imm_instr_m)();
+      mem_sp_idx_imm_instr_r.tmp=mem_sp_idx_imm_instr_XD.val;
+      mem_sp_idx_imm_instr_XD.tmp=mem_sp_idx_imm_instr_m.val;
+    }
+}
+void Iam_func_do()
+{
+}
+void Ibm_func_do()
+{
+}
+void Mam_func_do()
+{
+}
+void Mbm_func_do()
+{
+}
+void acu_regs_func_do()
+{
+  (*(void (*))()acu_regs_subinstr)();
+}
+void imm_load_addr_instr_func_do()
+{
+  if(stage.E1)
+    {
+      (*(void (*))()imm_load_addr_instr_r)();
+      (*(void (*))()imm_load_addr_instr_imm_a)();
+      (*(void (*))()imm_load_addr_instr_c)();
+      imm_load_addr_instr_r.tmp=imm_load_addr_instr_imm_a.val;
+      imm_load_addr_instr_imm_a.tmp=imm_load_addr_instr_c.val;
+    }
+}
+void imm_load8se_func_do()
+{
+  if(stage.E1)
+    {
+      (*(void (*))()imm_load8se_r.value)();
+      (*(void (*))()imm_load8se_imm_w)();
+      (*(void (*))()imm_load8se_imm_c)();
+      (*(void (*))()imm_load8se_c)();
+      imm_load8se_r.value.tmp=imm_load8se_imm_w.val;
+      imm_load8se_imm_w.tmp=imm_load8se_imm_c.val;
+      imm_load8se_imm_c.tmp=imm_load8se_c.val;
+    }
+}
+void imm_load8hi_func_do()
+{
+  if(stage.E1)
+    {
+      (*(void (*))()imm_load8hi_imm)();
+      (*(void (*))()imm_load8hi_true)();
+      imm_load8hi_imm.tmp=imm_load8hi_true.val;
+      (*(void (*))()imm_load8hi_r)();
+      (*(void (*))()imm_load8hi_imm_w)();
+      imm_load8hi_r.tmp=imm_load8hi_imm_w.val;
+      imm_load8hi_imm_w.tmp=.val;
+    }
+}
+void imm_load_data_instr_func_do()
+{
+  (*(void (*))()imm_load_data_instr_subinstr)();
+}
+void sp_mod_instr_func_do()
+{
+  (*(void (*))()sp_mod_instr_SP)();
+  (*(void (*))()sp_mod_instr_upd1)();
+  sp_mod_instr_SP.tmp=sp_mod_instr_upd1.val;
+  sp_mod_instr_upd1.tmp=.val;
+  (*(void (*))()sp_mod_instr_acu1)();
+  (*(void (*))()sp_mod_instr_true)();
+  sp_mod_instr_acu1.tmp=sp_mod_instr_true.val;
+}
+void ptr_init_sp_instr_func_do()
+{
+  if(stage.E1)
+    {
+    }
+}
+void regs_func_do()
+{
+  (*(void (*))()regs_subinstr)();
+}
+void rmove_instr_func_do()
+{
+  if(stages.E1)
+    {
+      (*(void (*))()rmove_instr_rd)();
+      (*(void (*))()rmove_instr_XD)();
+      (*(void (*))()rmove_instr_rs)();
+      rmove_instr_rd.tmp=rmove_instr_XD.val;
+      rmove_instr_XD.tmp=rmove_instr_rs.val;
+    }
+}
+void doloop_instr_func_do()
+{
+  if(stage.E1)
+    {
+    }
+}
+void dir_abs_cond_branch_func_do()
+{
+  if(stage.E1)
+    {
+      (*(void (*))()dir_abs_cond_branch_tT)();
+      (*(void (*))()dir_abs_cond_branch_t)();
+      dir_abs_cond_branch_tT.tmp=dir_abs_cond_branch_t.val;
+    }
+}
+void dir_abs_uncond_branch_func_do()
+{
+  if(stage.E1)
+    {
+    }
+}
+void branch_instr_func_do()
+{
+  (*(void (*))()branch_instr_subinstr)();
+}
+void jsr_instr_func_do()
+{
+  if(stage.E1)
+    {
+    }
+}
+void return_instr_func_do()
+{
+  if(stage.E1)
+    {
+    }
+}
+void tctcore_func_do()
+{
+  (*(void (*))()tctcore_subinstr)();
+}

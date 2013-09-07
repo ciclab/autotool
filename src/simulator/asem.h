@@ -38,15 +38,15 @@ class Asem{
 			vector<triple> &r);			// 保存展开结果
   int unfold_enum(ofstream & yout,ofstream & dot_c_out);
   int unfold_type(ofstream & yout,ofstream & dot_c_out);
-  int unfold_instr(ofstream & yout,ofstream & dot_c_out);
+  int unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out);
   void switch_chg(vector<string> &var_name,
 		  vector<vector<string> >&var_choose_name,
 		  vector<vector<int> >&var_val,
 		  vector<pair<int,int> > &var_choosed_val
 		  );
   void dfs_copy_content(do_content &dl);
-  void translate_doo(ofstream & dot_c_out,vector<string> &var_list);
-  string doo_translate_statement(ofstream & dot_c_out);
+  void translate_doo(ofstream &dot_h_out,ofstream & dot_c_out,vector<string> &var_list,const string & rule_name);
+  string doo_translate_statement(ofstream & dot_h_out,ofstream & dot_c_out,const string & rule_name);
   bool doo_is_assignment();
   bool doo_is_vec();
   bool doo_is_if();
@@ -58,8 +58,8 @@ class Asem{
   void doo_output_rule_call(ofstream &dot_c_out,string s);
   void doo_output_if_end(ofstream &dot_c_out);
   void doo_output_if_beg(ofstream &dot_c_out);
-  void doo_translate_or_and_cond(ofstream &dot_c_out,string c);
-  void doo_output_cond_var(ofstream &dot_c_out,string s);
+  void doo_translate_or_and_cond(ofstream &dot_c_out);
+  //void doo_output_cond_var(ofstream &dot_c_out,string s);
   void doo_output_switch_beg(ofstream &dot_c_out);
  public:
   /*TODO chang following member to private*/
@@ -85,6 +85,6 @@ class Asem{
   Asem * find(const string &name);
   void display(int lev);// output content in ivec recursively
   void gen(FILE * &input);// read from file
-  int unfold(ofstream &yout,ofstream &dot_c_out);// analysize conten in ivec
+  int unfold(ofstream &yout,ofstream &dot_c_out,ofstream &dot_h_out);// analysize conten in ivec
 };
 #endif

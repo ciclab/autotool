@@ -110,7 +110,7 @@ void Asem::gen(FILE * & input){
 }
 
 // 展开一个描述，包括枚举，指令，类型
-int Asem::unfold(ofstream &yout,ofstream & dot_c_out)
+int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
 {
   string & name=ivec[0].name;
 
@@ -125,7 +125,7 @@ int Asem::unfold(ofstream &yout,ofstream & dot_c_out)
   int r;
   // 对不同的类型分别展开
   if(is_instr(name))
-    r=unfold_instr(yout,dot_c_out);
+    r=unfold_instr(yout,dot_c_out,dot_h_out);
   else if(is_enum(name))
     r=unfold_enum(yout,dot_c_out);
   else if(is_type(name))
@@ -410,7 +410,7 @@ int Asem::unfold_type(ofstream &yout,ofstream & dot_c_out)
   return k;
 }
 // 对instruction展开
-int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out)
+int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out)
 {
   // 变量名
   vector<string> var_name;
@@ -448,7 +448,7 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out)
 	    // 如果变量对应的是一个instruction 或者是type或者是枚举 递归地展开先
 	    if(this->is_instr(name) || this->is_type(name) || this->is_enum(name))
 	      {
-		int val=(*get_asem(name)).unfold(yout,dot_c_out);
+		int val=(*get_asem(name)).unfold(yout,dot_c_out,dot_h_out);
 		// 保存展开的索引
 		var_val[k].push_back(val);
 	      }
@@ -459,11 +459,9 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out)
 	  }
 	
 #ifdef DOT_Y
-	
-	yout<<rule_name<<'_'<<ivec[i].ivec[1].name<<':'<<'\t';
+	yout<<rule_name<<'_'<<ivec[i].ivec[1].name<<':'<<' ';
 	// every varibale in rule correspond to a global variable in .y 
-	dot_c_out<<"ll "<<rule_name<<"_var_"<<ivec[i].ivec[1].name<<"_tmp"<<endl;
-	dot_c_out<<"ll "<<rule_name<<"_var_"<<ivec[i].ivec[1].name<<"_val"<<endl;
+	dot_h_out<<"ll "<<rule_name<<"_var_"<<ivec[i].ivec[1].name<<";"<<endl;
 	for(int j=2;j<ivec[i].ivec.size();++j)
 	  {
 	    if(j!=2)
@@ -477,7 +475,10 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out)
 #ifdef DOT_Y
   yout<<'{'<<endl;
   yout<<rule_name<<"_func_"<<"do();"<<endl;
-  (*find("do")).translate_doo(dot_c_out,var_list);
+  dot_h_out<<"void "<<rule_name<<"_func_"<<"do();"<<endl;
+  dot_c_out<<"void "<<rule_name<<"_func_"<<"do()\n{"<<endl;
+  (*find("do")).translate_doo(dot_h_out,dot_c_out,var_list,rule_name);
+  dot_c_out<<"}"<<endl;
   yout<<"};"<<endl;
 #endif  
   // 保存待展开instruction项的binary,code,do的asem地址
@@ -652,45 +653,44 @@ void Asem::dfs_copy_content(do_content &dl)
   else assert(0);
 }
 
-void Asem::translate_doo(ofstream &dot_c_out,vector<string> &var_list)
+void Asem::translate_doo(ofstream &dot_h_out,ofstream &dot_c_out,vector<string> &var_list,const string & rule_name)
 {
   for(int i=1;i<ivec.size();++i)
-    ivec[i].doo_translate_statement(dot_c_out);
+    ivec[i].doo_translate_statement(dot_h_out,dot_c_out,rule_name);
 }
 
-string Asem::doo_translate_statement(ofstream & dot_c_out)
+string Asem::doo_translate_statement(ofstream & dot_h_out,ofstream & dot_c_out,const string & rule_name)
 {
   if(doo_is_assignment())
     {
       vector<string> obj;
       for(int i=1;i<ivec.size();++i)
-  	obj.push_back(ivec[i].doo_translate_statement(dot_c_out));
+  	obj.push_back(ivec[i].doo_translate_statement(dot_h_out,dot_c_out,rule_name));
       for(int i=1;i<obj.size();++i)
   	doo_output_assignment(dot_c_out,obj[i-1],obj[i]);
       return obj[0];
     }
+  else if(is_string())
+    {
+      string func_name=rule_name+"_"+name;
+      doo_output_rule_call(dot_c_out,func_name);
+      return func_name;
+    }
+  else if(doo_is_if())
+    {
+      doo_output_if_beg(dot_c_out);
+      ivec[1].doo_translate_or_and_cond(dot_c_out);
+      dot_c_out<<"\n{"<<endl;
+      for(int i=2;i<ivec.size();++i)
+  	ivec[i].doo_translate_statement(dot_h_out,dot_c_out,rule_name);
+      doo_output_if_end(dot_c_out);
+      return "";
+    }
   return "";
-  // else if(is_string())
-  //   {
-  //     doo_output_rule_call(dot_c_out,name);
-  //     return name;
-  //   }
-  // else if(doo_is_if())
-  //   {
-  //     doo_output_if_beg(dot_c_out);
-  //     cout<<"!"<<ivec.size()<<endl;
-  //     ivec[1].display(0);
-  //     return 0;
-  //     ivec[1].doo_translate_or_and_cond(dot_c_out," || ");
-  //     for(int i=2;i<ivec.size();++i)
-  // 	ivec[i].doo_translate_statement(dot_c_out);
-  //     doo_output_if_end(dot_c_out);
-  //     return NULL;
-  //   }
   // else if(doo_is_switch())
   //   {
   //     doo_output_switch_beg(dot_c_out);
-  //     ivec[1].doo_translate_or_and_cond(dot_c_out," || ");
+  //     ivec[1].doo_translate_or_and_cond(dot_c_out);
   //     dot_c_out<<"{";
   //     for(int i=2;i<ivec.size();++i)
   // 	{
@@ -780,39 +780,39 @@ void Asem::doo_output_assignment(ofstream &dot_c_out,string to,string from)
 
 void Asem::doo_output_rule_call(ofstream &dot_c_out,string s)
 {
-  dot_c_out<<"*(void *)"<<s<<"();"<<endl;
+  dot_c_out<<"(*(void (*))()"<<s<<")();"<<endl;
 }
 void Asem::doo_output_if_beg(ofstream &dot_c_out)
 {
-  dot_c_out<<"if"<<endl;
+  dot_c_out<<"if";
 }
 void Asem::doo_output_if_end(ofstream &dot_c_out)
 {
   dot_c_out<<"}"<<endl;
 }
-void Asem::doo_translate_or_and_cond(ofstream &dot_c_out,string c)
+void Asem::doo_translate_or_and_cond(ofstream &dot_c_out)
 {
   dot_c_out<<"(";
-  for(int i=0;i<ivec.size();++i)
+  if(is_string())
     {
-      if(i)
-	dot_c_out<<c;
-      if(ivec[i].is_string())
-	doo_output_cond_var(dot_c_out,ivec[i].get_string());
-      else if(ivec[i].is_vec())
-	{
-	  if(ivec[i].ivec[0].get_string()==(string)"or")
-	    ivec[i].doo_translate_or_and_cond(dot_c_out," || ");
-	  else if(ivec[i].ivec[0].get_string()==(string)"and")
-	    ivec[i].doo_translate_or_and_cond(dot_c_out," && ");
-	  else assert(false);
-	}
+      dot_c_out<<name;
     }
+  else
+    {
+      string relation;
+      if(ivec[0].get_string()=="or")
+	relation=" || ";
+      else if(ivec[0].get_string()=="and")
+	relation=" && ";
+      else assert(ivec.size()==1);
+      for(int i=0;i<ivec.size();++i)
+	{
+	  if(i)
+	    dot_c_out<<relation;
+	  ivec[i].doo_translate_or_and_cond(dot_c_out);
+	}
+      }
   dot_c_out<<")";
-}
-void Asem::doo_output_cond_var(ofstream & dot_c_out,string s)
-{
-  dot_c_out<<' '<<s<<' ';
 }
 void Asem::doo_output_switch_beg(ofstream &dot_c_out)
 {
