@@ -1,5 +1,6 @@
 #include "asem.h"
 #include <cstdlib>
+#define DOT_Y
 // 返回v的二进制，宽度能表示w项（从0开始）
 static string num2string(int v,int w)
 {
@@ -109,7 +110,7 @@ void Asem::gen(FILE * & input){
 }
 
 // 展开一个描述，包括枚举，指令，类型
-int Asem::unfold()
+int Asem::unfold(ofstream &yout,ofstream & dot_c_out)
 {
   string & name=ivec[0].name;
 
@@ -124,11 +125,11 @@ int Asem::unfold()
   int r;
   // 对不同的类型分别展开
   if(is_instr(name))
-    r=unfold_instr();
+    r=unfold_instr(yout,dot_c_out);
   else if(is_enum(name))
-    r=unfold_enum();
+    r=unfold_enum(yout,dot_c_out);
   else if(is_type(name))
-    r=unfold_type();
+    r=unfold_type(yout,dot_c_out);
   else assert(0);
   if(unfolded_list_name.size()<=r)
     unfolded_list_name.resize(r+1);
@@ -279,8 +280,8 @@ void Asem::eval_unfold(vector<string> &var_name,
     {
       // copy content in do  description
       (*doo).dfs_copy_content(r[k].doo);
-      if((*doo).ivec.size()>2)
-	cout<<k<<' '<<(*doo).ivec[1].ivec.size()<<' '<<r[k].doo.ivec[1].ivec.size()<<endl;
+      // if((*doo).ivec.size()>2)
+      // 	cout<<k<<' '<<(*doo).ivec[1].ivec.size()<<' '<<r[k].doo.ivec[1].ivec.size()<<endl;
       // 对可能出现的switch中的变量进行代换
       // (*doo).switch_chg(var_name,
       // 		 var_choose_name,
@@ -328,7 +329,7 @@ void Asem::eval_unfold(vector<string> &var_name,
 // 类似(enum_name ('aaa' 'xxx') ...)
 // 枚举类型每一项可以是二元组，表示名字和对应的code，binary根据
 // 它的位置决定
-int Asem::unfold_enum()
+int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
 {
   // 新增一项
   int k=unfolded_list.size();
@@ -381,7 +382,7 @@ int Asem::unfold_enum()
 // (name (width num) (flag xxx) )
 // 生成的code是"name_width_xxx"
 // 生成的binary是"-..."(共width个"-")
-int Asem::unfold_type()
+int Asem::unfold_type(ofstream &yout,ofstream & dot_c_out)
 {
   // type定义有3个部分
   assert(ivec.size()==3);
@@ -409,7 +410,7 @@ int Asem::unfold_type()
   return k;
 }
 // 对instruction展开
-int Asem::unfold_instr()
+int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out)
 {
   // 变量名
   vector<string> var_name;
@@ -423,6 +424,10 @@ int Asem::unfold_instr()
   // 表示a可以是b或c或...
   // 假设变量定义很简单,没有嵌套和递归
   // 所有变量定义在当前instruction描述的最外面一层
+#ifdef DOT_Y
+  string rule_name=ivec[0].name;
+  vector<string> var_list;
+#endif
   for(int i=1;i<ivec.size();++i)
     if(ivec[i].ivec[0].name==(string)"=")
       {// 这一项是变量定义
@@ -443,7 +448,7 @@ int Asem::unfold_instr()
 	    // 如果变量对应的是一个instruction 或者是type或者是枚举 递归地展开先
 	    if(this->is_instr(name) || this->is_type(name) || this->is_enum(name))
 	      {
-		int val=(*get_asem(name)).unfold();
+		int val=(*get_asem(name)).unfold(yout,dot_c_out);
 		// 保存展开的索引
 		var_val[k].push_back(val);
 	      }
@@ -452,8 +457,29 @@ int Asem::unfold_instr()
 		assert(0);
 	      }
 	  }
+	
+#ifdef DOT_Y
+	
+	yout<<rule_name<<'_'<<ivec[i].ivec[1].name<<':'<<'\t';
+	// every varibale in rule correspond to a global variable in .y 
+	dot_c_out<<"ll "<<rule_name<<"_var_"<<ivec[i].ivec[1].name<<"_tmp"<<endl;
+	dot_c_out<<"ll "<<rule_name<<"_var_"<<ivec[i].ivec[1].name<<"_val"<<endl;
+	for(int j=2;j<ivec[i].ivec.size();++j)
+	  {
+	    if(j!=2)
+	      yout<<'|';
+	    yout<<' '<<ivec[i].ivec[j].name;
+	    var_list.push_back(ivec[i].ivec[j].name);
+	  }
+	yout<<endl;
+#endif
       }
-
+#ifdef DOT_Y
+  yout<<'{'<<endl;
+  yout<<rule_name<<"_func_"<<"do();"<<endl;
+  (*find("do")).translate_doo(dot_c_out,var_list);
+  yout<<"};"<<endl;
+#endif  
   // 保存待展开instruction项的binary,code,do的asem地址
   Asem & code=*(this->find("code"));
   Asem & binary=*(this->find("binary"));
@@ -624,4 +650,171 @@ void Asem::dfs_copy_content(do_content &dl)
       dl.str=name;
     }
   else assert(0);
+}
+
+void Asem::translate_doo(ofstream &dot_c_out,vector<string> &var_list)
+{
+  for(int i=1;i<ivec.size();++i)
+    ivec[i].doo_translate_statement(dot_c_out);
+}
+
+string Asem::doo_translate_statement(ofstream & dot_c_out)
+{
+  if(doo_is_assignment())
+    {
+      vector<string> obj;
+      for(int i=1;i<ivec.size();++i)
+  	obj.push_back(ivec[i].doo_translate_statement(dot_c_out));
+      for(int i=1;i<obj.size();++i)
+  	doo_output_assignment(dot_c_out,obj[i-1],obj[i]);
+      return obj[0];
+    }
+  return "";
+  // else if(is_string())
+  //   {
+  //     doo_output_rule_call(dot_c_out,name);
+  //     return name;
+  //   }
+  // else if(doo_is_if())
+  //   {
+  //     doo_output_if_beg(dot_c_out);
+  //     cout<<"!"<<ivec.size()<<endl;
+  //     ivec[1].display(0);
+  //     return 0;
+  //     ivec[1].doo_translate_or_and_cond(dot_c_out," || ");
+  //     for(int i=2;i<ivec.size();++i)
+  // 	ivec[i].doo_translate_statement(dot_c_out);
+  //     doo_output_if_end(dot_c_out);
+  //     return NULL;
+  //   }
+  // else if(doo_is_switch())
+  //   {
+  //     doo_output_switch_beg(dot_c_out);
+  //     ivec[1].doo_translate_or_and_cond(dot_c_out," || ");
+  //     dot_c_out<<"{";
+  //     for(int i=2;i<ivec.size();++i)
+  // 	{
+  // 	  dot_c_out<<"case \'"<<ivec[i].get_string()<<"\'";
+  // 	  ++i;
+  // 	  dot_c_out<<": ";
+  // 	  ivec[i].doo_translate_statement(dot_c_out);
+  // 	  dot_c_out<<endl;
+  // 	}
+  //     dot_c_out<<"}"<<endl;
+  //     return NULL;
+  //   }
+  // else if(doo_is_leftshift())
+  //   {
+  //     string tmpvar=gen_tmp_var();
+  //     out<<tmpvar<<"="<<ivec[1].translate_statement(vl)<<"<<"\
+  // 	 <<ivec[2].translate_statement(vl)<<endl;
+  //     return tmpvar;
+  //   }
+  // else if(doo_is_call())
+  //   {
+  //     vector<string> tmp;
+  //     FEEV(i,1,ivec)
+  // 	tmp.push_back(ivec[i].translate_statement(vl));
+  //     out<<ivec[0].get_string()<<"(";
+  //     FEEV(i,0,tmp)
+  // 	{
+  // 	  if(i)
+  // 	    out<<",";
+  // 	  out<<tmp[i];
+  // 	}
+  //     out<<")";
+  //   }
+  // else if(doo_is_idx())
+  //   {
+  //     return ivec[1].translate_statement(vl)+(string)"["+ivec[2].translate_statement(vl)+(string)"]";
+  //   }
+
+}
+bool Asem::doo_is_if()
+{
+  return (is_vec() && ivec.size()>0 && ivec[0].is_string() && ivec[0].name=="if");
+}
+
+bool Asem::is_string()
+{
+  return !is_vec();
+}
+bool Asem::doo_is_assignment()
+{
+  return (is_vec() && ivec.size()>0 && ivec[0].is_string() && ivec[0].name==(string)"=");
+}
+bool Asem::doo_is_switch()
+{
+  return (is_vec() && ivec.size()>2 && ivec[0].is_string() &&
+	  ivec[0].get_string()==(string)"switch");
+}
+bool Asem::doo_is_leftshift()
+{
+  return (is_vec() && ivec[0].is_string() && 
+	  ivec[0].get_string()==(string)"<<");
+}
+bool Asem::doo_is_idx()
+{
+  return (is_vec() && ivec.size()>0 && ivec[0].is_string() &&
+	  ivec[0].get_string()==(string)"[]");
+}
+bool Asem::doo_is_call()
+{
+  return (is_vec() && ivec.size()>0 &&
+	  ivec[0].is_string() &&
+	  ivec[0].get_string()[0]=='#');
+}
+
+bool Asem::is_vec()
+{
+  return type==type_is_vector;
+}
+string Asem::get_string()
+{
+  return name;
+}
+void Asem::doo_output_assignment(ofstream &dot_c_out,string to,string from)
+{
+  dot_c_out<<to<<".tmp="<<from<<".val;"<<endl;
+}
+
+void Asem::doo_output_rule_call(ofstream &dot_c_out,string s)
+{
+  dot_c_out<<"*(void *)"<<s<<"();"<<endl;
+}
+void Asem::doo_output_if_beg(ofstream &dot_c_out)
+{
+  dot_c_out<<"if"<<endl;
+}
+void Asem::doo_output_if_end(ofstream &dot_c_out)
+{
+  dot_c_out<<"}"<<endl;
+}
+void Asem::doo_translate_or_and_cond(ofstream &dot_c_out,string c)
+{
+  dot_c_out<<"(";
+  for(int i=0;i<ivec.size();++i)
+    {
+      if(i)
+	dot_c_out<<c;
+      if(ivec[i].is_string())
+	doo_output_cond_var(dot_c_out,ivec[i].get_string());
+      else if(ivec[i].is_vec())
+	{
+	  if(ivec[i].ivec[0].get_string()==(string)"or")
+	    ivec[i].doo_translate_or_and_cond(dot_c_out," || ");
+	  else if(ivec[i].ivec[0].get_string()==(string)"and")
+	    ivec[i].doo_translate_or_and_cond(dot_c_out," && ");
+	  else assert(false);
+	}
+    }
+  dot_c_out<<")";
+}
+void Asem::doo_output_cond_var(ofstream & dot_c_out,string s)
+{
+  dot_c_out<<' '<<s<<' ';
+}
+void Asem::doo_output_switch_beg(ofstream &dot_c_out)
+{
+  dot_c_out<<"switch";
 }

@@ -36,15 +36,31 @@ class Asem{
 			Asem * doo,				// 待展开do对应的asem
 			int lev,					// 当前枚举到第lev个变量
 			vector<triple> &r);			// 保存展开结果
-  int unfold_enum();
-  int unfold_type();
-  int unfold_instr();
+  int unfold_enum(ofstream & yout,ofstream & dot_c_out);
+  int unfold_type(ofstream & yout,ofstream & dot_c_out);
+  int unfold_instr(ofstream & yout,ofstream & dot_c_out);
   void switch_chg(vector<string> &var_name,
 		  vector<vector<string> >&var_choose_name,
 		  vector<vector<int> >&var_val,
 		  vector<pair<int,int> > &var_choosed_val
 		  );
   void dfs_copy_content(do_content &dl);
+  void translate_doo(ofstream & dot_c_out,vector<string> &var_list);
+  string doo_translate_statement(ofstream & dot_c_out);
+  bool doo_is_assignment();
+  bool doo_is_vec();
+  bool doo_is_if();
+  bool doo_is_switch();
+  bool doo_is_leftshift();
+  bool doo_is_call();
+  bool doo_is_idx();
+  void doo_output_assignment(ofstream &dot_c_out,string to,string from);
+  void doo_output_rule_call(ofstream &dot_c_out,string s);
+  void doo_output_if_end(ofstream &dot_c_out);
+  void doo_output_if_beg(ofstream &dot_c_out);
+  void doo_translate_or_and_cond(ofstream &dot_c_out,string c);
+  void doo_output_cond_var(ofstream &dot_c_out,string s);
+  void doo_output_switch_beg(ofstream &dot_c_out);
  public:
   /*TODO chang following member to private*/
   static hash_control & hc_unfold;
@@ -57,16 +73,18 @@ class Asem{
   //用于保存do的数据结构
   //vector<Asem*> do_list;
   // 哈希表 hash controller
-  
+  bool is_string();
+  bool is_vec();
   bool is_instr(string name);
   bool is_type(string name);
   bool is_enum(string name);
+  string get_string();
   Asem *get_asem(string name);
   string get_full_name(string name,string pwd);
   void dfs_insert_hash(string pwd);
   Asem * find(const string &name);
   void display(int lev);// output content in ivec recursively
   void gen(FILE * &input);// read from file
-  int unfold();// analysize conten in ivec
+  int unfold(ofstream &yout,ofstream &dot_c_out);// analysize conten in ivec
 };
 #endif
