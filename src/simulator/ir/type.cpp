@@ -7,7 +7,7 @@ Type::Type(string n,int l,string t)
 }
 void Type::output(ofstream &fout)
 {
-  fout<<name<<' '<<len<<' '<<type;
+  fout<<name<<' '<<len<<' '<<type<<endl;
 }
 void Type::read(ifstream &fin)
 {

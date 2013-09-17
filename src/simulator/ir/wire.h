@@ -1,6 +1,6 @@
 #ifndef WIRE_H
 #define WIRE_H
-#include <iostream>
+#include <fstream>
 #include <string>
 using namespace std;
 class Wire
@@ -10,9 +10,10 @@ private:
   int width;
   string end[2];
 public:
+  Wire(){};
   Wire(string &n,int w);
-  void input(istream fin);
-  void output(ostream fout);
+  void read(ifstream &fin);
+  void output(ofstream &fout);
   string get_name();
   int get_width();
 };

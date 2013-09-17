@@ -17,6 +17,7 @@ public:
   void add_type(Type t);
   void add_wire(Wire w);
   void output_wire(ofstream &fout);
+  void read_wire(ifstream &fin);
   void add_instruction(string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al);
   void output_instruction_set(ofstream &fout);
   void output_type(ofstream &fout);
@@ -71,9 +72,20 @@ void Ir::add_wire(Wire w)
 void Ir::output_wire(ofstream &fout)
 {
   fout<<"(wire"<<endl;
+  fout<<wire.size()<<endl;
   for(int i=0;i<wire.size();++i)
-    fout<<"("<<wire[i].get_name()<<' '<<wire[i].get_width()<<")"<<endl;
+    wire[i].output(fout);
   fout<<")"<<endl;
+}
+void Ir::read_wire(ifstream &fin)
+{
+  int num;
+  fin>>num;
+  for(Wire tmp;num--;)
+    {
+      tmp.read(fin);
+      add_wire(tmp);
+    }
 }
 void Ir::output_type(ofstream &fout)
 {
@@ -85,7 +97,11 @@ void Ir::output_type(ofstream &fout)
 }
 void Ir::read_type(ifstream & fin)
 {
-  Type tmp;
-  tmp.read(fin);
-  add_type(tmp);
+  int num;
+  fin>>num;
+  for(Type tmp;num--;)
+    {
+      tmp.read(fin);
+      add_type(tmp);
+    }
 }
