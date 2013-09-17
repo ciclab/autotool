@@ -1,5 +1,5 @@
-#ifndef _STAGE_H_
-#define _STAGE_H_
+#ifndef _STAGES_H_
+#define _STAGES_H_
 #include <string>
 #include <fstream>
 using namespace std;
