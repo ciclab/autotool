@@ -1,25 +1,7 @@
-#include <vector>
-#include <string>
-#include <fstream>
-#include <iostream>
-#include <cassert>
-#include <cstdlib>
-using namespace std;
+#include "translate2c.h"
 // For Every Entry in Vector
 #define FEEV(a,s,b) for(int a=s;a<(b).size();++a)
 
-class Vardef
-{
-private:
-#define IS_RULE (string)"rule"
-  string type;
-  string name;
-public:
-  string get_type();
-  string get_name();
-  bool is_rule();
-  bool is_var();
-};
 bool Vardef::is_var()
 {
   return !is_rule();
@@ -39,18 +21,6 @@ string Vardef::get_name()
 
 static ofstream out;
 
-class Varlist
-{
-private:
-  vector<Vardef> variable_list;
-public:
-  int find_var(string s);
-  bool var_is_rule(int i);
-  int get_size();
-  string get_name(int i);
-  string get_type(int i);
-  bool is_var(int i);
-};
 bool Varlist::is_var(int i)
 {
   return variable_list[i].is_var();
@@ -78,39 +48,6 @@ int Varlist::find_var(string s)
       return i+1;
   return 0;
 }
-
-class Expression
-{
-private:
-#define IS_VEC 1
-#define IS_STATEMENT 2
-  int type;
-  string statement;
-  vector<Expression> expr;
-public:
-  string get_string();
-  void translate_variable_list(string type,string name);
-  void translate_function_name(string function_name);
-  // 把行为描述从ir转换成c
-  void translate(string rule_name,Varlist &vl);
-  void translate_or_and_cond(string c);
-  string translate_statement(Varlist &vl);
-  void output_assignment(string to,string from);
-  void output_if_end();
-  void output_cond_var(string s);
-  void output_rule_call(string);
-  void output_if_beg();
-  void output_switch_beg();
-  bool is_assignment();
-  bool is_vec();
-  bool is_string();
-  bool is_if();
-  bool is_switch();
-  bool is_leftshift();
-  bool is_call();
-  bool is_idx();
-  string gen_tmp_var();
-};
 bool Expression::is_idx()
 {
   return (is_vec() && expr.size()>0 && expr[0].is_string () &&
@@ -123,10 +60,19 @@ bool Expression::is_call()
 	  expr[0].get_string()[0]=='#');
 }
 string Expression::gen_tmp_var()
-{
+{//得到一个数
   static int cnt=0;
-  static char buf[100];
-  itoa(cnt++,buf,16);
+  string buf;
+#define base 4
+  for(int i=cnt++;i;i>>=base)
+    {
+      int t=i&((1<<base)-1);
+      char tt;
+      if(t>=10)
+	tt=t+'A';
+      else tt=t+'0';
+      buf.insert(buf.begin(),tt);
+    }
   return (string)"tmp"+buf;
 }
 bool Expression::is_leftshift()

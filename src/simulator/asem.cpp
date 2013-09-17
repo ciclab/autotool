@@ -1,6 +1,6 @@
 #include "asem.h"
 #include <cstdlib>
-#define DOT_Y
+//#define DOT_Y
 // 返回v的二进制，宽度能表示w项（从0开始）
 static string num2string(int v,int w)
 {

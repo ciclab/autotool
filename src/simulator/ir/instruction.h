@@ -22,6 +22,7 @@ private:
   do_content doo;
   vector<pair<string,string>  > arglist;
 public:
+  void output_arglist(ofstream &fout);
   void set_arglist(vector<pair<string,string>  > & al);
   void set_code(string &code);
   void set_binary(string &b);

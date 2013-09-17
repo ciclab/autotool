@@ -82,3 +82,11 @@ void Instruction::set_arglist(vector<pair<string,string>  > &al)
 {
   arglist=al;
 }
+
+void Instruction::output_arglist(ofstream &fout)
+{
+  fout<<"(";
+  for(int i=0;i<arglist.size();++i)
+    fout<<arglist[i].first<<' '<<arglist[i].second<<endl;
+  fout<<")"<<endl;
+}
