@@ -6,14 +6,19 @@
 #include <typeinfo>
 #include "../do_content.h"
 #include "type.h"
+#include "stages.h"
 using namespace std;
 class Ir
 {
 private:
   vector<Wire> wire;
   vector<Type> type;
+  vector<Stage> stage;
   vector<Instruction> instruction_set;
 public:
+  void add_stage(Stage s);
+  void read_stage(ifstream &fin);
+  void output_stage(ofstream &fout);
   void add_type(Type t);
   void add_wire(Wire w);
   void output_wire(ofstream &fout);
@@ -105,3 +110,26 @@ void Ir::read_type(ifstream & fin)
       add_type(tmp);
     }
 }
+void Ir::add_stage(Stage s)
+{
+  stage.push_back(s);
+}
+void Ir::read_stage(ifstream &fin)
+{
+  int num;
+  fin>>num;
+  for(Stage tmp;num--;)
+    {
+      tmp.read(fin);
+      add_stage(tmp);
+    }
+}
+void Ir::output_stage(ofstream &fout)
+{
+  fout<<"(stage"<<endl;
+  fout<<stage.size()<<endl;
+  for(int i=0;i<stage.size();++i)
+    stage[i].output(fout);
+  fout<<")"<<endl;
+}
+
