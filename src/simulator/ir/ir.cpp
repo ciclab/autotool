@@ -19,6 +19,8 @@ public:
   void output_wire(ofstream &fout);
   void add_instruction(string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al);
   void output_instruction_set(ofstream &fout);
+  void output_type(ofstream &fout);
+  void read_type(ifstream &fin);
 };
 void Ir::add_type(Type t)
 {
@@ -73,4 +75,17 @@ void Ir::output_wire(ofstream &fout)
     fout<<"("<<wire[i].get_name()<<' '<<wire[i].get_width()<<")"<<endl;
   fout<<")"<<endl;
 }
-
+void Ir::output_type(ofstream &fout)
+{
+  fout<<"(type"<<endl;
+  fout<<type.size()<<endl;
+  for(int i=0;i<type.size();++i)
+    type[i].output(fout);
+  fout<<")"<<endl;
+}
+void Ir::read_type(ifstream & fin)
+{
+  Type tmp;
+  tmp.read(fin);
+  add_type(tmp);
+}

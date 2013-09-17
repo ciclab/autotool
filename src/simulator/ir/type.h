@@ -9,6 +9,9 @@ class Type
   string name;
   int len;
   string type;
+  Type(){};
   Type(string,int,string);
+  void output(ofstream&);
+  void read(ifstream&);
 };
 #endif
