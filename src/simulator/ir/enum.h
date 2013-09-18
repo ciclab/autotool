@@ -2,6 +2,7 @@
 #define _ENUM_H_
 #include <string>
 #include <vector>
+#include <fstream>
 using namespace std;
 class Enum
 {
@@ -10,8 +11,7 @@ class Enum
   vector<pair<string,string> > list;
  public:
   Enum(){};
-  void add(string name);
-  void add_list(string name);
+  void add(string name,string code);
   void output(ofstream & fout);
   void read(ifstream & fin);
 };
