@@ -20,3 +20,7 @@ void Enum::read(ifstream & fin)
       list.push_back(make_pair(t1,t2));
     }
 }
+void Enum::set_name(string n)
+{
+  name=n;
+}

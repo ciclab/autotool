@@ -7,6 +7,7 @@
 #include "../do_content.h"
 #include "type.h"
 #include "stages.h"
+#include "enum.h"
 using namespace std;
 class Ir
 {
@@ -15,6 +16,7 @@ private:
   vector<Type> type;
   vector<Stage> stage;
   vector<Instruction> instruction_set;
+  vector<Enum> enumm;
 public:
   void add_stage(Stage s);
   void read_stage(ifstream &fin);
@@ -27,6 +29,10 @@ public:
   void output_instruction_set(ofstream &fout);
   void output_type(ofstream &fout);
   void read_type(ifstream &fin);
+  void add_enum(string name);
+  void add_enum_entry(string name,string code);
+  void read_enum(ifstream & fin);
+  void output_enum(ofstream & fout);
 };
 void Ir::add_type(Type t)
 {
@@ -132,4 +138,28 @@ void Ir::output_stage(ofstream &fout)
     stage[i].output(fout);
   fout<<")"<<endl;
 }
-
+void Ir::add_enum(string name)
+{
+  int t=enumm.size();
+  enumm.resize(t+1);
+  enumm[t].set_name(name);
+}
+void Ir::add_enum_entry(string name,string code)
+{
+  int t=enumm.size();
+  enumm[t-1].add(name,code);
+}
+void Ir::output_enum(ofstream & fout)
+{
+  fout<<"(enum"<<' '<<enumm.size()<<endl;
+  for(int i=0;i<enumm.size();++i)
+    enumm[i].output(fout);
+  fout<<")"<<endl;
+}
+void Ir::read_enum(ifstream & fin)
+{
+  int num;
+  fin>>num;
+  for(int i=0;i<num;++i)
+    enumm[i].read(fin);
+}
