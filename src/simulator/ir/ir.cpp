@@ -8,6 +8,7 @@
 #include "type.h"
 #include "stages.h"
 #include "enum.h"
+#include "memory.h"
 using namespace std;
 class Ir
 {
@@ -17,6 +18,7 @@ private:
   vector<Stage> stage;
   vector<Instruction> instruction_set;
   vector<Enum> enumm;
+  vector<Memory> memory;
 public:
   void add_stage(Stage s);
   void read_stage(ifstream &fin);
@@ -33,14 +35,38 @@ public:
   void add_enum_entry(string name,string code);
   void read_enum(ifstream & fin);
   void output_enum(ofstream & fout);
+  void add_memory(Memory m);
+  void output_memory(ofstream &);
+  void read_memory(ifstream &);
 };
+void Ir::read_memory(ifstream &fin)
+{
+  int num;
+  fin>>num;
+  memory.resize(num);
+  for(int i=0;i<num;++i)
+    memory[i].read(fin);
+}
+void Ir::output_memory(ofstream &fout)
+{
+  fout<<"memory"<<endl;
+  fout<<memory.size()<<endl;
+  for(int i=0;i<memory.size();++i)
+    memory[i].output(fout);
+  fout<<endl;
+}
+void Ir::add_memory(Memory m)
+{
+  memory.push_back(m);
+}
 void Ir::add_type(Type t)
 {
   type.push_back(t);
 }
 void Ir::output_instruction_set(ofstream &fout)
 {
-  fout<<"("<<endl;
+  fout<<"instr"<<endl;
+  fout<<instruction_set.size()<<endl;
   for(vector<Instruction>::iterator ite=instruction_set.begin();
       ite!=instruction_set.end();++ite)
     {
@@ -60,7 +86,7 @@ void Ir::output_instruction_set(ofstream &fout)
       ite->output_do(fout);
       fout<<")"<<")"<<endl;
     }
-  fout<<")"<<endl;
+  fout<<endl;
 }
 
 void Ir::add_instruction(string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al)
@@ -82,11 +108,11 @@ void Ir::add_wire(Wire w)
 
 void Ir::output_wire(ofstream &fout)
 {
-  fout<<"(wire"<<endl;
+  fout<<"wire"<<endl;
   fout<<wire.size()<<endl;
   for(int i=0;i<wire.size();++i)
     wire[i].output(fout);
-  fout<<")"<<endl;
+  fout<<endl;
 }
 void Ir::read_wire(ifstream &fin)
 {
@@ -100,21 +126,19 @@ void Ir::read_wire(ifstream &fin)
 }
 void Ir::output_type(ofstream &fout)
 {
-  fout<<"(type"<<endl;
+  fout<<"type"<<endl;
   fout<<type.size()<<endl;
   for(int i=0;i<type.size();++i)
     type[i].output(fout);
-  fout<<")"<<endl;
+  fout<<endl;
 }
 void Ir::read_type(ifstream & fin)
 {
   int num;
   fin>>num;
-  for(Type tmp;num--;)
-    {
-      tmp.read(fin);
-      add_type(tmp);
-    }
+  type.resize(num);
+  for(int i=0;i<num;++i)
+    type[i].read(fin);
 }
 void Ir::add_stage(Stage s)
 {
@@ -124,19 +148,17 @@ void Ir::read_stage(ifstream &fin)
 {
   int num;
   fin>>num;
-  for(Stage tmp;num--;)
-    {
-      tmp.read(fin);
-      add_stage(tmp);
-    }
+  stage.resize(num);
+  for(int i=0;i<num;++i)
+    stage[i].read(fin);
 }
 void Ir::output_stage(ofstream &fout)
 {
-  fout<<"(stage"<<endl;
+  fout<<"stage"<<endl;
   fout<<stage.size()<<endl;
   for(int i=0;i<stage.size();++i)
     stage[i].output(fout);
-  fout<<")"<<endl;
+  fout<<endl;
 }
 void Ir::add_enum(string name)
 {
@@ -151,15 +173,16 @@ void Ir::add_enum_entry(string name,string code)
 }
 void Ir::output_enum(ofstream & fout)
 {
-  fout<<"(enum"<<' '<<enumm.size()<<endl;
+  fout<<"enum"<<' '<<enumm.size()<<endl;
   for(int i=0;i<enumm.size();++i)
     enumm[i].output(fout);
-  fout<<")"<<endl;
+  fout<<endl;
 }
 void Ir::read_enum(ifstream & fin)
 {
   int num;
   fin>>num;
+  enumm.resize(num);
   for(int i=0;i<num;++i)
     enumm[i].read(fin);
 }
