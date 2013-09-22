@@ -1,2 +1,2 @@
-read: ir/instruction.cpp ir/wire.cpp  hash.cpp  read.cpp asem.cpp ir/wire.h hash.h asem.h do_content.cpp ir/type.cpp ir/stages.cpp ir/enum.cpp
-	g++ -g ir/instruction.cpp ir/wire.cpp  ir/stages.cpp ir/enum.cpp hash.cpp  asem.cpp do_content.cpp ir/type.cpp read.cpp -o rd
+read: ir/instruction.cpp ir/wire.cpp  hash.cpp  read.cpp asem.cpp ir/wire.h hash.h asem.h do_content.cpp ir/type.cpp ir/stages.cpp ir/enum.cpp ir/memory.cpp
+	g++ -g ir/instruction.cpp ir/wire.cpp  ir/stages.cpp ir/enum.cpp ir/memory.cpp hash.cpp  asem.cpp do_content.cpp ir/type.cpp read.cpp -o rd
