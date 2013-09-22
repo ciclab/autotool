@@ -9,6 +9,7 @@
 #include "stages.h"
 #include "enum.h"
 #include "memory.h"
+#include "register.h"
 using namespace std;
 class Ir
 {
@@ -19,6 +20,7 @@ private:
   vector<Instruction> instruction_set;
   vector<Enum> enumm;
   vector<Memory> memory;
+  vector<Register> registers;
 public:
   void add_stage(Stage s);
   void read_stage(ifstream &fin);
@@ -38,7 +40,31 @@ public:
   void add_memory(Memory m);
   void output_memory(ofstream &);
   void read_memory(ifstream &);
+  void add_register(Register r);
+  void read_register(ifstream &);
+  void output_register(ofstream &);
 };
+
+void Ir::read_register(ifstream & fin)
+{
+  int num;
+  fin>>num;
+  registers.resize(num);
+  for(int i=0;i<num;++i)
+    registers[i].read(fin);
+}
+void Ir::output_register(ofstream & fout)
+{
+  fout<<"register"<<endl;
+  fout<<registers.size()<<endl;
+  for(int i=0;i<registers.size();++i)
+    registers[i].output(fout);
+  fout<<endl;
+}
+void Ir::add_register(Register r)
+{
+  registers.push_back(r);
+}
 void Ir::read_memory(ifstream &fin)
 {
   int num;

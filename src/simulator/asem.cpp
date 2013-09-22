@@ -40,8 +40,8 @@ Asem * Asem::find(const string &name)
 	 ivec[i].ivec[0].type==type_is_string1 &&
 	 name==ivec[i].ivec[0].name)
 	return &(ivec[i]);
-  cout<<"Cannot find "<<name<<endl;
-  assert(0);
+  // cout<<"Cannot find "<<name<<endl;
+  // assert(0);
   return NULL;
 }
 
