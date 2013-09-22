@@ -18,7 +18,9 @@ class do_content
   string str;
   int type;
   vector<do_content> ivec;
+  bool is_empty();
   void output(ofstream &fout);
+  void output_empty(ofstream &fout);
   void read(ifstream &fin);
 };
 #endif

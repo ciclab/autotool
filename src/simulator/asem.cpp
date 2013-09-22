@@ -140,18 +140,19 @@ int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
   return r;
 }
 
-void Asem::dfs_unfold_instr(vector<string> &var_name, // 变量名字
-		      vector<vector<string> > &var_choose_name, // 变量可选的值的名字
-		      vector<vector<int> > &var_val,		// 变量可选值对应unfolded_list的索引
-		      vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
+void Asem::dfs_unfold_instr(const string &rule_name,
+			    vector<string> &var_name, // 变量名字
+			    vector<vector<string> > &var_choose_name, // 变量可选的值的名字
+			    vector<vector<int> > &var_val,		// 变量可选值对应unfolded_list的索引
+			    vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
 		      Asem &code,				// 待展开的code对应asem
-		      Asem &binary,				// 待展开的binary对应asem
-		      Asem * doo,				// 待展开do对应的asem
-		      int lev,					// 当前枚举到第lev个变量
-		      vector<triple> &r)			// 保存展开结果
+			    Asem &binary,				// 待展开的binary对应asem
+			    Asem * doo,				// 待展开do对应的asem
+			    int lev,					// 当前枚举到第lev个变量
+			    vector<triple> &r)			// 保存展开结果
 {
   if(lev>=var_name.size())
-    eval_unfold(var_name,var_choose_name,var_val,var_choosed_val,
+    eval_unfold(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
 		code,binary,doo,r);
   else
     for(int i=0;i<var_val[lev].size();++i)
@@ -162,21 +163,22 @@ void Asem::dfs_unfold_instr(vector<string> &var_name, // 变量名字
 	  {
 	    // 第i个值中第j个展开项
 	    var_choosed_val[lev].second=j;
-	    dfs_unfold_instr(var_name,var_choose_name,var_val,var_choosed_val,
+	    dfs_unfold_instr(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
 			     code,binary,doo,lev+1,r);
 	  }
       }
 }
 
 // 每个变量已经定好取值后计算code，binary，do并保存到r中
-void Asem::eval_unfold(vector<string> &var_name,
-		 vector<vector<string> >&var_choose_name,
-		 vector<vector<int> >&var_val,
-		 vector<pair<int,int> > &var_choosed_val,
-		 Asem &code,
-		 Asem &binary,
-		 Asem * doo,
-		 vector<triple> &r)
+void Asem::eval_unfold(const string &rule_name,
+		       vector<string> &var_name,
+		       vector<vector<string> >&var_choose_name,
+		       vector<vector<int> >&var_val,
+		       vector<pair<int,int> > &var_choosed_val,
+		       Asem &code,
+		       Asem &binary,
+		       Asem * doo,
+		       vector<triple> &r)
 {
   // 记录变量在code中出现的位置，目前认为一个变量在code中只出现一次
   vector<int> var_off_in_code;
@@ -189,9 +191,10 @@ void Asem::eval_unfold(vector<string> &var_name,
   // r中新增一项保留结果
   int k=r.size();
   r.resize(k+1);
-  // store naem ofargments and their values
+  r[k].rulename=rule_name+"_"+int2string(k);
+  // store name of argments and their values
   for(int i=0;i<var_name.size();++i)
-    r[k].arg_list.push_back(make_pair(var_name[i],var_choose_name[i][var_choosed_val[i].first]+int2string(var_choosed_val[i].second)));
+    r[k].arg_list.push_back(make_pair(var_name[i],var_choose_name[i][var_choosed_val[i].first]+"_"+int2string(var_choosed_val[i].second)));
 
   // 对code和binary的求值应该可以写成函数
   // 求出code
@@ -343,7 +346,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
   string binary;
   for(int i=0;i<ivec.size()-1;++i)
     binary+="-";
-  unfolded_list[k].push_back(triple(ivec[0].name,binary));
+  unfolded_list[k].push_back(triple(ivec[0].name,"",binary));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back(ivec[0].name);
@@ -400,7 +403,8 @@ int Asem::unfold_type(ofstream &yout,ofstream & dot_c_out)
   string binary;
   for(int i=0;i<width;++i)
     binary+=(string)"-";
-  unfolded_list[k].push_back(triple((string)"type_"+ivec[0].name+
+  unfolded_list[k].push_back(triple(ivec[0].name,
+				    (string)"type_"+ivec[0].name+
 				    (string)"_"+tmpw.ivec[1].name+
 				    (string)"_"+tmpf.ivec[1].name,
 				    binary));
@@ -424,8 +428,8 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
   // 表示a可以是b或c或...
   // 假设变量定义很简单,没有嵌套和递归
   // 所有变量定义在当前instruction描述的最外面一层
-#ifdef DOT_Y
   string rule_name=ivec[0].name;
+#ifdef DOT_Y
   vector<string> var_list;
 #endif
   for(int i=1;i<ivec.size();++i)
@@ -498,7 +502,7 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
   vector<pair<int,int> > var_choosed_val;
   var_choosed_val.resize(var_name.size());
   // 针对变量取不同值的时候得到展开的code，binary和do
-  dfs_unfold_instr(var_name,var_choose_name,var_val,var_choosed_val,
+  dfs_unfold_instr(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
 		   code,binary,doo,0,unfolded_list[k]);
   return k;
 }

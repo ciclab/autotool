@@ -19,7 +19,8 @@ using namespace std;
 
 class Asem{
  private:
-  void eval_unfold(vector<string> &var_name,
+  void eval_unfold(const string &,
+		   vector<string> &var_name,
 		   vector<vector<string> >&var_choose_name,
 		   vector<vector<int> >&var_val,
 		   vector<pair<int,int> > &var_choosed_val,
@@ -27,7 +28,7 @@ class Asem{
 		   Asem &binary,
 		   Asem * doo,
 		   vector<triple> &r);
-  void dfs_unfold_instr(vector<string> &var_name, // 变量名字
+  void dfs_unfold_instr(const string &,vector<string> &var_name, // 变量名字
 			vector<vector<string> > &var_choose_name, // 变量可选的值的名字
 			vector<vector<int> > &var_val,		// 变量可选值对应unfolded_list的索引
 			vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况

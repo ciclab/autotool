@@ -31,7 +31,7 @@ public:
   void add_wire(Wire w);
   void output_wire(ofstream &fout);
   void read_wire(ifstream &fin);
-  void add_instruction(string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al);
+  void add_instruction(const string &name,string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al);
   void output_instruction_set(ofstream &fout);
   void read_instr(ifstream &fin);
   void output_type(ofstream &fout);
@@ -132,7 +132,7 @@ void Ir::read_instr(ifstream &fin)
   for(int i=0;i<num;++i)
     instruction_set[i].read(fin);
 }
-void Ir::add_instruction(string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al)
+void Ir::add_instruction(const string &name,string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al)
 {
   int t=instruction_set.size();
   instruction_set.resize(t+1);
@@ -142,6 +142,7 @@ void Ir::add_instruction(string &c,string &b,do_content &d,vector<pp> &off,vecto
   instruction_set[t].set_off(off);
   instruction_set[t].set_enum_var(enum_var);
   instruction_set[t].set_arglist(al);
+  instruction_set[t].set_name(name);
 }
 
 void Ir::add_wire(Wire w)

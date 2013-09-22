@@ -19,7 +19,13 @@
 
 void Instruction::output_do(ofstream & fout)
 {
-  doo.output(fout);
+  if(!doo.is_empty())
+    doo.output(fout);
+  else doo.output_empty(fout);
+}
+void Instruction::set_name(const string &n)
+{
+  name=n;
 }
 void Instruction::read_do(ifstream &fin)
 {
@@ -47,7 +53,7 @@ void Instruction::set_binary(string &b)
 }
 void Instruction::set_off(vector<pp> &o)
 {
-  off=o;
+   off=o;
 }
 void Instruction::set_do(do_content &d)
 {
@@ -103,11 +109,40 @@ void Instruction::read_arglist(ifstream &fin)
 }
 void Instruction::read(ifstream &fin)
 {
+  fin>>name;
+  int c;
+  for(;;)
+    {
+      c=fin.get();
+      if(c==EOF)
+	assert(0);
+      if(c=='"')
+	break;
+    }
+  for(;;)
+    {
+      c=fin.get();
+      if(c=='"')
+	break;
+      code+=c;
+    }
+  fin>>binary;
+  fin>>c;
+  off.resize(c);
+  for(int i=0;i<c;++i)
+    fin>>off[i].first>>off[i].second;
+  fin>>c;
+  enum_var.resize(c);
+  for(int i=0;i<c;++i)
+    fin>>enum_var[i];
+  read_arglist(fin);
+  read_do(fin);
 }
 void Instruction::output(ofstream &fout)
 {
+  fout<<name<<endl;
   fout<<"\""<<code<<"\""<<endl;
-  fout<<"\""<<binary<<"\""<<endl;
+  fout<<binary<<endl;
   fout<<off.size()<<endl;
   for(int i=0;i<off.size();++i)
     fout<<off[i].first<<' '<<off[i].second<<' ';
@@ -117,5 +152,7 @@ void Instruction::output(ofstream &fout)
     fout<<enum_var[i]<<' ';
   fout<<endl;
   output_arglist(fout);
+  //fout<<"!!do_beg"<<endl;
   output_do(fout);
+  //fout<<"!!do_end"<<endl;
 }

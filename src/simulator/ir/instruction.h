@@ -15,6 +15,7 @@ typedef pair<int,int> pp;
 class Instruction
 {
 private:
+  string name;
   string code;
   string binary;
   vector<pp> off;
@@ -29,6 +30,7 @@ public:
   void set_binary(string &b);
   void set_off(vector<pp> &o);
   void set_do(do_content &d);
+  void set_name(const string & n);
   void set_enum_var(vector<string> &ev);
   string get_code();
   string get_binary();

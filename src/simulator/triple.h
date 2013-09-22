@@ -17,7 +17,7 @@ class triple
   vector<int> off_in_code;
   vector<int> off_in_binary;
   vector<string> enum_name;
-  triple(string c,string b){code=c,binary=b;};
+ triple(string n,string c,string b):rulename(n),code(c),binary(b){};
   triple(){};
 };
 #endif
