@@ -10,6 +10,7 @@
 #include "enum.h"
 #include "memory.h"
 #include "register.h"
+#include "pipeline.h"
 using namespace std;
 class Ir
 {
@@ -21,6 +22,7 @@ private:
   vector<Enum> enumm;
   vector<Memory> memory;
   vector<Register> registers;
+  vector<Pipeline> pipeline;
 public:
   void add_stage(Stage s);
   void read_stage(ifstream &fin);
@@ -43,8 +45,29 @@ public:
   void add_register(Register r);
   void read_register(ifstream &);
   void output_register(ofstream &);
+  void add_pipeline(Pipeline p);
+  void read_pipeline(ifstream &);
+  void output_pipeline(ofstream &);
 };
-
+void Ir::read_pipeline(ifstream &fin)
+{
+  int num;
+  fin>>num;
+  pipeline.resize(num);
+  for(int i=0;i<num;++i)
+    pipeline[i].read(fin);
+}
+void Ir::output_pipeline(ofstream &fout)
+{
+  fout<<"pipeline"<<endl;
+  fout<<pipeline.size()<<endl;
+  for(int i=0;i<pipeline.size();++i)
+    pipeline[i].output(fout);
+}
+void Ir::add_pipeline(Pipeline p)
+{
+  pipeline.push_back(p);
+}
 void Ir::read_register(ifstream & fin)
 {
   int num;
