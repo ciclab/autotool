@@ -19,5 +19,6 @@ class do_content
   int type;
   vector<do_content> ivec;
   void output(ofstream &fout);
+  void read(ifstream &fin);
 };
 #endif

@@ -21,6 +21,10 @@ void Instruction::output_do(ofstream & fout)
 {
   doo.output(fout);
 }
+void Instruction::read_do(ifstream &fin)
+{
+  doo.read(fin);
+}
 void Instruction::set_enum_var(vector<string> &ev)
 {
   enum_var=ev;
@@ -85,8 +89,33 @@ void Instruction::set_arglist(vector<pair<string,string>  > &al)
 
 void Instruction::output_arglist(ofstream &fout)
 {
-  fout<<"(";
+  fout<<arglist.size()<<endl;
   for(int i=0;i<arglist.size();++i)
     fout<<arglist[i].first<<' '<<arglist[i].second<<endl;
-  fout<<")"<<endl;
+}
+void Instruction::read_arglist(ifstream &fin)
+{
+  int num;
+  fin>>num;
+  arglist.resize(num);
+  for(int i=0;i<num;++i)
+    fin>>arglist[i].first>>arglist[i].second;
+}
+void Instruction::read(ifstream &fin)
+{
+}
+void Instruction::output(ofstream &fout)
+{
+  fout<<"\""<<code<<"\""<<endl;
+  fout<<"\""<<binary<<"\""<<endl;
+  fout<<off.size()<<endl;
+  for(int i=0;i<off.size();++i)
+    fout<<off[i].first<<' '<<off[i].second<<' ';
+  fout<<endl;
+  fout<<enum_var.size()<<endl;
+  for(int i=0;i<enum_var.size();++i)
+    fout<<enum_var[i]<<' ';
+  fout<<endl;
+  output_arglist(fout);
+  output_do(fout);
 }

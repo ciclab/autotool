@@ -33,6 +33,7 @@ public:
   void read_wire(ifstream &fin);
   void add_instruction(string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al);
   void output_instruction_set(ofstream &fout);
+  void read_instr(ifstream &fin);
   void output_type(ofstream &fout);
   void read_type(ifstream &fin);
   void add_enum(string name);
@@ -119,25 +120,18 @@ void Ir::output_instruction_set(ofstream &fout)
   for(vector<Instruction>::iterator ite=instruction_set.begin();
       ite!=instruction_set.end();++ite)
     {
-      fout<<"(\""<<ite->get_code()<<"\""<<endl<<"\""<<ite->get_binary()<<"\""<<endl;
-      fout<<ite->get_off_size()<<endl;
-      for(int i=0;i<ite->get_off_size();++i)
-	fout<<ite->get_off(i).first<<' '<<ite->get_off(i).second<<' ';
-      fout<<endl;
-      fout<<ite->get_enum_var_size()<<endl;
-      for(int i=0;i<ite->get_enum_var_size();++i)
-	fout<<ite->get_enum_var(i)<<' ';
-      fout<<endl;
-      ite->output_arglist(fout);
-      // for(int i=0;i<ite->get_do_size();++i)
-      // 	fout<<ite->get_do(i)<<' ';
-      fout<<"("<<endl;
-      ite->output_do(fout);
-      fout<<")"<<")"<<endl;
+      ite->output(fout);
     }
   fout<<endl;
 }
-
+void Ir::read_instr(ifstream &fin)
+{
+  int num;
+  fin>>num;
+  instruction_set.resize(num);
+  for(int i=0;i<num;++i)
+    instruction_set[i].read(fin);
+}
 void Ir::add_instruction(string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al)
 {
   int t=instruction_set.size();

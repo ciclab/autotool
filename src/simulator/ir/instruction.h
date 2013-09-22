@@ -23,6 +23,7 @@ private:
   vector<pair<string,string>  > arglist;
 public:
   void output_arglist(ofstream &fout);
+  void read_arglist(ifstream &fin);
   void set_arglist(vector<pair<string,string>  > & al);
   void set_code(string &code);
   void set_binary(string &b);
@@ -36,7 +37,10 @@ public:
   // int get_do(int id);
   int get_enum_var_size();
   void output_do(ofstream & fout);
+  void read_do(ifstream &fin);
   string get_enum_var(int id);
   pp get_off(int id);
+  void read(ifstream &);
+  void output(ofstream &);
 };
 #endif
