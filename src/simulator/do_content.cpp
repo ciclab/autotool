@@ -17,7 +17,6 @@ void do_content::output(ofstream &fout)
       fout<<"\""<<str<<"\""<<endl;
       break;
     default:
-      cout<<type<<endl;
       assert(0);
     }
 }

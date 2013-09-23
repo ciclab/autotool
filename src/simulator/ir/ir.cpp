@@ -1,4 +1,6 @@
 #include "ir.h"
+#include <iostream>
+using namespace std;
 void Ir::read_all(ifstream &fin)
 {
   read_wire(fin);
@@ -31,7 +33,7 @@ void Ir::read_pipeline(ifstream &fin)
 }
 void Ir::output_pipeline(ofstream &fout)
 {
-  fout<<"pipeline"<<endl;
+  //fout<<"pipeline"<<endl;
   fout<<pipeline.size()<<endl;
   for(int i=0;i<pipeline.size();++i)
     pipeline[i].output(fout);
@@ -50,7 +52,7 @@ void Ir::read_register(ifstream & fin)
 }
 void Ir::output_register(ofstream & fout)
 {
-  fout<<"register"<<endl;
+  //fout<<"register"<<endl;
   fout<<registers.size()<<endl;
   for(int i=0;i<registers.size();++i)
     registers[i].output(fout);
@@ -70,7 +72,7 @@ void Ir::read_memory(ifstream &fin)
 }
 void Ir::output_memory(ofstream &fout)
 {
-  fout<<"memory"<<endl;
+  //fout<<"memory"<<endl;
   fout<<memory.size()<<endl;
   for(int i=0;i<memory.size();++i)
     memory[i].output(fout);
@@ -86,7 +88,7 @@ void Ir::add_type(Type t)
 }
 void Ir::output_instruction_set(ofstream &fout)
 {
-  fout<<"instr"<<endl;
+  //fout<<"instr"<<endl;
   fout<<instruction_set.size()<<endl;
   for(vector<Instruction>::iterator ite=instruction_set.begin();
       ite!=instruction_set.end();++ite)
@@ -123,7 +125,7 @@ void Ir::add_wire(Wire w)
 
 void Ir::output_wire(ofstream &fout)
 {
-  fout<<"wire"<<endl;
+  //fout<<"wire"<<endl;
   fout<<wire.size()<<endl;
   for(int i=0;i<wire.size();++i)
     wire[i].output(fout);
@@ -141,7 +143,7 @@ void Ir::read_wire(ifstream &fin)
 }
 void Ir::output_type(ofstream &fout)
 {
-  fout<<"type"<<endl;
+  //fout<<"type"<<endl;
   fout<<type.size()<<endl;
   for(int i=0;i<type.size();++i)
     type[i].output(fout);
@@ -169,7 +171,7 @@ void Ir::read_stage(ifstream &fin)
 }
 void Ir::output_stage(ofstream &fout)
 {
-  fout<<"stage"<<endl;
+  //fout<<"stage"<<endl;
   fout<<stage.size()<<endl;
   for(int i=0;i<stage.size();++i)
     stage[i].output(fout);
@@ -188,7 +190,8 @@ void Ir::add_enum_entry(string name,string code)
 }
 void Ir::output_enum(ofstream & fout)
 {
-  fout<<"enum"<<' '<<enumm.size()<<endl;
+  //fout<<"enum"<<endl;
+  fout<<enumm.size()<<endl;
   for(int i=0;i<enumm.size();++i)
     enumm[i].output(fout);
   fout<<endl;

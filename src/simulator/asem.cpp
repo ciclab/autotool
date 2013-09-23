@@ -344,9 +344,10 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
 #ifdef ENUM_NOT_UNFOLDED
   //cout<<"enum_"<<ivec[0].name<<":"<<endl;
   string binary;
-  for(int i=0;i<ivec.size()-1;++i)
+  for(int i=1;i<(ivec.size()-1);i<<=1)
     binary+="-";
-  unfolded_list[k].push_back(triple(ivec[0].name,"",binary));
+  //cout<<(ivec.size()-1)<<' '<<binary<<endl;
+  unfolded_list[k].push_back(triple(ivec[0].name,ivec[0].name,binary));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back(ivec[0].name);

@@ -107,9 +107,9 @@ void Instruction::read_arglist(ifstream &fin)
   for(int i=0;i<num;++i)
     fin>>arglist[i].first>>arglist[i].second;
 }
-void Instruction::read(ifstream &fin)
+string read_quoted_str(ifstream &fin)
 {
-  fin>>name;
+  string r;
   int c;
   for(;;)
     {
@@ -124,9 +124,19 @@ void Instruction::read(ifstream &fin)
       c=fin.get();
       if(c=='"')
 	break;
-      code+=c;
+      if(c==EOF)
+	assert(0);
+      r+=c;
     }
-  fin>>binary;
+  return r;
+}
+void Instruction::read(ifstream &fin)
+{
+  fin>>name;
+  cout<<name<<endl;
+  code=read_quoted_str(fin);
+  binary=read_quoted_str(fin);
+  int c;
   fin>>c;
   off.resize(c);
   for(int i=0;i<c;++i)
@@ -134,7 +144,7 @@ void Instruction::read(ifstream &fin)
   fin>>c;
   enum_var.resize(c);
   for(int i=0;i<c;++i)
-    fin>>enum_var[i];
+    enum_var[i]=read_quoted_str(fin);
   read_arglist(fin);
   read_do(fin);
 }
@@ -142,14 +152,14 @@ void Instruction::output(ofstream &fout)
 {
   fout<<name<<endl;
   fout<<"\""<<code<<"\""<<endl;
-  fout<<binary<<endl;
+  fout<<"\""<<binary<<"\""<<endl;
   fout<<off.size()<<endl;
   for(int i=0;i<off.size();++i)
     fout<<off[i].first<<' '<<off[i].second<<' ';
   fout<<endl;
   fout<<enum_var.size()<<endl;
   for(int i=0;i<enum_var.size();++i)
-    fout<<enum_var[i]<<' ';
+    fout<<'"'<<enum_var[i]<<'"'<<' ';
   fout<<endl;
   output_arglist(fout);
   //fout<<"!!do_beg"<<endl;

@@ -13,6 +13,8 @@ void Register::output(ofstream & fout)
 {
   fout<<size;
   for(int i=0;i<N_ELE;++i)
-    fout<<' '<<ele[i];
+    if(ele[i].size())
+      fout<<' '<<ele[i];
+    else fout<<" 0";
   fout<<endl;
 }
