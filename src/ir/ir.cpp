@@ -122,6 +122,10 @@ void Ir::add_wire(Wire w)
 {
   wire.push_back(w);
 }
+// void Ir::add_wire(string &n,int w)
+// {
+//   wire.push_back(Wire(n,w));
+// }
 
 void Ir::output_wire(ofstream &fout)
 {

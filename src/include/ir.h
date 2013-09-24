@@ -30,6 +30,7 @@ public:
   void read_stage(ifstream &fin);
   void output_stage(ofstream &fout);
   void add_type(Type t);
+  /* void add_wire(string &n,int w); */
   void add_wire(Wire w);
   void output_wire(ofstream &fout);
   void read_wire(ifstream &fin);
