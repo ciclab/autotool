@@ -13,6 +13,7 @@
 #include "memory.h"
 #include "register.h"
 #include "pipeline.h"
+#include "def.h"
 using namespace std;
 class Ir
 {
@@ -28,6 +29,8 @@ private:
   string top_rule_name;
 public:
   //asgen interface
+  void get_instr_off(int,vector<ppi> &);
+  string get_instr_binary(int);
   int get_instr_size();
   string get_top_rule_name();
   string get_instr_name(int);

@@ -83,10 +83,9 @@ int Instruction::get_off_size()
   return off.size();
 }
 
-pp Instruction::get_off(int id)
+void Instruction::get_off(vector<ppi> &roff)
 {
-  assert(id<get_off_size());
-  return off[id];
+  roff=off;
 }
 void Instruction::set_arglist(vector<pair<string,string>  > &al)
 {

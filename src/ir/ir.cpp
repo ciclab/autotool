@@ -2,6 +2,14 @@
 #include <iostream>
 #include "def.h"
 using namespace std;
+void Ir::get_instr_off(int i,vector<ppi> &roff)
+{
+  instruction_set[i].get_off(roff);
+}
+string Ir::get_instr_binary(int i)
+{
+  return instruction_set[i].get_binary();
+}
 string Ir::get_instr_code(int i)
 {
   return instruction_set[i].get_code();

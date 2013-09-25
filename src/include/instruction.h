@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include "do_content.h"
+#include "def.h"
 using namespace std;
 typedef pair<int,int> pp;
 class Instruction
@@ -41,7 +42,7 @@ public:
   void output_do(ofstream & fout);
   void read_do(ifstream &fin);
   string get_enum_var(int id);
-  pp get_off(int id);
+  void get_off(vector<ppi> &);
   void read(ifstream &);
   void output(ofstream &);
 };

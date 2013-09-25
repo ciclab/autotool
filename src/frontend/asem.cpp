@@ -350,7 +350,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
   for(int i=1;i<(int)(ivec.size()-1);i<<=1)
     binary+="-";
   //cout<<(ivec.size()-1)<<' '<<binary<<endl;
-  unfolded_list[k].push_back(triple(ivec[0].name,ivec[0].name,binary));
+  unfolded_list[k].push_back(triple(ivec[0].name," "+ivec[0].name+" ",binary));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back(ivec[0].name);
@@ -408,9 +408,9 @@ int Asem::unfold_type(ofstream &yout,ofstream & dot_c_out)
   for(int i=0;i<width;++i)
     binary+=(string)"-";
   unfolded_list[k].push_back(triple(ivec[0].name,
-				    (string)"type_"+ivec[0].name+
-				    (string)"_"+tmpw.ivec[1].name+
-				    (string)"_"+tmpf.ivec[1].name,
+				    " type_"+ivec[0].name+
+				    "_"+tmpw.ivec[1].name+
+				    "_"+tmpf.ivec[1].name+" ",
 				    binary));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
