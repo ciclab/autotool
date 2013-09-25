@@ -1,14 +1,23 @@
 CXX=g++
-CXXFLAGS=-g -Wall
+CXXFLAGS=-g -Wall \
+	-DREAD_COUT=0 \
+	-DASEM_COUT=0 \
+	-DINSTR_COUT=0
 SRC=src
-VPATH=../src/frontend:../src/lib:../src/ir
+VPATH=../src/frontend:../src/lib:../src/ir:../src/as
 INCLUDE=-I../src/include
+
+testasgen: asgen out
+	./asgen out
+
+asgen: asGen.cpp libir.a
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 rd: hash.o ir.o libir.a asem.o read.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE)  $^ -o $@
 
 out: rd in
-	./rd in out.o
+	./rd in $@
 
 libir.a: hash.o wire.o stage.o enum.o instruction.o \
 memory.o pipeline.o register.o type.o do_content.o ir.o

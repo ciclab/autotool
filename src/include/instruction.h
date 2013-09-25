@@ -34,6 +34,7 @@ public:
   string get_code();
   string get_binary();
   int get_off_size();
+  string get_name();
   // int get_do_size();
   // int get_do(int id);
   int get_enum_var_size();

@@ -27,6 +27,12 @@ private:
   vector<Pipeline> pipeline;
   string top_rule_name;
 public:
+  //asgen interface
+  int get_instr_size();
+  string get_top_rule_name();
+  string get_instr_name(int);
+  string get_instr_code(int);
+  //reader writer interface
   void add_top_name(string n);
   void add_stage(Stage s);
   void read_stage(ifstream &fin);

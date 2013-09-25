@@ -120,8 +120,9 @@ int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
       return (long long)hc_unfold.find(name)-1; // 由于加入hash表的时候加过1
     }
 
+#if ASEM_COUT==1
   cout<<"unfolding:"<<name<<endl;
-
+#endif
   int r;
   // 对不同的类型分别展开
   if(is_instr(name))
@@ -134,7 +135,9 @@ int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
   if((int)unfolded_list_name.size()<=r)
     unfolded_list_name.resize(r+1);
   unfolded_list_name[r]=name;
+#if ASEM_COUT==1
   cout<<"done:"<<name<<endl;
+#endif
   // 加入hash表，由于r可能是0，而hash.find返回0表示没有找到
   hc_unfold.insert(name,(void*)(r+1));
   return r;

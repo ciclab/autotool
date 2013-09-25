@@ -88,12 +88,14 @@ pp Instruction::get_off(int id)
   assert(id<get_off_size());
   return off[id];
 }
-
 void Instruction::set_arglist(vector<pair<string,string>  > &al)
 {
   arglist=al;
 }
-
+string Instruction::get_name()
+{
+  return name;
+}
 void Instruction::output_arglist(ofstream &fout)
 {
   fout<<arglist.size()<<endl;
@@ -136,7 +138,9 @@ string read_quoted_str(ifstream &fin)
 void Instruction::read(ifstream &fin)
 {
   fin>>name;
+#if INSTR_COUT==1
   cout<<name<<endl;
+#endif
   code=read_quoted_str(fin);
   binary=read_quoted_str(fin);
   int c;

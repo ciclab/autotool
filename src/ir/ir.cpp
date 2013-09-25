@@ -2,6 +2,22 @@
 #include <iostream>
 #include "def.h"
 using namespace std;
+string Ir::get_instr_code(int i)
+{
+  return instruction_set[i].get_code();
+}
+string Ir::get_instr_name(int i)
+{
+  return instruction_set[i].get_name();
+}
+int Ir::get_instr_size()
+{
+  return instruction_set.size();
+}
+string Ir::get_top_rule_name()
+{
+  return top_rule_name;
+}
 void Ir::read_all(ifstream &fin)
 {
   fin>>top_rule_name;
