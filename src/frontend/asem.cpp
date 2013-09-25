@@ -2,17 +2,17 @@
 #include <cstdlib>
 //#define DOT_Y
 // 返回v的二进制，宽度能表示w项（从0开始）
-static string num2string(int v,int w)
-{
-  string r;
-  for(int i=1;i<w;i<<=1)
-    {
-      if(i&v)
-	r=(string)"1"+r;
-      else r=(string)"0"+r;
-    }
-  return r;
-}
+// static string num2string(int v,int w)
+// {
+//   string r;
+//   for(int i=1;i<w;i<<=1)
+//     {
+//       if(i&v)
+// 	r=(string)"1"+r;
+//       else r=(string)"0"+r;
+//     }
+//   return r;
+// }
 
 // v should be positive
 static string int2string(int v)
@@ -26,7 +26,7 @@ static int string2num(string s)
 {
   int v(0);
   // 没考虑溢出情况
-  for(int i=0;i<s.length();++i)
+  for(int i=0;i<(int)s.length();++i)
     v=(int)(s[i]-'0')+v*10;
   return v;
 }
@@ -35,7 +35,7 @@ static int string2num(string s)
 Asem * Asem::find(const string &name)
 {
   if(this->type==type_is_vector)
-    for(int i=0;i<ivec.size();++i)
+    for(int i=0;i<(int)ivec.size();++i)
       if(ivec[i].type==type_is_vector &&
 	 ivec[i].ivec[0].type==type_is_string1 &&
 	 name==ivec[i].ivec[0].name)
@@ -46,7 +46,7 @@ Asem * Asem::find(const string &name)
 }
 
 void Asem::display(int lev){
-  for(int i=0;i<ivec.size();++i){
+  for(int i=0;i<(int)ivec.size();++i){
     if(ivec[i].type==type_is_vector){
       if(i)
 	{
@@ -131,7 +131,7 @@ int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
   else if(is_type(name))
     r=unfold_type(yout,dot_c_out);
   else assert(0);
-  if(unfolded_list_name.size()<=r)
+  if((int)unfolded_list_name.size()<=r)
     unfolded_list_name.resize(r+1);
   unfolded_list_name[r]=name;
   cout<<"done:"<<name<<endl;
@@ -151,15 +151,15 @@ void Asem::dfs_unfold_instr(const string &rule_name,
 			    int lev,					// 当前枚举到第lev个变量
 			    vector<triple> &r)			// 保存展开结果
 {
-  if(lev>=var_name.size())
+  if(lev>=(int)var_name.size())
     eval_unfold(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
 		code,binary,doo,r);
   else
-    for(int i=0;i<var_val[lev].size();++i)
+    for(int i=0;i<(int)var_val[lev].size();++i)
       {
 	// 第lev个变量选择第i个值
 	var_choosed_val[lev].first=i;
-	for(int j=0;j<unfolded_list[var_val[lev][i]].size();++j)
+	for(int j=0;j<(int)unfolded_list[var_val[lev][i]].size();++j)
 	  {
 	    // 第i个值中第j个展开项
 	    var_choosed_val[lev].second=j;
@@ -193,13 +193,13 @@ void Asem::eval_unfold(const string &rule_name,
   r.resize(k+1);
   r[k].rulename=rule_name+"_"+int2string(k);
   // store name of argments and their values
-  for(int i=0;i<var_name.size();++i)
+  for(int i=0;i<(int)var_name.size();++i)
     r[k].arg_list.push_back(make_pair(var_name[i],var_choose_name[i][var_choosed_val[i].first]+"_"+int2string(var_choosed_val[i].second)));
 
   // 对code和binary的求值应该可以写成函数
   // 求出code
   assert(code.ivec[0].name==(string)"code");
-  for(int i=1;i<code.ivec.size();++i)
+  for(int i=1;i<(int)code.ivec.size();++i)
     {
       if(code.ivec[i].type==type_is_string2)
 	{// 是带引号的string
@@ -210,9 +210,9 @@ void Asem::eval_unfold(const string &rule_name,
 	  // string1的内容目前只能是临时变量的名字
 	  int j=0;
 	  // 找到对应的变量在var_list的索引，目前是顺序查找
-	  for(;j<var_name.size() && var_name[j]!=code.ivec[i].name;++j)
+	  for(;j<(int)var_name.size() && var_name[j]!=code.ivec[i].name;++j)
 	    ;
-	  assert(j<var_name.size());
+	  assert(j<(int)var_name.size());
 
 	  // 记录找到的变量在code中的偏移
 	  var_off_in_code[j]=r[k].code.length();
@@ -221,7 +221,7 @@ void Asem::eval_unfold(const string &rule_name,
       else assert(0);
     }
   // 求出binary
-  for(int i=1;i<binary.ivec.size();++i)
+  for(int i=1;i<(int)binary.ivec.size();++i)
     {
       if(binary.ivec[i].type==type_is_string2)
 	{
@@ -230,9 +230,9 @@ void Asem::eval_unfold(const string &rule_name,
       else if(binary.ivec[i].type==type_is_string1)
 	{
 	  int j=0;
-	  for(;j<var_name.size() && var_name[j]!=binary.ivec[i].name;++j)
+	  for(;j<(int)var_name.size() && var_name[j]!=binary.ivec[i].name;++j)
 	    ;
-	  assert(j<var_name.size());
+	  assert(j<(int)var_name.size());
 
 	  var_off_in_bin[j]=r[k].binary.length();
 	  r[k].binary+=unfolded_list[var_val[j][var_choosed_val[j].first]][var_choosed_val[j].second].binary;
@@ -244,16 +244,16 @@ void Asem::eval_unfold(const string &rule_name,
 	  
 	  // 找到switch中指定的变量在var_name中的序号
 	  int j=0;
-	  for(;j<var_name.size() && var_name[j]!=binary.ivec[i].ivec[1].name;++j)
+	  for(;j<(int)var_name.size() && var_name[j]!=binary.ivec[i].ivec[1].name;++j)
 	    ;
-	  assert(j<var_name.size());
+	  assert(j<(int)var_name.size());
 
 	  int z=2;
 	  // 遍历switch中每一个选项，找到当前匹配的那一项
-	  for(;z<binary.ivec[i].ivec.size() &&
+	  for(;z<(int)binary.ivec[i].ivec.size() &&
 		var_choose_name[j][var_choosed_val[j].first]!=binary.ivec[i].ivec[z].name;z+=2)
 	    assert(binary.ivec[i].ivec[z].type==type_is_string1);
-	  assert(z+1<binary.ivec[i].ivec.size());
+	  assert(z+1<(int)binary.ivec[i].ivec.size());
 
 	  // 现在认为switch后面的值只是常量string，以后应该处理其他情况
 	  assert(binary.ivec[i].ivec[z+1].type==type_is_string2);
@@ -261,13 +261,13 @@ void Asem::eval_unfold(const string &rule_name,
 	}
     }
   // 计算新生成的code offset和binary offset 信息
-  for(int i=0;i<var_val.size();++i)
+  for(int i=0;i<(int)var_val.size();++i)
     {
       int a=var_val[i][var_choosed_val[i].first];
       int b=var_choosed_val[i].second;
       int oc=var_off_in_code[i];
       int ob=var_off_in_bin[i];
-      for(int j=0;j<unfolded_list[a][b].off_in_code.size();++j)
+      for(int j=0;j<(int)unfolded_list[a][b].off_in_code.size();++j)
 	{
 	  r[k].off_in_code.push_back(unfolded_list[a][b].off_in_code[j]+oc);
 	  r[k].off_in_binary.push_back(unfolded_list[a][b].off_in_binary[j]+ob);
@@ -344,7 +344,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
 #ifdef ENUM_NOT_UNFOLDED
   //cout<<"enum_"<<ivec[0].name<<":"<<endl;
   string binary;
-  for(int i=1;i<(ivec.size()-1);i<<=1)
+  for(int i=1;i<(int)(ivec.size()-1);i<<=1)
     binary+="-";
   //cout<<(ivec.size()-1)<<' '<<binary<<endl;
   unfolded_list[k].push_back(triple(ivec[0].name,ivec[0].name,binary));
@@ -352,7 +352,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back(ivec[0].name);
 #endif
-  for(int i=1;i<ivec.size();++i)
+  for(int i=1;i<(int)ivec.size();++i)
     {
       if(ivec[i].type==type_is_vector)
 	{
@@ -433,7 +433,7 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
 #ifdef DOT_Y
   vector<string> var_list;
 #endif
-  for(int i=1;i<ivec.size();++i)
+  for(int i=1;i<(int)ivec.size();++i)
     if(ivec[i].ivec[0].name==(string)"=")
       {// 这一项是变量定义
 	// 这是第k个变量
@@ -445,7 +445,7 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
 	// 保存变量名a
 	var_name[k]=ivec[i].ivec[1].name;
 	// j从2开始,是第一个可选的值
-	for(int j=2;j<ivec[i].ivec.size();++j)
+	for(int j=2;j<(int)ivec[i].ivec.size();++j)
 	  {
 	    const string &name=ivec[i].ivec[j].name;
 	    // 保存可选的值的名字
@@ -529,16 +529,16 @@ void Asem::switch_chg(vector<string> &var_name,
 		  // 分成这个变量是var.value 和 var两种
 		  // 前一种对应变量是一个枚举类型
 		  int pos=ivec[1].name.find(".value");
-		  if(pos!=string::npos)
+		  if(pos!=(typeof(pos))string::npos)
 		    {
 		      // 第一种情况
 		      // 由于现在对enum类型的是不展开，所以在执行时再处理
 		      string var=ivec[1].name.substr(0,pos);
 		      int i;
-		      for(i=0;i<var_name.size();++i)
+		      for(i=0;i<(int)var_name.size();++i)
 			if(var_name[i]==var)
 			  break;
-		      assert(i<var_name.size());
+		      assert(i<(int)var_name.size());
 		      ivec[1].name=(string)"ENUM_"+var+(string)"_"+var_choose_name[i][0];
 		    }
 		  else
@@ -549,7 +549,7 @@ void Asem::switch_chg(vector<string> &var_name,
 	      else assert(false);
 	    }
 	  else
-	    for(int i=0;i<ivec.size();++i)
+	    for(int i=0;i<(int)ivec.size();++i)
 	      ivec[i].switch_chg(//ivec[i],
 			 var_name,
 			 var_choose_name,
@@ -575,13 +575,13 @@ void Asem::dfs_insert_hash(string pwd)
       // 不应该有重复定义
       assert(NULL==hc.insert(pwd.c_str(),(void*)this));
       //assert(sizeof(int)==sizeof(&asem));
-      for(int i=1;i<ivec.size();++i)
+      for(int i=1;i<(int)ivec.size();++i)
 	if(ivec[i].type==type_is_vector)
 	  ivec[i].dfs_insert_hash(pwd);
     }
   else if(ivec[0].type==type_is_vector)
     {
-      for(int i=0;i<ivec.size();++i)
+      for(int i=0;i<(int)ivec.size();++i)
 	if(ivec[i].type==type_is_vector)
 	  ivec[i].dfs_insert_hash(pwd);
     }
@@ -595,7 +595,7 @@ string Asem::get_full_name(string name,string pwd)
   //  找...a.b..c.d时，先找...a.b..c.d
   // 如果没有,则删除c.,找...a..b..d
   // 没有,继续找...a..b.d > ...a..d > ...a.d > ...d
-  for(;hc.find(name)==0 && name.length()>=minl;)
+  for(;hc.find(name)==0 && (int)name.length()>=minl;)
     {
       int l=name.length()-1;
       for(;l>=0 && name[l]!='.';--l)
@@ -606,7 +606,7 @@ string Asem::get_full_name(string name,string pwd)
       name.erase(l+1,t-l);
     }
   // 出错返回空字符串
-  if(name.length()<minl)
+  if((int)name.length()<minl)
     return "";
   return name;
 }
@@ -648,7 +648,7 @@ void Asem::dfs_copy_content(do_content &dl)
   if(type==type_is_vector)
     {
       dl.ivec.resize(ivec.size());
-      for(int i=0;i<ivec.size();++i)
+      for(int i=0;i<(int)ivec.size();++i)
 	ivec[i].dfs_copy_content(dl.ivec[i]);
     }
   else if(type==type_is_string1 || type==type_is_string2)
@@ -660,7 +660,7 @@ void Asem::dfs_copy_content(do_content &dl)
 
 void Asem::translate_doo(ofstream &dot_h_out,ofstream &dot_c_out,vector<string> &var_list,const string & rule_name)
 {
-  for(int i=1;i<ivec.size();++i)
+  for(int i=1;i<(int)ivec.size();++i)
     ivec[i].doo_translate_statement(dot_h_out,dot_c_out,rule_name);
 }
 
@@ -669,9 +669,9 @@ string Asem::doo_translate_statement(ofstream & dot_h_out,ofstream & dot_c_out,c
   if(doo_is_assignment())
     {
       vector<string> obj;
-      for(int i=1;i<ivec.size();++i)
+      for(int i=1;i<(int)ivec.size();++i)
   	obj.push_back(ivec[i].doo_translate_statement(dot_h_out,dot_c_out,rule_name));
-      for(int i=1;i<obj.size();++i)
+      for(int i=1;i<(int)obj.size();++i)
   	doo_output_assignment(dot_c_out,obj[i-1],obj[i]);
       return obj[0];
     }
@@ -686,7 +686,7 @@ string Asem::doo_translate_statement(ofstream & dot_h_out,ofstream & dot_c_out,c
       doo_output_if_beg(dot_c_out);
       ivec[1].doo_translate_or_and_cond(dot_c_out);
       dot_c_out<<"\n{"<<endl;
-      for(int i=2;i<ivec.size();++i)
+      for(int i=2;i<(int)ivec.size();++i)
   	ivec[i].doo_translate_statement(dot_h_out,dot_c_out,rule_name);
       doo_output_if_end(dot_c_out);
       return "";
@@ -711,7 +711,7 @@ string Asem::doo_translate_statement(ofstream & dot_h_out,ofstream & dot_c_out,c
   // else if(doo_is_leftshift())
   //   {
   //     string tmpvar=gen_tmp_var();
-  //     out<<tmpvar<<"="<<ivec[1].translate_statement(vl)<<"<<"\
+  //     out<<tmpvar<<"="<<ivec[1].translate_statement(vl)<<"<<"
   // 	 <<ivec[2].translate_statement(vl)<<endl;
   //     return tmpvar;
   //   }
@@ -810,7 +810,7 @@ void Asem::doo_translate_or_and_cond(ofstream &dot_c_out)
       else if(ivec[0].get_string()=="and")
 	relation=" && ";
       else assert(ivec.size()==1);
-      for(int i=0;i<ivec.size();++i)
+      for(int i=0;i<(int)ivec.size();++i)
 	{
 	  if(i)
 	    dot_c_out<<relation;

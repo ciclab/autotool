@@ -25,7 +25,9 @@ private:
   vector<Memory> memory;
   vector<Register> registers;
   vector<Pipeline> pipeline;
+  string top_rule_name;
 public:
+  void add_top_name(string n);
   void add_stage(Stage s);
   void read_stage(ifstream &fin);
   void output_stage(ofstream &fout);

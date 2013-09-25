@@ -1,6 +1,7 @@
 #include "do_content.h"
 #include <cassert>
 #include <iostream>
+#include "def.h"
 using namespace std;
 void do_content::output(ofstream &fout)
 {
@@ -9,8 +10,10 @@ void do_content::output(ofstream &fout)
     {
     case do_type_is_vector:
       fout<<ivec.size()<<endl;
-      for(int i=0;i<ivec.size();++i)
-	ivec[i].output(fout);
+      FR(i,ivec)
+	i->output(fout);
+      // for(int i=0;i<ivec.size();++i)
+      // 	ivec[i].output(fout);
       break;
     case do_type_is_string1:
     case do_type_is_string2:

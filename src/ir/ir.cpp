@@ -1,8 +1,10 @@
 #include "ir.h"
 #include <iostream>
+#include "def.h"
 using namespace std;
 void Ir::read_all(ifstream &fin)
 {
+  fin>>top_rule_name;
   read_wire(fin);
   read_type(fin);
   read_stage(fin);
@@ -12,8 +14,13 @@ void Ir::read_all(ifstream &fin)
   read_pipeline(fin);
   read_instr(fin);
 }
+void Ir::add_top_name(string n)
+{
+  top_rule_name=n;
+}
 void Ir::output_all(ofstream &fout)
 {
+  fout<<top_rule_name<<endl;
   output_wire(fout);
   output_type(fout);
   output_stage(fout);
@@ -35,8 +42,10 @@ void Ir::output_pipeline(ofstream &fout)
 {
   //fout<<"pipeline"<<endl;
   fout<<pipeline.size()<<endl;
-  for(int i=0;i<pipeline.size();++i)
-    pipeline[i].output(fout);
+  FR(i,pipeline)
+    i->output(fout);
+  // for(size_t i=0;i<pipeline.size();++i)
+  //   pipeline[i].output(fout);
 }
 void Ir::add_pipeline(Pipeline p)
 {
@@ -54,8 +63,10 @@ void Ir::output_register(ofstream & fout)
 {
   //fout<<"register"<<endl;
   fout<<registers.size()<<endl;
-  for(int i=0;i<registers.size();++i)
-    registers[i].output(fout);
+  FR(i,registers)
+    i->output(fout);
+  // for(int i=0;i<registers.size();++i)
+  //   registers[i].output(fout);
   fout<<endl;
 }
 void Ir::add_register(Register r)
@@ -74,8 +85,10 @@ void Ir::output_memory(ofstream &fout)
 {
   //fout<<"memory"<<endl;
   fout<<memory.size()<<endl;
-  for(int i=0;i<memory.size();++i)
-    memory[i].output(fout);
+  FR(i,memory)
+    i->output(fout);
+  // for(int i=0;i<memory.size();++i)
+  //   memory[i].output(fout);
   fout<<endl;
 }
 void Ir::add_memory(Memory m)
@@ -131,8 +144,10 @@ void Ir::output_wire(ofstream &fout)
 {
   //fout<<"wire"<<endl;
   fout<<wire.size()<<endl;
-  for(int i=0;i<wire.size();++i)
-    wire[i].output(fout);
+  FR(i,wire)
+    i->output(fout);
+  // for(int i=0;i<wire.size();++i)
+  //   wire[i].output(fout);
   fout<<endl;
 }
 void Ir::read_wire(ifstream &fin)
@@ -149,8 +164,10 @@ void Ir::output_type(ofstream &fout)
 {
   //fout<<"type"<<endl;
   fout<<type.size()<<endl;
-  for(int i=0;i<type.size();++i)
-    type[i].output(fout);
+  FR(i,type)
+    i->output(fout);
+  // for(int i=0;i<type.size();++i)
+  //   type[i].output(fout);
   fout<<endl;
 }
 void Ir::read_type(ifstream & fin)
@@ -177,8 +194,10 @@ void Ir::output_stage(ofstream &fout)
 {
   //fout<<"stage"<<endl;
   fout<<stage.size()<<endl;
-  for(int i=0;i<stage.size();++i)
-    stage[i].output(fout);
+  FR(i,stage)
+    i->output(fout);
+  // for(int i=0;i<stage.size();++i)
+  //   stage[i].output(fout);
   fout<<endl;
 }
 void Ir::add_enum(string name)
@@ -196,8 +215,10 @@ void Ir::output_enum(ofstream & fout)
 {
   //fout<<"enum"<<endl;
   fout<<enumm.size()<<endl;
-  for(int i=0;i<enumm.size();++i)
-    enumm[i].output(fout);
+  FR(i,enumm)
+    i->output(fout);
+  // for(int i=0;i<enumm.size();++i)
+  //   enumm[i].output(fout);
   fout<<endl;
 }
 void Ir::read_enum(ifstream & fin)

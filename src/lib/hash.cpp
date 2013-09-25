@@ -94,7 +94,7 @@ class hash_entry *hash_control::
 #endif
 
   hash = 0;
-  int len=key.length();
+  size_t len=key.length();
   for (n = 0; n < len; n++)
     {
       c = key[n];

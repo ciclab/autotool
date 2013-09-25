@@ -1,8 +1,11 @@
 CXX=g++
-CXXFLAGS=-g 
+CXXFLAGS=-g -Wall
 SRC=src
 VPATH=../src/frontend:../src/lib:../src/ir
 INCLUDE=-I../src/include
+
+out: rd in
+	./rd in out.o
 
 rd: hash.o ir.o libir.a asem.o read.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE)  $^ -o $@
@@ -50,4 +53,4 @@ type.o: type.cpp
 do_content.o: do_content.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 clean:
-	rm *.o libir.a rd
+	rm *.* rd

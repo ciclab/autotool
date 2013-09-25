@@ -1,4 +1,5 @@
 #include "enum.h"
+#include "def.h"
 void Enum::add(string name,string code)
 {
   list.push_back(make_pair(name,code));
@@ -6,8 +7,10 @@ void Enum::add(string name,string code)
 void Enum::output(ofstream & fout)
 {
   fout<<name<<' '<<list.size()<<endl;
-  for(int i=0;i<list.size();++i)
-    fout<<list[i].first<<' '<<list[i].second<<' ';
+  FR(i,list)
+    fout<<i->first<<' '<<i->second<<' ';
+  // for(int i=0;i<list.size();++i)
+  //   fout<<list[i].first<<' '<<list[i].second<<' ';
   fout<<endl;
 }
 void Enum::read(ifstream & fin)

@@ -1,4 +1,5 @@
 #include "instruction.h"
+#include "def.h"
 // class doo
 // {
 // private:
@@ -96,8 +97,10 @@ void Instruction::set_arglist(vector<pair<string,string>  > &al)
 void Instruction::output_arglist(ofstream &fout)
 {
   fout<<arglist.size()<<endl;
-  for(int i=0;i<arglist.size();++i)
-    fout<<arglist[i].first<<' '<<arglist[i].second<<endl;
+  FR(i,arglist)
+    fout<<i->first<<' '<<i->second<<endl;
+  // for(int i=0;i<arglist.size();++i)
+  //   fout<<arglist[i].first<<' '<<arglist[i].second<<endl;
 }
 void Instruction::read_arglist(ifstream &fin)
 {
@@ -154,12 +157,16 @@ void Instruction::output(ofstream &fout)
   fout<<"\""<<code<<"\""<<endl;
   fout<<"\""<<binary<<"\""<<endl;
   fout<<off.size()<<endl;
-  for(int i=0;i<off.size();++i)
-    fout<<off[i].first<<' '<<off[i].second<<' ';
+  FR(i,off)
+    fout<<i->first<<' '<<i->second<<' ';
+  // for(int i=0;i<off.size();++i)
+  //   fout<<off[i].first<<' '<<off[i].second<<' ';
   fout<<endl;
   fout<<enum_var.size()<<endl;
-  for(int i=0;i<enum_var.size();++i)
-    fout<<'"'<<enum_var[i]<<'"'<<' ';
+  FR(i,enum_var)
+    fout<<'"'<<*i<<'"'<<' ';
+  // for(int i=0;i<enum_var.size();++i)
+  //   fout<<'"'<<enum_var[i]<<'"'<<' ';
   fout<<endl;
   output_arglist(fout);
   //fout<<"!!do_beg"<<endl;
