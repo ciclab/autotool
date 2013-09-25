@@ -7,8 +7,8 @@ SRC=src
 VPATH=../src/frontend:../src/lib:../src/ir:../src/as
 INCLUDE=-I../src/include
 
-testasgen: asgen out
-	./asgen out
+as.l: asgen out
+	./asgen out $@
 
 asgen: asGen.cpp libir.a
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
