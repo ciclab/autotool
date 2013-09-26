@@ -62,4 +62,4 @@ type.o: type.cpp
 do_content.o: do_content.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 clean:
-	rm *.* rd asgen
+	rm *.* rd asgen out
