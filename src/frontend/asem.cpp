@@ -1,5 +1,6 @@
 #include "asem.h"
 #include <cstdlib>
+#include "def.h"
 //#define DOT_Y
 // 返回v的二进制，宽度能表示w项（从0开始）
 // static string num2string(int v,int w)
@@ -206,7 +207,10 @@ void Asem::eval_unfold(const string &rule_name,
     {
       if(code.ivec[i].type==type_is_string2)
 	{// 是带引号的string
-	  r[k].code+=code.ivec[i].name;
+	  if(code.ivec[i].name.length() && code.ivec[i].name[0]!=c_sep)
+	    r[k].code=r[k].code+c_sep+code.ivec[i].name;
+	  else
+	    r[k].code+=code.ivec[i].name;
 	}
       else if(code.ivec[i].type==type_is_string1)
 	{
@@ -216,10 +220,18 @@ void Asem::eval_unfold(const string &rule_name,
 	  for(;j<(int)var_name.size() && var_name[j]!=code.ivec[i].name;++j)
 	    ;
 	  assert(j<(int)var_name.size());
-
+	  string tmp=unfolded_list[var_val[j][var_choosed_val[j].first]][var_choosed_val[j].second].code;
 	  // 记录找到的变量在code中的偏移
-	  var_off_in_code[j]=r[k].code.length();
-	  r[k].code+=unfolded_list[var_val[j][var_choosed_val[j].first]][var_choosed_val[j].second].code;
+	  if(tmp.length() && tmp[0]!=c_sep)
+	    {
+	      var_off_in_code[j]=r[k].code.length()+1;
+	      r[k].code=r[k].code+s_sep+tmp;
+	    }
+	  else
+	    {
+	      var_off_in_code[j]=r[k].code.length();
+	      r[k].code+=tmp;
+	    }
 	}
       else assert(0);
     }
@@ -350,7 +362,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
   for(int i=1;i<(int)(ivec.size()-1);i<<=1)
     binary+="-";
   //cout<<(ivec.size()-1)<<' '<<binary<<endl;
-  unfolded_list[k].push_back(triple(ivec[0].name," "+ivec[0].name+" ",binary));
+  unfolded_list[k].push_back(triple(ivec[0].name,s_enum_beg+ivec[0].name,binary));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back(ivec[0].name);
@@ -408,9 +420,9 @@ int Asem::unfold_type(ofstream &yout,ofstream & dot_c_out)
   for(int i=0;i<width;++i)
     binary+=(string)"-";
   unfolded_list[k].push_back(triple(ivec[0].name,
-				    " type_"+ivec[0].name+
+				    s_type_beg+"type_"+ivec[0].name+
 				    "_"+tmpw.ivec[1].name+
-				    "_"+tmpf.ivec[1].name+" ",
+				    "_"+tmpf.ivec[1].name,
 				    binary));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
