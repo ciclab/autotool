@@ -1,3 +1,4 @@
+#include "hash.h"
 #include "ir.h"
 #include "def.h"
 #include <iostream>
@@ -5,20 +6,20 @@
 #include <vector>
 #include <algorithm>
 using namespace std;
-// static string int2string(int w,int v)
-// {
-//   string r;
-//   r.resize(w);
-//   FOR(i,0,w)
-//     {
-//       r[i]=(v&1)?'1':'0';
-//       v>>=1;
-//     }
-//   return r;
-// }
+static string int2string(int w,int v)
+{
+  string r;
+  r.resize(w);
+  FOR(i,0,w)
+    {
+      r[i]=(v&1)?'1':'0';
+      v>>=1;
+    }
+  return r;
+}
 int main(int argc,char *argv[])
 {
-  assert(argc==3);
+  assert(argc==4);
   ifstream fin;
   fin.open(argv[1],ofstream::in);
   Ir ir;
@@ -26,15 +27,23 @@ int main(int argc,char *argv[])
   
   int instr_size=ir.get_instr_size();
   string top_rule_name=ir.get_top_rule_name();
-  ofstream fout;
-  fout.open(argv[2],ofstream::out);
+  ofstream lout,yout;
+  lout.open(argv[2],ofstream::out);
+  yout.open(argv[3],ofstream::out);
+  //lex file head
+  lout<<"%{\n";
+  lout<<"#include \""<<argv[2]<<".tab.h\""<<endl;
+  lout<<"%}\n";
+  lout<<"BLANK [ \\t]+\n";
+  lout<<"%%\n";
+  //yacc file head
+  yout<<"%{\n";
+  yout<<"%}\n";
+  yout<<"%%\n";
 
-  fout<<"%{\n";
-  fout<<"%}\n";
-
-  fout<<"BLANK [ \\t]+\n";
-
-  fout<<"%%\n";
+  //lex rule name should be unique
+  hash_control hc;
+  char * cnt(NULL);
   //output rules for enum
   int enum_size=ir.get_num_enum();
   FOR(i,0,enum_size)
@@ -45,15 +54,23 @@ int main(int argc,char *argv[])
       int width=0;
       for(;(1<<width)<enum_ent_size;++width)
 	;
+      yout<<enu.enum_name()<<": ";
       FOR(j,0,enum_ent_size)
-	fout<<enu.ent_name(j)<<" \""<<enu.ent_code(j)<<"\""<<endl;
-      fout<<enu.enum_name()<<" [";
-      FOR(j,0,enum_ent_size)
-	fout<<'{'<<enu.ent_name(j)<<'}';
-      fout<<"]";
-      fout<<endl;
+	{
+	  if(j)
+	    yout<<"|"<<endl;
+	  string ent_name=enu.ent_name(j);
+	  char *en=(char*)hc.find(ent_name);
+	  if(en==NULL)
+	    {
+	      en=++cnt;
+	      hc.insert(ent_name,cnt);
+	      lout<<"\""<<enu.ent_code(j)<<"\""<<" return TOK_"<<(ll)en<<";"<<endl;
+	    }
+	  yout<<"TOK_"<<(ll)en<<" {return (char*)"<<int2string(width,j)<<";}";
+	}
+      yout<<";"<<endl;
     }
-  fout<<"BLANK {}\n";
   //fout<<"\\n return 0;\n";
 
   FOR(i,0,instr_size)
@@ -80,7 +97,7 @@ int main(int argc,char *argv[])
 		case ' ':
 		  for(;j!=code.end() && *j==' ';++j,++off_in_code)
 		    ;
-		  fout<<"BLANK";
+		  //fout<<"BLANK";
 		  break;
 		case c_sep:
 		  ++j,++off_in_code;
@@ -103,13 +120,22 @@ int main(int argc,char *argv[])
 		  for(;j!=code.end() && *j!=' ' && *j!='\1';++j,++off_in_code)
 		    token+=*j;
 		  if(is_string)
-		    fout<<'"'<<token<<'"';
-		  else fout<<'{'<<token<<'}';
+		    {
+		      char *tmp=(char*)hc.find(token);
+		      if(tmp==NULL)
+			{
+			  tmp=++cnt;
+			  hc.insert(token,tmp);
+			  lout<<"\""<<token<<"\""<<" return TOK_"<<(ll)tmp<<";"<<endl;
+			}
+		      yout<<"TOK_"<<(ll)tmp<<" ";
+		    }
+		  else yout<<'{'<<token<<'}';
 		  break;
 		}
 	    }
-	  fout<<"{return \""<<binary<<"\";}"<<endl;
-	  fout<<endl;
+	  yout<<"{return (char*)\""<<binary<<"\";}"<<endl;
+	  yout<<endl;
 	}
     }
   return 0;

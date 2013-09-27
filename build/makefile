@@ -8,8 +8,8 @@ SRC=src
 VPATH=../src/frontend:../src/lib:../src/ir:../src/as
 INCLUDE=-I../src/include
 
-as.lex: asgen out
-	./asgen out $@
+as.lex as.y: asgen out hash.o
+	./asgen out as.lex as.y
 
 asgen: asGen.cpp libir.a
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
