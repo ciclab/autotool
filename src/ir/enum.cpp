@@ -1,5 +1,21 @@
 #include "enum.h"
 #include "def.h"
+string Enum::ent_name(int i)
+{
+  return list[i].first;
+}
+string Enum::ent_code(int i)
+{
+  return list[i].second;
+}
+string Enum::enum_name()
+{
+  return name;
+}
+int Enum::size()
+{
+  return list.size();
+}
 void Enum::add(string name,string code)
 {
   list.push_back(make_pair(name,code));

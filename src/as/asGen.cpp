@@ -5,6 +5,17 @@
 #include <vector>
 #include <algorithm>
 using namespace std;
+// static string int2string(int w,int v)
+// {
+//   string r;
+//   r.resize(w);
+//   FOR(i,0,w)
+//     {
+//       r[i]=(v&1)?'1':'0';
+//       v>>=1;
+//     }
+//   return r;
+// }
 int main(int argc,char *argv[])
 {
   assert(argc==3);
@@ -24,7 +35,24 @@ int main(int argc,char *argv[])
   fout<<"BLANK [ \\t]+\n";
 
   fout<<"%%\n";
-  //output rules for 
+  //output rules for enum
+  int enum_size=ir.get_num_enum();
+  FOR(i,0,enum_size)
+    {
+      Enum enu;
+      ir.get_enum(i,enu);
+      int enum_ent_size=enu.size();
+      int width=0;
+      for(;(1<<width)<enum_ent_size;++width)
+	;
+      FOR(j,0,enum_ent_size)
+	fout<<enu.ent_name(j)<<" \""<<enu.ent_code(j)<<"\""<<endl;
+      fout<<enu.enum_name()<<" [";
+      FOR(j,0,enum_ent_size)
+	fout<<'{'<<enu.ent_name(j)<<'}';
+      fout<<"]";
+      fout<<endl;
+    }
   fout<<"BLANK {}\n";
   //fout<<"\\n return 0;\n";
 

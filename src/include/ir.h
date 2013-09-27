@@ -29,6 +29,8 @@ private:
   string top_rule_name;
 public:
   //asgen interface
+  void get_enum(int,Enum &);
+  int get_num_enum();
   void get_instr_off(int,vector<ppi> &);
   string get_instr_binary(int);
   int get_instr_size();

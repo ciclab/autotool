@@ -18,7 +18,8 @@
 // v should be positive
 static string int2string(int v)
 {
-  char tmp[33];
+  char tmp[330];
+  assert(v<(int)(sizeof(tmp)/sizeof(tmp[0])));
   sprintf(tmp,"%d",v);
   return (string)tmp;
 }

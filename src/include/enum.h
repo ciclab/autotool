@@ -15,5 +15,9 @@ class Enum
   void output(ofstream & fout);
   void read(ifstream & fin);
   void set_name(string n);
+  int size();
+  string enum_name();
+  string ent_name(int);
+  string ent_code(int);
 };
 #endif
