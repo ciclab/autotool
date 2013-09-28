@@ -9,6 +9,10 @@ int Type::get_len()
 {
   return len;
 }
+string Type::get_type()
+{
+  return type;
+}
 Type::Type(string n,int l,string t)
 {
   name=n,len=l,type=t;

@@ -7,7 +7,16 @@
 #include <cstdlib>
 #include <algorithm>
 using namespace std;
-static string int2string(int w,int v)
+static string int2string(int v)
+{
+  if(v==0)
+    return "0";
+  string r;
+  for(;v;v/=10)
+    r=(char)('0'+(v%10))+r;
+  return r;
+}
+static string int2binary(int w,int v)
 {
   string r;
   r.resize(w);
@@ -44,7 +53,7 @@ int main(int argc,char *argv[])
   lout<<"%}\n";
   lout<<"BLANK [ \\t]+\n";
   lout<<"%%\n";
-  lout<<"{BLANK} {}\n";
+  lout<<"{BLANK} {return TOK_BLANK;}\n";
   //yacc file head
   tokout<<"%{\n";
   tokout<<"%}\n";
@@ -54,14 +63,14 @@ int main(int argc,char *argv[])
   tokout<<"char ch;\n";
   tokout<<"char * chp\n";
   tokout<<"}\n";
-
   //lex rule name should be unique
   hash_control hc;
   // hash_control hc_len;
   char * cnt(NULL);
 
-  tokout<<"%token TOK_INT"<<endl;
-
+  tokout<<"%token<integer> TOK_INT"<<endl;
+  tokout<<"%token<chp> TOK_LABEL"<<endl;
+  tokout<<"%token TOK_BLANK"<<endl;
   yout<<"%%\n";
 
   //output rules for enum
@@ -92,7 +101,7 @@ int main(int argc,char *argv[])
 	      tokout<<"%token TOK_"<<(ll)en<<endl;
 	      lout<<"\""<<ent_code<<"\""<<" return TOK_"<<(ll)en<<";"<<endl;
 	    }
-	  yout<<"TOK_"<<(ll)en<<" {return (char*)\""<<int2string(width,j)<<"\";}";
+	  yout<<"TOK_"<<(ll)en<<" {return (char*)\""<<int2binary(width,j)<<"\";}";
 	}
       yout<<";"<<endl;
     }
@@ -110,7 +119,6 @@ int main(int argc,char *argv[])
 	  ++j;
 	}
     }
-	
   //output rules for instructions
   FOR(i,0,instr_size)
     {
@@ -130,29 +138,55 @@ int main(int argc,char *argv[])
 	  int off_in_code=0,offi=0;
 	  sort(off.begin(),off.end());
 	  yout<<n<<": ";
+	  int seg(0);
+	  // if(n=="tctcore_0")
+	  //   {
+	  //     FR(i,off)
+	  //   	cout<<i->first<<' '<<i->second<<endl;
+	  //     FR(j,code)
+	  //   	if(*j==c_enum_beg)
+	  //   	  cout<<"E";
+	  //   	else if(*j==c_type_beg)
+	  //   	  cout<<"T";
+	  //   	else if(*j==c_sep)
+	  //   	  cout<<"S";
+	  //   	else cout<<*j;
+	  //     cout<<endl;
+	  //   }
 	  for(typeof(code.begin()) j=code.begin();j!=code.end();)
 	    {
+	      ++seg;
 	      switch(*j)
 		{
 		case ' ':
 		  for(;j!=code.end() && *j==' ';++j,++off_in_code)
 		    ;
-		  //fout<<"BLANK";
+		  yout<<"TOK_BLANK ";
 		  break;
 		case c_sep:
 		  ++j,++off_in_code;
 		default:
 		  string token;
-		  for(;offi<(int)off.size() && off[offi].first<off_in_code;++offi)
+		  for(;offi<(int)off.size() && off[offi].first<off_in_code-1;++offi)
 		    ;
 		  bool is_string=true;
-		  if(offi<(int)off.size() && off[offi].first==off_in_code)
+		  if(offi<(int)off.size() && off[offi].first==off_in_code-1)
 		    {
 		      //may be a type or enum;
+		      off[offi].first=seg;
+		      ++offi;
 		      is_string=false;
 		    }
 		  if(!is_string)
 		    {
+		      //cout<<*j<<endl;
+		      if(!(*j==c_type_beg || *j==c_enum_beg))
+			{
+			  cout<<code<<endl;
+			  yout<<offi<<' '<<off.size()<<' '<<seg<<endl;
+			  FR(i,off)
+			    yout<<i->first<<' '<<i->second<<endl;
+			}
 		      assert(*j==c_type_beg || *j==c_enum_beg);
 		      ++off_in_code;
 		      ++j;
@@ -179,11 +213,19 @@ int main(int argc,char *argv[])
 		  break;
 		}
 	    }
+	  assert(offi==(int)off.size());
 	  yout<<endl<<"{static char tmp[]=\""<<binary<<"\";"<<endl;
+	  // if(n=="tctcore_0")
+	  //   {
+	  //     cout<<code<<endl;
+	  //     yout<<offi<<' '<<off.size()<<' '<<seg<<endl;
+	  //     FR(i,off)
+	  // 	yout<<i->first<<' '<<i->second<<endl;
+	  //   }
 	  FR(i,off)
 	    {
-	      yout<<"for(int i=0"<<";$"<<(1+i-off.begin())<<"[i];"<<"++i)"<<endl;
-	      yout<<"tmp[i+"<<i->second<<"]=$"<<(1+i-off.begin())<<"[i];"<<endl;
+	      yout<<"for(int i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
+	      yout<<"tmp[i+"<<i->second<<"]=$"<<(i->first)<<"[i];"<<endl;
 	    }
 	  yout<<"return tmp;";
 	  yout<<"}"<<endl;
@@ -197,9 +239,10 @@ int main(int argc,char *argv[])
     {
       Type ty=ir.get_type(i);
       string name=ty.get_name();
+      int len=ty.get_len();
+      name="type_"+name+"_"+int2string(ty.len)+"_"+ty.get_type();
       tokout<<"%type<chp> "<<name<<endl;
       yout<<name<<": ";
-      int len=ty.get_len();
       yout<<"TOK_INT" ;
       yout<<"{\n";
       yout<<"static char tmp["<<len<<"];"<<endl;

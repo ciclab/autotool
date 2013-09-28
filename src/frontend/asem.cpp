@@ -209,7 +209,7 @@ void Asem::eval_unfold(const string &rule_name,
       if(code.ivec[i].type==type_is_string2)
 	{// 是带引号的string
 	  if(code.ivec[i].name.length() && code.ivec[i].name[0]!=c_sep)
-	    r[k].code=r[k].code+c_sep+code.ivec[i].name;
+	      r[k].code=r[k].code+c_sep+code.ivec[i].name;
 	  else
 	    r[k].code+=code.ivec[i].name;
 	}
@@ -225,7 +225,7 @@ void Asem::eval_unfold(const string &rule_name,
 	  // 记录找到的变量在code中的偏移
 	  if(tmp.length() && tmp[0]!=c_sep)
 	    {
-	      var_off_in_code[j]=r[k].code.length()+1;
+	      var_off_in_code[j]=r[k].code.length();
 	      r[k].code=r[k].code+s_sep+tmp;
 	    }
 	  else

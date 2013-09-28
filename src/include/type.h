@@ -10,6 +10,7 @@ class Type
   int len;
   string type;
   Type(){};
+  string get_type();
   string get_name();
   int get_len();
   Type(string,int,string);
