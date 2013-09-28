@@ -10,6 +10,8 @@ class Type
   int len;
   string type;
   Type(){};
+  string get_name();
+  int get_len();
   Type(string,int,string);
   void output(ofstream&);
   void read(ifstream&);

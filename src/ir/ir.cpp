@@ -2,6 +2,14 @@
 #include <iostream>
 #include "def.h"
 using namespace std;
+Type Ir::get_type(int i)
+{
+  return type[i];
+}
+int Ir::type_size()
+{
+  return type.size();
+}
 void Ir::get_enum(int i,Enum &e)
 {
   e=enumm[i];
