@@ -47,7 +47,7 @@ int main(int argc,char *argv[])
   tokout.open(token_file_name.c_str(),ofstream::out);
   //lex file head
   lout<<"%{\n";
-  lout<<"#include \""<<argv[2]<<".tab.h\""<<endl;
+  lout<<"#include \"y.h\""<<endl;
   lout<<"#include \"strstack.h\"\n";
   lout<<"extern struct strstack strsta;\n";
   lout<<"%}\n";
@@ -56,12 +56,20 @@ int main(int argc,char *argv[])
   lout<<"{BLANK} {return TOK_BLANK;}\n";
   //yacc file head
   tokout<<"%{\n";
+  tokout<<"#include \"strstack.h\"\n";
+  tokout<<"#include <stdio.h>\n";		\
+  tokout<<"#include <string.h>\n";
+  tokout<<"extern int dummy_lineno;\n";
+  tokout<<"extern void dummy_error(const char *s);\n";
+  tokout<<"extern struct strstack strsta;\n";
+  tokout<<"extern int dummy_lex(void);\n";
+  tokout<<"extern void dummy_getExpression(const char * str);\n";
   tokout<<"%}\n";
   
   tokout<<"%union{\n";
-  tokout<<"int integer\n";
+  tokout<<"int integer;\n";
   tokout<<"char ch;\n";
-  tokout<<"char * chp\n";
+  tokout<<"char * chp;\n";
   tokout<<"}\n";
   //lex rule name should be unique
   hash_control hc;
@@ -101,12 +109,13 @@ int main(int argc,char *argv[])
 	      tokout<<"%token TOK_"<<(ll)en<<endl;
 	      lout<<"\""<<ent_code<<"\""<<" return TOK_"<<(ll)en<<";"<<endl;
 	    }
-	  yout<<"TOK_"<<(ll)en<<" {return (char*)\""<<int2binary(width,j)<<"\";}";
+	  yout<<"TOK_"<<(ll)en<<" {$$=(char*)\""<<int2binary(width,j)<<"\";}";
 	}
       yout<<";"<<endl;
     }
   
   tokout<<"%start "<<top_rule_name<<endl;
+  tokout<<"%type<chp> "<<top_rule_name<<endl;
   yout<<top_rule_name<<": "<<endl;
   for(int i=0,j=0;i<instr_size;++i)
     {
@@ -115,10 +124,11 @@ int main(int argc,char *argv[])
 	{
 	  if(j)
 	    yout<<"|"<<endl;
-	  yout<<n<<"{return $1;}"<<endl;
+	  yout<<n<<"{$$=$1;}"<<endl;
 	  ++j;
 	}
     }
+
   //output rules for instructions
   FOR(i,0,instr_size)
     {
@@ -227,7 +237,7 @@ int main(int argc,char *argv[])
 	      yout<<"for(int i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
 	      yout<<"tmp[i+"<<i->second<<"]=$"<<(i->first)<<"[i];"<<endl;
 	    }
-	  yout<<"return tmp;";
+	  yout<<"$$=tmp;";
 	  yout<<"}"<<endl;
 	}
     }
@@ -246,12 +256,13 @@ int main(int argc,char *argv[])
       yout<<"TOK_INT" ;
       yout<<"{\n";
       yout<<"static char tmp["<<len<<"];"<<endl;
-      yout<<"i2s(tmp,$1,"<<len<<");"<<endl;
-      yout<<"return tmp;}"<<endl;
+      yout<<"i2bs(tmp,$1,"<<len<<");"<<endl;
+      yout<<"$$=tmp;}"<<endl;
       yout<<"|"<<" TOK_LABEL{"<<endl;
+      yout<<"static char tmp["<<len<<"];"<<endl;
       yout<<"for(int i=0;i<"<<len<<";++i)"<<endl;
       yout<<"tmp[i]='L';"<<endl;
-      yout<<"return tmp;}"<<endl;
+      yout<<"$$=tmp;}"<<endl;
       
     }
 
@@ -259,7 +270,7 @@ int main(int argc,char *argv[])
         dummy_lval.chp=newstr1(&strsta,yytext);/*TODO*/return TOK_LABEL;}"<<endl;
   lout<<"[0-9]+	{dummy_lval.integer=atoi(dummy_text);return TOK_INT;}"<<endl;
 
-  lout<<"[\"0\"|\"1\"] dummy_lval=(*dummytext)=='1'?1:0;return C01\n";
+  //lout<<"[\"0\"|\"1\"] dummy_lval=(*dummytext)=='1'?1:0;return C01;\n";
 
 
   lout<<"%%\n\
@@ -267,6 +278,9 @@ int yywrap()\n\
 {\n\
         return 1;\n\
 }\n";
+  yout<<"%%\nvoid yyerror(const char *s)\n{";
+  yout<<"fprintf (stderr, \"L%d: %s\",dummy_lineno,s);\n}\n";
+
   yout.close();
   tokout.close();
   string cmd="cat "+token_file_name+" "+y_file_name+" > "+"_"+y_file_name;

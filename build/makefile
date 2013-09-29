@@ -7,8 +7,30 @@ CXXFLAGS=-g -Wall \
 SRC=src
 VPATH=../src/frontend:../src/lib:../src/ir:../src/as
 INCLUDE=-I../src/include
+LEX = flex -v
+YACC = bison -dv
 
-as.lex as.y: asgen out hash.o
+driver:y.o l.o strstack.o l.h  driver.cpp 
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -I.  $^ -o $@
+
+strstack.o: strstack.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+l.o: l.c
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+y.o: y.c
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+l.c: as.lex y.h
+	$(LEX) --prefix=dummy_ -o l.c $^
+
+l.h: as.lex
+	$(LEX) --header-file=l.h --prefix=dummy_ $^
+
+y.c y.h: _as.y
+	$(YACC) --name-prefix=dummy_ -o y.c $^
+
+as.lex as.y _as.y: asgen out hash.o
 	./asgen out as.lex as.y
 
 asgen: asGen.cpp libir.a
