@@ -146,6 +146,7 @@ int main(int argc,char *argv[])
   FOR(i,0,instr_size)
     {
       string n=ir.get_instr_name(i);
+      vector<int> len;
       if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
 	{
 #if ASGEN_COUT==1
