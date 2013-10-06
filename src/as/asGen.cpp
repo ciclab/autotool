@@ -59,6 +59,7 @@ int main(int argc,char *argv[])
   tokout<<"#include \"strstack.h\"\n";
   tokout<<"#include <stdio.h>\n";		\
   tokout<<"#include <string.h>\n";
+  tokout<<"extern char * yyret;"<<endl;
   tokout<<"extern int dummy_lineno;\n";
   tokout<<"extern void dummy_error(const char *s);\n";
   tokout<<"extern struct strstack strsta;\n";
@@ -124,7 +125,7 @@ int main(int argc,char *argv[])
 	{
 	  if(j)
 	    yout<<"|"<<endl;
-	  yout<<n<<"{$$=$1;}"<<endl;
+	  yout<<n<<"{yyret=$1;}"<<endl;
 	  ++j;
 	}
     }
