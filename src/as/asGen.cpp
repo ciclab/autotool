@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstdlib>
 #include <algorithm>
+#include <string>
 using namespace std;
 static string int2string(int v)
 {
@@ -118,7 +119,7 @@ int main(int argc,char *argv[])
 	      hc.insert(ent_code,en);
 	      tokout<<"%token TOK_"<<(ll)en<<endl;
 	      if(check_is_int(ent_code))
-		int_list.push_back(make_pair((ll)en,atoll(ent_code.c_str())));
+		int_list.push_back(make_pair((ll)en,strtoll(ent_code.c_str(),NULL,10)));
 	      lout<<"\""<<ent_code<<"\""<<" return TOK_"<<(ll)en<<";"<<endl;
 	    }
 	  yout<<"TOK_"<<(ll)en<<" {$$=(char*)\""<<int2binary(width,j)<<"\";}";
@@ -239,7 +240,7 @@ int main(int argc,char *argv[])
 			  hc.insert(token,tmp);
 			  tokout<<"%token TOK_"<<(ll)tmp<<endl;
 			  if(check_is_int(token))
-			    int_list.push_back(make_pair((ll)tmp,atoll(token.c_str())));
+			    int_list.push_back(make_pair((ll)tmp,strtoll(token.c_str(),NULL,10)));
 			  lout<<"\""<<token<<"\""<<" return TOK_"<<(ll)tmp<<";"<<endl;
 			}
 		      yout<<"TOK_"<<(ll)tmp<<" ";
@@ -247,6 +248,20 @@ int main(int argc,char *argv[])
 		  else
 		    {
 		      yout<<token<<' ';
+		      if(token.compare(0,5,"type_")==0)
+			{
+			  for(typeof(token.rbegin()) i=token.rbegin();;++i)
+			    if(*i=='_')
+			      {
+				++i;
+				int num(0);
+				for(int j=1;*i!='_';++i,j*=10)
+				  num=num+j*(*i-'0');
+				len.push_back(num);
+				break;
+			      }
+			}
+		      else len.push_back(-1);
 		    }
 		  break;
 		}
