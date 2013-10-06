@@ -27,6 +27,13 @@ static string int2binary(int w,int v)
     }
   return r;
 }
+static bool check_is_int(string c)
+{
+  FR(i,c)
+    if(*i<'0' || *i>'9')
+      return false;
+  return true;
+}
 int main(int argc,char *argv[])
 {
   assert(argc==4);
@@ -72,16 +79,18 @@ int main(int argc,char *argv[])
   tokout<<"char ch;\n";
   tokout<<"char * chp;\n";
   tokout<<"}\n";
+  tokout<<"%locations;\n";
   //lex rule name should be unique
   hash_control hc;
   // hash_control hc_len;
   char * cnt(NULL);
-
+  tokout<<"%type<integer> rule_int"<<endl;
   tokout<<"%token<integer> TOK_INT"<<endl;
   tokout<<"%token<chp> TOK_LABEL"<<endl;
   tokout<<"%token TOK_BLANK"<<endl;
   yout<<"%%\n";
 
+  vector<pair<ll,ll> > int_list;
   //output rules for enum
   int enum_size=ir.get_num_enum();
   FOR(i,0,enum_size)
@@ -108,6 +117,8 @@ int main(int argc,char *argv[])
 	      en=++cnt;
 	      hc.insert(ent_code,en);
 	      tokout<<"%token TOK_"<<(ll)en<<endl;
+	      if(check_is_int(ent_code))
+		int_list.push_back(make_pair((ll)en,atoll(ent_code.c_str())));
 	      lout<<"\""<<ent_code<<"\""<<" return TOK_"<<(ll)en<<";"<<endl;
 	    }
 	  yout<<"TOK_"<<(ll)en<<" {$$=(char*)\""<<int2binary(width,j)<<"\";}";
@@ -129,6 +140,7 @@ int main(int argc,char *argv[])
 	  ++j;
 	}
     }
+  yout<<";\n";
 
   //output rules for instructions
   FOR(i,0,instr_size)
@@ -190,18 +202,30 @@ int main(int argc,char *argv[])
 		    }
 		  if(!is_string)
 		    {
-		      //cout<<*j<<endl;
-		      if(!(*j==c_type_beg || *j==c_enum_beg))
-			{
-			  cout<<code<<endl;
-			  yout<<offi<<' '<<off.size()<<' '<<seg<<endl;
-			  FR(i,off)
-			    yout<<i->first<<' '<<i->second<<endl;
-			}
+		      // //cout<<*j<<endl;
+		      // if(!(*j==c_type_beg || *j==c_enum_beg))
+		      // 	{
+		      // 	  cout<<code<<endl;
+		      // 	  yout<<offi<<' '<<off.size()<<' '<<seg<<endl;
+		      // 	  FR(i,off)
+		      // 	    yout<<i->first<<' '<<i->second<<endl;
+		      // 	}
 		      assert(*j==c_type_beg || *j==c_enum_beg);
 		      ++off_in_code;
 		      ++j;
 		    }
+		  else {
+		      //cout<<*j<<endl;
+		      // if((*j==c_type_beg || *j==c_enum_beg))
+		      // 	{
+		      // 	  cout<<code<<endl;
+		      // 	  cout<<offi<<' '<<off.size()<<' '<<seg<<endl;
+		      // 	  FR(i,off)
+		      // 	    cout<<i->first<<' '<<i->second<<endl;
+		      // 	  cout<<binary<<endl;
+		      // 	}
+		      assert(!(*j==c_type_beg || *j==c_enum_beg));
+		  }
 		  for(;j!=code.end() && *j!=' ' && *j!='\1';++j,++off_in_code)
 		    token+=*j;
 		  if(is_string)
@@ -213,6 +237,8 @@ int main(int argc,char *argv[])
 			  tmp=++cnt;
 			  hc.insert(token,tmp);
 			  tokout<<"%token TOK_"<<(ll)tmp<<endl;
+			  if(check_is_int(token))
+			    int_list.push_back(make_pair((ll)tmp,atoll(token.c_str())));
 			  lout<<"\""<<token<<"\""<<" return TOK_"<<(ll)tmp<<";"<<endl;
 			}
 		      yout<<"TOK_"<<(ll)tmp<<" ";
@@ -240,6 +266,7 @@ int main(int argc,char *argv[])
 	    }
 	  yout<<"$$=tmp;";
 	  yout<<"}"<<endl;
+	  yout<<";"<<endl;
 	}
     }
   
@@ -254,7 +281,7 @@ int main(int argc,char *argv[])
       name="type_"+name+"_"+int2string(ty.len)+"_"+ty.get_type();
       tokout<<"%type<chp> "<<name<<endl;
       yout<<name<<": ";
-      yout<<"TOK_INT" ;
+      yout<<"rule_int" ;
       yout<<"{\n";
       yout<<"static char tmp["<<len<<"];"<<endl;
       yout<<"i2bs(tmp,$1,"<<len<<");"<<endl;
@@ -264,8 +291,13 @@ int main(int argc,char *argv[])
       yout<<"for(int i=0;i<"<<len<<";++i)"<<endl;
       yout<<"tmp[i]='L';"<<endl;
       yout<<"$$=tmp;}"<<endl;
-      
+      yout<<";"<<endl;
     }
+  
+  yout<<"rule_int: TOK_INT {$$=$1;}";
+  FR(i,int_list)
+    yout<<"| TOK_"<<i->first<<" {$$="<<i->second<<";};"<<endl;
+  yout<<";\n";
 
   lout<<"[_a-zA-Z][_a-zA-Z0-9]*	{\n\
         dummy_lval.chp=newstr1(&strsta,yytext);/*TODO*/return TOK_LABEL;}"<<endl;
@@ -280,7 +312,7 @@ int yywrap()\n\
         return 1;\n\
 }\n";
   yout<<"%%\nvoid yyerror(const char *s)\n{";
-  yout<<"fprintf (stderr, \"L%d: %s\",dummy_lineno,s);\n}\n";
+  yout<<"fprintf (stderr, \"L%d: %s \\n\",dummy_lineno,s);\n}\n";
 
   yout.close();
   tokout.close();

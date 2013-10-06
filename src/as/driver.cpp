@@ -11,16 +11,17 @@ int main()
 {
   char buf[4096];
   ini(&strsta);
-  for(;;)
+  //for(;;)
     {
       if(NULL==fgets(buf,sizeof(buf),stdin))
-	break;
+	//break;
       printf("%s\n",buf);
       YY_BUFFER_STATE bs=dummy__scan_string(buf);
       dummy_parse();
-      printf("%s",yyret);
+      printf("!%s",yyret);
       dummy__delete_buffer(bs);
       //printf("!%s\n",getstr(&strsta,getsize(&strsta)));
       clear(&strsta);
     }
+  return 0;
 }
