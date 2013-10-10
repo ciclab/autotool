@@ -58,14 +58,16 @@ int main(int argc,char *argv[])
   lout<<"#include \"y.h\""<<endl;
   lout<<"#include \"strstack.h\"\n";
   lout<<"extern struct strstack strsta;\n";
+  lout<<"#define YY_NO_INPUT\n";
   lout<<"%}\n";
   lout<<"BLANK [ \\t]+\n";
-  lout<<"%%\n";
+  lout<<"%option nounput\n";//to suppress yyunput defined but not used warning
+  lout<<"%%\n";// get rid of ‘input’ defined but not used warning
   lout<<"{BLANK} {return TOK_BLANK;}\n";
   //yacc file head
   tokout<<"%{\n";
   tokout<<"#include \"strstack.h\"\n";
-  tokout<<"#include <stdio.h>\n";		\
+  tokout<<"#include <stdio.h>\n";
   tokout<<"#include <string.h>\n";
   tokout<<"extern char * yyret;"<<endl;
   tokout<<"extern int dummy_lineno;\n";
@@ -74,7 +76,6 @@ int main(int argc,char *argv[])
   tokout<<"extern int dummy_lex(void);\n";
   tokout<<"extern void dummy_getExpression(const char * str);\n";
   tokout<<"%}\n";
-  
   tokout<<"%union{\n";
   tokout<<"int integer;\n";
   tokout<<"char ch;\n";
@@ -91,6 +92,7 @@ int main(int argc,char *argv[])
   tokout<<"%token TOK_BLANK"<<endl;
   yout<<"%%\n";
 
+  //
   vector<pair<ll,ll> > int_list;
   //output rules for enum
   int enum_size=ir.get_num_enum();
@@ -275,9 +277,10 @@ int main(int argc,char *argv[])
 	  //     FR(i,off)
 	  // 	yout<<i->first<<' '<<i->second<<endl;
 	  //   }
+	  yout<<"int i;\ni^=i;\n";
 	  FR(i,off)
 	    {
-	      yout<<"for(int i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
+	      yout<<"for(i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
 	      yout<<"tmp[i+"<<i->second<<"]=$"<<(i->first)<<"[i];"<<endl;
 	    }
 	  yout<<"$$=tmp;";
@@ -304,7 +307,8 @@ int main(int argc,char *argv[])
       yout<<"$$=tmp;}"<<endl;
       yout<<"|"<<" TOK_LABEL{"<<endl;
       yout<<"static char tmp["<<len<<"];"<<endl;
-      yout<<"for(int i=0;i<"<<len<<";++i)"<<endl;
+      yout<<"int i;\ni^=i;\n";
+      yout<<"for(i=0;i<"<<len<<";++i)"<<endl;
       yout<<"tmp[i]='L';"<<endl;
       yout<<"$$=tmp;}"<<endl;
       yout<<";"<<endl;

@@ -49,8 +49,11 @@ int newstr(struct strstack *ss,int num,const char *str[])
       (*ss).sta=(char **)realloc((*ss).sta,(*ss).size*sizeof(char*));
     }
   int len=0;
-  for(int i=0;i<num;++i)
-    len+=strlen(str[i]);
+  {
+    int i;
+    for(i=0;i<num;++i)
+      len+=strlen(str[i]);
+  }
 	
   (*ss).sta[(*ss).used]=(char *)calloc(len+1,sizeof(char));
 #ifdef DBG_STRSTACK
@@ -60,8 +63,11 @@ int newstr(struct strstack *ss,int num,const char *str[])
 	return 0;
     }
 #endif
-  for(int i=0;i<num;++i)
-    strcat((*ss).sta[(*ss).used],str[i]);
+  {
+    int i;
+    for(i=0;i<num;++i)
+      strcat((*ss).sta[(*ss).used],str[i]);
+  }
   return (*ss).used;
 }
 const char * getstr(const struct strstack *ss,int k)
