@@ -149,7 +149,6 @@ int main(int argc,char *argv[])
   FOR(i,0,instr_size)
     {
       string n=ir.get_instr_name(i);
-      vector<int> len;
       if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
 	{
 #if ASGEN_COUT==1
@@ -180,6 +179,10 @@ int main(int argc,char *argv[])
 	  //   	else cout<<*j;
 	  //     cout<<endl;
 	  //   }
+	  vector<int> len;
+	  vector<bool> need_reloc;
+	  len.resize(off.size());
+	  need_reloc.resize(off.size());
 	  for(typeof(code.begin()) j=code.begin();j!=code.end();)
 	    {
 	      ++seg;
@@ -259,11 +262,16 @@ int main(int argc,char *argv[])
 				int num(0);
 				for(int j=1;*i!='_';++i,j*=10)
 				  num=num+j*(*i-'0');
-				len.push_back(num);
+				len[offi-1]=num;
+				need_reloc[offi-1]=true;
 				break;
 			      }
 			}
-		      else len.push_back(-1);
+		      else
+			{//is enum
+			  Enum tmp=ir.find_enum(token);
+			  len[offi-1]=tmp.width();
+			}
 		    }
 		  break;
 		}
@@ -280,8 +288,21 @@ int main(int argc,char *argv[])
 	  yout<<"int i;\ni^=i;\n";
 	  FR(i,off)
 	    {
-	      yout<<"for(i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
+	      //yout<<"for(i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
+	      //*TODO* infact enum do not need check
+	      if(need_reloc[(int)(i-off.begin())])
+		{
+		  yout<<"if(isnumber($"<<(i->first)<<"))"<<endl;
+		  yout<<"{"<<endl;
+		}
+	      yout<<"for(i=0"<<";i<"<<len[(int)(i-off.begin())]<<";"<<"++i)"<<endl;
 	      yout<<"tmp[i+"<<i->second<<"]=$"<<(i->first)<<"[i];"<<endl;
+	      if(need_reloc[(int)(i-off.begin())])
+		{
+		  yout<<"}"<<endl;
+		  yout<<"else"<<endl;
+		  yout<<"dummy_getExpression("<<"$"<<(i->first)<<");"<<endl;
+		}
 	    }
 	  yout<<"$$=tmp;";
 	  yout<<"}"<<endl;

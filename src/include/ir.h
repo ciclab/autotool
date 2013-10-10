@@ -29,6 +29,7 @@ private:
   string top_rule_name;
 public:
   //asgen interface
+  Enum find_enum(string name);
   Type get_type(int);
   int type_size();
   void get_enum(int,Enum &);

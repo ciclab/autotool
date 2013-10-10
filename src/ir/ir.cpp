@@ -2,6 +2,16 @@
 #include <iostream>
 #include "def.h"
 using namespace std;
+Enum Ir::find_enum(string name)
+{
+  FR(i,enumm)
+    if((*i).enum_name()==name)
+      return *i;
+  //should always find
+  Enum tmp;
+  assert(0);
+  return tmp;
+}
 Type Ir::get_type(int i)
 {
   return type[i];

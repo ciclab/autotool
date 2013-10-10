@@ -12,6 +12,13 @@ string Enum::enum_name()
 {
   return name;
 }
+int Enum::width()
+{
+  int w=0;
+  for(int i=1;i<list.size();++w,i<<=1)
+    ;
+  return w;
+}
 int Enum::size()
 {
   return list.size();

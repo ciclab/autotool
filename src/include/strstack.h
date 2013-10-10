@@ -13,4 +13,5 @@ char* newstr1(struct strstack *ss,const char str[]);
 const char * getstr(const struct strstack *ss,int k);
 int getsize(const struct strstack *ss);
 void i2bs(char *,int,int);
+bool isnumber(const char*);
 #endif
