@@ -15,7 +15,7 @@ string Enum::enum_name()
 int Enum::width()
 {
   int w=0;
-  for(int i=1;i<list.size();++w,i<<=1)
+  for(int i=1;i<(int)list.size();++w,i<<=1)
     ;
   return w;
 }

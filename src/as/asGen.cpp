@@ -84,6 +84,8 @@ int main(int argc,char *argv[])
   tokout<<"%locations;\n";
   //lex rule name should be unique
   hash_control hc;
+  hash_control hc_bfd;
+  vector<pair<string,ppi> > bfd_list;
   // hash_control hc_len;
   char * cnt(NULL);
   tokout<<"%type<integer> rule_int"<<endl;
@@ -286,12 +288,14 @@ int main(int argc,char *argv[])
 	  // 	yout<<i->first<<' '<<i->second<<endl;
 	  //   }
 	  yout<<"int i;\ni^=i;\n";
+	  vector<ppi> relocinfo;
 	  FR(i,off)
 	    {
 	      //yout<<"for(i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
 	      //*TODO* infact enum do not need check
 	      if(need_reloc[(int)(i-off.begin())])
 		{
+		  relocinfo.push_back(ppi(i->second,len[(int)(i-off.begin())]));
 		  yout<<"if(isnumber($"<<(i->first)<<"))"<<endl;
 		  yout<<"{"<<endl;
 		}
@@ -307,11 +311,88 @@ int main(int argc,char *argv[])
 	  yout<<"$$=tmp;";
 	  yout<<"}"<<endl;
 	  yout<<";"<<endl;
+	  //gether relocinfo for bfd
+	  FR(i,relocinfo)
+	    {
+	      int o=binary.length()-(i->first+i->second);
+	      int l=i->second;
+	      string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+int2string(l);
+	      if(hc_bfd.find(bfd_name)==NULL)
+		{
+		  hc_bfd.insert(bfd_name,(void*)(bfd_list.size()+1));
+		  bfd_list.push_back(make_pair(bfd_name,ppi(o,l)));
+		}
+	    }
 	}
     }
-  
-  //output rules for type
+  ofstream bout("coff-dummy2");
+  bout<<"static reloc_howto_type mips_howto_table[] =\n{\n";
+  FR(i,bfd_list)
+    {
+      if(i!=bfd_list.begin())
+	bout<<",\n";
+      bout<<"HOWTO ("<<i->first<<",	/* type */\n";
+      bout<<"2,			/* TODO rightshift */\n";//TODO my be variable
+      bout<<"2,			/* TODO size (0 = byte, 1 = short, 2 = long) */\n";
+      bout<<i->second.second<<",			/* bitsize */\n";
+      bout<<"TRUE,			/* pc_relative */\n";
+      bout<<i->second.first<<",			/* bitpos */\n";
+      bout<<"complain_overflow_signed, /*TODO complain_on_overflow */\n";
+      bout<<"mips_generic_reloc,			/* special_function */\n";
+      bout<<"\""<<i->first<<"\",		/* name */\n";
+      bout<<"TRUE,			/* partial_inplace */\n";
+      //calculate mask
+      int msk(0);//now only 32bit
+      for(int j=0;j<i->second.second;++j)
+	msk|=(1<<(j+i->second.first));
+      bout<<"0X"<<std::hex<<msk<<",			/* TODO src_mask */\n";
+      bout<<"0X"<<std::hex<<msk<<",			/* TODO dst_mask */\n";
+      bout<<"TRUE)		/* TODO pcrel_offset */\n";
+    }
+  bout<<"};\n";
 
+
+  bout<<"/* Get the howto structure for a generic reloc type.  */\n";
+  bout<<"static reloc_howto_type *mips_bfd_reloc_type_lookup\
+ (bfd *abfd ATTRIBUTE_UNUSED,\
+bfd_reloc_code_real_type code)\n{";
+  bout<<"  int mips_type;\n\
+  switch (code)\n\
+    {\n";
+  FR(i,bfd_list)
+    {
+      bout<<"case "<<i->first<<":"<<endl;
+      bout<<"mips_type="<<(int)(i-bfd_list.begin())<<";\nbreak;"<<endl;
+    }
+  bout<<"default:\n\
+      return (reloc_howto_type *) NULL;\n\
+    }\n\
+  return &mips_howto_table[mips_type];\n}\n";
+  
+  ofstream rout("reloc.c");
+  // for content in bfd/doc/reloc.c
+  FR(i,bfd_list)
+    {
+      if(i==bfd_list.begin())
+	rout<<"ENUM\n  "<<i->first<<endl;
+      else rout<<"ENUMX\n  "<<i->first<<endl;
+    }
+  rout<<"ENUMDOC\n  DUMMY\n"<<endl;
+  // for content in bfd/doc/reloc.texi
+  FR(i,bfd_list)
+    {
+      if(i==bfd_list.begin())
+	rout<<"@deffn {} "<<i->first<<endl;
+      else
+	rout<<"@deffnx {} "<<i->first<<endl;
+      //rout<<"Adapteva EPIPHANY -"<<i->first<<endl;
+    }
+  rout<<"@end deffn"<<endl;
+  rout<<"DUMMY\n@end deffn\n";
+  rout.close();
+
+
+  //output rules for type
   int type_size=(int)ir.type_size();
   FOR(i,0,type_size)
     {
@@ -334,7 +415,13 @@ int main(int argc,char *argv[])
       yout<<"$$=tmp;}"<<endl;
       yout<<";"<<endl;
     }
-  
+  bout.close();
+  system("cat ../src/as/coff-dummy1 \
+./coff-dummy2 \
+../src/as/coff-dummy3 \
+ ../src/as/coff-dummy4 > coff-dummy.c; indent ./coff-dummy.c");
+
+
   yout<<"rule_int: TOK_INT {$$=$1;}";
   FR(i,int_list)
     yout<<"| TOK_"<<i->first<<" {$$="<<i->second<<";};"<<endl;
@@ -361,3 +448,4 @@ int yywrap()\n\
   system(cmd.c_str());
   return 0;
 }
+
