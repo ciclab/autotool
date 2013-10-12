@@ -74,7 +74,7 @@ int main(int argc,char *argv[])
   tokout<<"extern void dummy_error(const char *s);\n";
   tokout<<"extern struct strstack strsta;\n";
   tokout<<"extern int dummy_lex(void);\n";
-  tokout<<"extern void dummy_getExpression(const char * str);\n";
+  tokout<<"extern void get_expr(const char * str,int bfd_type);\n";
   tokout<<"%}\n";
   tokout<<"%union{\n";
   tokout<<"int integer;\n";
@@ -148,6 +148,7 @@ int main(int argc,char *argv[])
   yout<<";\n";
 
   //output rules for instructions
+  int max_reloc_num(0);//record max relocation number
   FOR(i,0,instr_size)
     {
       string n=ir.get_instr_name(i);
@@ -303,9 +304,14 @@ int main(int argc,char *argv[])
 	      yout<<"tmp[i+"<<i->second<<"]=$"<<(i->first)<<"[i];"<<endl;
 	      if(need_reloc[(int)(i-off.begin())])
 		{
+		  int l=len[(int)(i-off.begin())];
+		  int o=binary.length()-(i->second+l);
 		  yout<<"}"<<endl;
-		  yout<<"else"<<endl;
-		  yout<<"dummy_getExpression("<<"$"<<(i->first)<<");"<<endl;
+		  yout<<"else\n"<<endl;
+		  yout<<"get_expr("<<i->first<<",";
+		  string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+
+		    int2string(l);
+		  yout<<bfd_name<<");"<<endl;
 		}
 	    }
 	  yout<<"$$=tmp;";
@@ -323,8 +329,25 @@ int main(int argc,char *argv[])
 		  bfd_list.push_back(make_pair(bfd_name,ppi(o,l)));
 		}
 	    }
+	  max_reloc_num=max(max_reloc_num,(int)relocinfo.size());
 	}
     }
+  
+
+  ofstream tout("tc-dummy2");
+  tout<<"static bfd_reloc_code_real_type offset_reloc["<<max_reloc_num<<"];\n";
+  tout<<"static expressionS expr["<<max_reloc_num<<"];\n";
+  tout<<"int offset_cnt;"<<endl;
+  tout<<"char * yyret;"<<endl;
+  tout<<"void md_assemble (char *str)\n";
+  tout<<"{\n";
+  tout<<"YY_BUFFER_STATE bs=dummy__scan_string(str);\n";
+  tout<<"offset_cnt=0;\n";
+  tout<<"dummy_parse();\n";
+  tout<<"dummy__delete_buffer(bs);\n";
+  tout<<"clear(&strsta);\n";
+  tout<<"}\n";
+
   ofstream bout("coff-dummy2");
   bout<<"static reloc_howto_type mips_howto_table[] =\n{\n";
   FR(i,bfd_list)

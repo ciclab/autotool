@@ -10,8 +10,8 @@ INCLUDE=-I../src/include
 LEX = flex -v
 YACC = bison -dv
 
-driver:y.o l.o strstack.o l.h  driver.cpp 
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -I.  $^ -o $@
+# driver:y.o l.o strstack.o l.h  driver.cpp 
+# 	$(CXX) $(CXXFLAGS) $(INCLUDE) -I.  $^ -o $@
 
 strstack.o: strstack.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
@@ -30,7 +30,7 @@ l.h: as.lex
 y.c y.h: _as.y
 	$(YACC) --name-prefix=dummy_ -o y.c $^
 
-as.lex as.y _as.y coff-dummy.c reloc.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4
+as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4
 	./asgen out as.lex as.y
 
 asgen: asGen.cpp libir.a

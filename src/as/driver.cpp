@@ -3,7 +3,7 @@ extern int dummy_parse();
 #include "strstack.h"
 strstack strsta;
 char * yyret;
-void dummy_getExpression(const char *str)
+void get_expr(const char *str,int bfd_type)
 {
       printf("%s %s %d: %s\n",__FILE__,__FUNCTION__,__LINE__,str);
 }
