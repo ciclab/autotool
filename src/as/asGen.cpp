@@ -66,6 +66,7 @@ int main(int argc,char *argv[])
   lout<<"{BLANK} {return TOK_BLANK;}\n";
   //yacc file head
   tokout<<"%{\n";
+  tokout<<"#include \"bfd.h\"\n";
   tokout<<"#include \"strstack.h\"\n";
   tokout<<"#include <stdio.h>\n";
   tokout<<"#include <string.h>\n";
@@ -307,11 +308,15 @@ int main(int argc,char *argv[])
 		  int l=len[(int)(i-off.begin())];
 		  int o=binary.length()-(i->second+l);
 		  yout<<"}"<<endl;
-		  yout<<"else\n"<<endl;
-		  yout<<"get_expr("<<i->first<<",";
+		  yout<<"else"<<endl;
+		  yout<<"{\nint tmp=get_expr("<<i->first<<",";
 		  string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+
 		    int2string(l);
 		  yout<<bfd_name<<");"<<endl;
+		  yout<<"int j="<<(1<<(l-1))<<endl;
+		  yout<<"for(i=0;i<"<<l<<";++i)//l<31\n";
+		  yout<<"tmp["<<i->second<<"+i]+=(i&tmp)?\"1\":\"0\"";
+		  yout<<"}"<<endl;
 		}
 	    }
 	  yout<<"$$=tmp;";
