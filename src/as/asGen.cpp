@@ -313,9 +313,9 @@ int main(int argc,char *argv[])
 		  string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+
 		    int2string(l);
 		  yout<<bfd_name<<");"<<endl;
-		  yout<<"int j="<<(1<<(l-1))<<endl;
-		  yout<<"for(i=0;i<"<<l<<";++i)//l<31\n";
-		  yout<<"tmp["<<i->second<<"+i]+=(i&tmp)?\"1\":\"0\"";
+		  yout<<"int j="<<(1<<(l-1))<<";"<<endl;
+		  yout<<"for(i=0;i<"<<l<<";++i,j>>=1)//l<31\n";
+		  yout<<"tmp["<<i->second<<"+i]+=(j&tmp)?\"1\":\"0\"";
 		  yout<<"}"<<endl;
 		}
 	    }
@@ -350,9 +350,18 @@ int main(int argc,char *argv[])
   tout<<"offset_cnt=0;\n";
   tout<<"dummy_parse();\n";
   tout<<"dummy__delete_buffer(bs);\n";
+  tout<<"char * f=frag_more(4);\n";      //TODO should be a variable
+  tout<<"int i;\n";
+  tout<<"for(i=0;i<offset_cnt;++i)\n";
+  tout<<"fix_new_exp(frag_now,f-frag_now->fr_listeral,4/*TODO*/,expr+i,true,offset_reloc[i]);\n";
+  tout<<"int j;\n";
+  tout<<"for(i=0;i<4;++i)\n";
+  tout<<"for(j=0;j<8;++j)\n";
+  tout<<"f[i*8+j]=yyret[(3-i)*8+j];\n";
   tout<<"clear(&strsta);\n";
   tout<<"}\n";
-
+  tout.close();
+  system("indent ./tc-dummy2");
   ofstream bout("coff-dummy2");
   bout<<"static reloc_howto_type mips_howto_table[] =\n{\n";
   FR(i,bfd_list)

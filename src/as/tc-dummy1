@@ -1,0 +1,223 @@
+#include "as.h"
+#include "config.h"
+#include "subsegs.h"
+#include "safe-ctype.h"
+
+#include "dwarf2dbg.h"
+#include "dw2gencfi.h"
+#include "l.h"
+#include "strstack.h"
+struct strstack strsta;
+char *yyret;
+extern int dummy_parse (void);
+
+#ifdef DEBUG
+#define DBG(x) printf x
+#else
+#define DBG(x)
+#endif
+
+#ifdef OBJ_MAYBE_ELF
+
+#undef OBJ_PROCESS_STAB
+#undef OUTPUT_FLAVOR
+#undef S_GET_ALIGN
+#undef S_GET_SIZE
+#undef S_SET_ALIGN
+#undef S_SET_SIZE
+#undef obj_frob_file
+#undef obj_frob_file_after_relocs
+#undef obj_frob_symbol
+#undef obj_pop_insert
+#undef obj_sec_sym_ok_for_reloc
+#undef OBJ_COPY_SYMBOL_ATTRIBUTES
+
+#include "obj-elf.h"
+/* Fix any of them that we actually care about.  */
+#undef OUTPUT_FLAVOR
+#define OUTPUT_FLAVOR mips_output_flavor()
+#endif
+
+#if defined (OBJ_ELF)
+#include "elf/mips.h"
+#endif
+
+#ifndef ECOFF_DEBUGGING
+#define NO_ECOFF_DEBUGGING
+#define ECOFF_DEBUGGING 0
+#endif
+
+#ifdef TE_IRIX
+int mips_flag_pdr = FALSE;
+#else
+int mips_flag_pdr = TRUE;
+#endif
+
+#include "ecoff.h"
+
+#if defined (OBJ_ELF) || defined (OBJ_MAYBE_ELF)
+static char *mips_regmask_frag;
+#endif
+
+/* Allow override of standard little-endian ECOFF format.  */
+
+#ifndef ECOFF_LITTLE_FORMAT
+#define ECOFF_LITTLE_FORMAT "ecoff-littlemips"
+#endif
+
+extern int target_big_endian;
+
+
+/* The name of the readonly data section.  */
+#define RDATA_SECTION_NAME (OUTPUT_FLAVOR == bfd_target_ecoff_flavour \
+			    ? ".rdata" \
+			    : OUTPUT_FLAVOR == bfd_target_coff_flavour \
+			    ? ".rdata" \
+			    : OUTPUT_FLAVOR == bfd_target_elf_flavour \
+			    ? ".rodata" \
+			    : (abort (), ""))
+
+unsigned long mips_gprmask;
+unsigned long mips_cprmask[4];
+
+struct option md_longopts[] = { };
+
+const char *md_shortopts = "O::g::G:";
+size_t md_longopts_size = sizeof (md_longopts);
+enum mips_pic_level mips_pic;
+
+/* If we can determine in advance that GP optimization won't be
+   possible, we can skip the relaxation stuff that tries to produce
+   GP-relative references.  This makes delay slot optimization work
+   better.
+
+   This function can only provide a guess, but it seems to work for
+   gcc output.  It needs to guess right for gcc, otherwise gcc
+   will put what it thinks is a GP-relative instruction in a branch
+   delay slot.
+
+   I don't know if a fix is needed for the SVR4_PIC mode.  I've only
+   fixed it for the non-PIC mode.  KR 95/04/07  */
+
+/* This array holds the chars that always start a comment.  If the
+    pre-processor is disabled, these aren't very useful */
+const char comment_chars[] = "#";
+
+/* This array holds the chars that only start a comment at the beginning of
+   a line.  If the line seems to have the form '# 123 filename'
+   .line and .file directives will appear in the pre-processed output */
+/* Note that input_file.c hand checks for '#' at the beginning of the
+   first line of the input file.  This is because the compiler outputs
+   #NO_APP at the beginning of its output.  */
+/* Also note that C style comments are always supported.  */
+const char line_comment_chars[] = "#";
+
+/* This array holds machine specific line separator characters.  */
+const char line_separator_chars[] = ";";
+
+/* Chars that can be used to separate mant from exp in floating point nums */
+const char EXP_CHARS[] = "eE";
+
+/* Chars that mean this number is a floating point constant */
+/* As in 0f12.456 */
+/* or    0d1.2345e12 */
+const char FLT_CHARS[] = "rRsSfFdDxXpP";
+
+
+#define internalError()							\
+    as_fatal (_("internal Error, line %d, %s"), __LINE__, __FILE__)
+
+/* Pseudo-op table.
+
+   The following pseudo-ops from the Kane and Heinrich MIPS book
+   should be defined here, but are currently unsupported: .alias,
+   .galive, .gjaldef, .gjrlive, .livereg, .noalias.
+
+   The following pseudo-ops from the Kane and Heinrich MIPS book are
+   specific to the type of debugging information being generated, and
+   should be defined by the object format: .aent, .begin, .bend,
+   .bgnb, .end, .endb, .ent, .fmask, .frame, .loc, .mask, .verstamp,
+   .vreg.
+
+   The following pseudo-ops from the Kane and Heinrich MIPS book are
+   not MIPS CPU specific, but are also not specific to the object file
+   format.  This file is probably the best place to define them, but
+   they are not currently supported: .asm0, .endr, .lab, .struct.  */
+
+
+/* Export the ABI address size for use by TC_ADDRESS_BYTES for the
+   purpose of the `.dc.a' internal pseudo-op.  */
+
+int
+mips_address_bytes (void)
+{
+  DBG (("INTERNAL ERROR: %s %d %s\n", __FUNCTION__, __LINE__, __FUNCTION__));
+  return 0;
+}
+
+extern void pop_insert (const pseudo_typeS *);
+
+void
+mips_pop_insert (void)
+{
+  DBG (("INTERNAL ERROR: %s %d %s\n", __FUNCTION__, __LINE__, __FUNCTION__));
+}
+
+/* Symbols labelling the current insn.  */
+
+struct insn_label_list
+{
+  struct insn_label_list *next;
+  symbolS *label;
+};
+
+#define label_list tc_segment_info_data.labels
+
+/* This is set to the resulting size of the instruction to be produced
+   by mips16_ip if an explicit extension is used or by mips_ip if an
+   explicit size is supplied.  */
+
+#ifdef OBJ_ELF
+/* The pdr segment for per procedure frame/regmask info.  Not used for
+   ECOFF debugging.  */
+
+static segT pdr_seg;
+#endif
+
+/* The default target format to use.  */
+
+#if defined (TE_FreeBSD)
+#define ELF_TARGET(PREFIX, ENDIAN) PREFIX "trad" ENDIAN "mips-freebsd"
+#elif defined (TE_TMIPS)
+#define ELF_TARGET(PREFIX, ENDIAN) PREFIX "trad" ENDIAN "mips"
+#else
+#define ELF_TARGET(PREFIX, ENDIAN) PREFIX ENDIAN "mips"
+#endif
+
+const char *
+mips_target_format (void)
+{
+  DBG (("INTERNAL ERROR: %s %d %s\n", __FUNCTION__, __LINE__, __FUNCTION__));
+  return NULL;
+}
+
+
+void
+md_begin (void)
+{
+  const char *retval = NULL;
+  int i;
+
+  if (!bfd_set_arch_mach (stdoutput, bfd_arch_dummy, 0))
+    as_warn (_("Could not set architecture and machine"));
+
+  bfd_set_section_alignment (stdoutput, text_section, 2);
+  bfd_set_section_alignment (stdoutput, data_section, 2);
+  bfd_set_section_alignment (stdoutput, bss_section, 2);
+  
+  
+  ini(&strsta);
+}
+
+
+
