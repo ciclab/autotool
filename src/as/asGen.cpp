@@ -360,8 +360,43 @@ int main(int argc,char *argv[])
   tout<<"f[i*8+j]=yyret[(3-i)*8+j];\n";
   tout<<"clear(&strsta);\n";
   tout<<"}\n";
+  tout<<"void md_apply_fix(fixS * fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)\n";
+  tout<<"{\n";
+  tout<<"bfd_byte *buf;\n";
+  tout<<"reloc_howto_type *howto;\n";
+  tout<<"howto = bfd_reloc_type_lookup(stdoutput, fixP->fx_r_type);\n";
+  tout<<"if (!howto)\n";
+  tout<<"return;\n";
+  tout<<"buf = (bfd_byte *) (fixP->fx_frag->fr_literal + fixP->fx_where);\n";
+  tout<<"if (fixP->fx_addsy == NULL && !fixP->fx_pcrel && fixP->fx_tcbit == 0)\n";
+  tout<<"fixP->fx_done = 1;\n";
+  tout<<"switch (fixP->fx_r_type) {\n";
+  FR(i,bfd_list)
+    {
+      tout<<"case: "<<i->first<<endl;
+      tout<<"if(fixP->fx_done)\n{\n";
+      tout<<"int val=(int)(*valP);\n";
+      int o=i->second.first,l=i->second.second;
+      assert(l<32);
+      tout<<"int v(0);\n";
+      tout<<"int i;\n";
+      tout<<"for(i=0;i<4;++i)\n";
+      tout<<"v=(v<<8)|val[3-i];\n";
+      tout<<"int k=val&((1<<"<<l<<")-1);\n";
+      tout<<"v|=(k<<"<<o<<");\n";
+      tout<<"for(i=0;i<4;++i,v>>=1)\n";
+      tout<<"buf[i]=v&((1<<8)-1);\n";
+      tout<<"}\n";
+      tout<<"break;\n";
+    }
+  tout<<"default:\n";
+  tout<<"printf(\"internal error\");\n";
+  tout<<"break;\n";
+  tout<<"}";
+  tout<<"fixP->fx_addnumber = *valP;\n}\n";
   tout.close();
-  system("indent ./tc-dummy2");
+  system("cat ../src/as/tc-dummy1 ./tc-dummy2 ../src/as/tc-dummy3 > tc-dummy.c;\
+indent ./tc-dummy.c");
   ofstream bout("coff-dummy2");
   bout<<"static reloc_howto_type mips_howto_table[] =\n{\n";
   FR(i,bfd_list)

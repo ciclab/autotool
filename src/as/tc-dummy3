@@ -102,3 +102,12 @@ DBG(("md_section_align\n"));
     }
 return 0;
 }
+
+
+int md_estimate_size_before_relax(fragS * fragp, asection * segtype)
+{
+	DBG(("md_estimate_size_before_relax\n"));
+	WST(fragp);
+	WST(segtype);
+	return 0;
+}
