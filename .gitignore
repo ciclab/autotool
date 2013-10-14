@@ -1,0 +1,7 @@
+build/in
+
+*.o
+*.a
+
+build/asgen
+build/rd
