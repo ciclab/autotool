@@ -5,12 +5,12 @@
 #define DBG_STRSTACK
 #define STACK_SIZE (257)
 #include "strstack.h"
-bool isnumber(const char *c)
+int isnumber(const char *c)
 {
   for(;*c;++c)
     if(*c<'0' || *c>'9')
-      return false;
-  return true;
+      return 1;
+  return 0;
 }
 void i2bs(char *buf,int v,int len)
 {

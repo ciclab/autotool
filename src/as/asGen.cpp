@@ -66,6 +66,7 @@ int main(int argc,char *argv[])
   lout<<"{BLANK} {return TOK_BLANK;}\n";
   //yacc file head
   tokout<<"%{\n";
+  tokout<<"#include \"config.h\"\n";
   tokout<<"#include \"bfd.h\"\n";
   tokout<<"#include \"strstack.h\"\n";
   tokout<<"#include <stdio.h>\n";
@@ -75,7 +76,7 @@ int main(int argc,char *argv[])
   tokout<<"extern void dummy_error(const char *s);\n";
   tokout<<"extern struct strstack strsta;\n";
   tokout<<"extern int dummy_lex(void);\n";
-  tokout<<"extern void get_expr(const char * str,int bfd_type);\n";
+  tokout<<"extern int get_expr(const char * str,int bfd_type);\n";
   tokout<<"%}\n";
   tokout<<"%union{\n";
   tokout<<"int integer;\n";
@@ -86,7 +87,7 @@ int main(int argc,char *argv[])
   //lex rule name should be unique
   hash_control hc;
   hash_control hc_bfd;
-  vector<pair<string,ppi> > bfd_list;
+  vector<pair<pair<string,int>,ppi> > bfd_list;
   // hash_control hc_len;
   char * cnt(NULL);
   tokout<<"%type<integer> rule_int"<<endl;
@@ -294,7 +295,6 @@ int main(int argc,char *argv[])
 	  FR(i,off)
 	    {
 	      //yout<<"for(i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
-	      //*TODO* infact enum do not need check
 	      if(need_reloc[(int)(i-off.begin())])
 		{
 		  relocinfo.push_back(ppi(i->second,len[(int)(i-off.begin())]));
@@ -309,13 +309,13 @@ int main(int argc,char *argv[])
 		  int o=binary.length()-(i->second+l);
 		  yout<<"}"<<endl;
 		  yout<<"else"<<endl;
-		  yout<<"{\nint tmp=get_expr("<<i->first<<",";
+		  yout<<"{\nint t=get_expr($"<<i->first<<",";
 		  string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+
-		    int2string(l);
+		    int2string(l)+"_"+int2string((int)binary.length());
 		  yout<<bfd_name<<");"<<endl;
 		  yout<<"int j="<<(1<<(l-1))<<";"<<endl;
 		  yout<<"for(i=0;i<"<<l<<";++i,j>>=1)//l<31\n";
-		  yout<<"tmp["<<i->second<<"+i]+=(j&tmp)?\"1\":\"0\"";
+		  yout<<"tmp["<<i->second<<"+i]=(j&t)?\'1\':\'0\';";
 		  yout<<"}"<<endl;
 		}
 	    }
@@ -327,11 +327,11 @@ int main(int argc,char *argv[])
 	    {
 	      int o=binary.length()-(i->first+i->second);
 	      int l=i->second;
-	      string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+int2string(l);
+	      string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+int2string(l)+"_"+int2string((int)binary.length());
 	      if(hc_bfd.find(bfd_name)==NULL)
 		{
 		  hc_bfd.insert(bfd_name,(void*)(bfd_list.size()+1));
-		  bfd_list.push_back(make_pair(bfd_name,ppi(o,l)));
+		  bfd_list.push_back(make_pair(make_pair(bfd_name,(int)binary.length()),ppi(o,l)));
 		}
 	    }
 	  max_reloc_num=max(max_reloc_num,(int)relocinfo.size());
@@ -341,7 +341,7 @@ int main(int argc,char *argv[])
 
   ofstream tout("tc-dummy2");
   tout<<"static bfd_reloc_code_real_type offset_reloc["<<max_reloc_num<<"];\n";
-  tout<<"static expressionS expr["<<max_reloc_num<<"];\n";
+  tout<<"static expressionS expr_list["<<max_reloc_num<<"];\n";
   tout<<"int offset_cnt;"<<endl;
   tout<<"char * yyret;"<<endl;
   tout<<"void md_assemble (char *str)\n";
@@ -350,42 +350,48 @@ int main(int argc,char *argv[])
   tout<<"offset_cnt=0;\n";
   tout<<"dummy_parse();\n";
   tout<<"dummy__delete_buffer(bs);\n";
-  tout<<"char * f=frag_more(4);\n";      //TODO should be a variable
+  tout<<"int len;\n";
+  tout<<"for(len=0;yyret[len];++len);\nlen/=8;\n";
   tout<<"int i;\n";
+  tout<<"char * f=frag_more(len);\n";      //TODO should be a variable
   tout<<"for(i=0;i<offset_cnt;++i)\n";
-  tout<<"fix_new_exp(frag_now,f-frag_now->fr_listeral,4/*TODO*/,expr+i,true,offset_reloc[i]);\n";
-  tout<<"int j;\n";
-  tout<<"for(i=0;i<4;++i)\n";
-  tout<<"for(j=0;j<8;++j)\n";
-  tout<<"f[i*8+j]=yyret[(3-i)*8+j];\n";
+  tout<<"fix_new_exp(frag_now,f-frag_now->fr_literal,4/*TODO*/,expr_list+i,TRUE,offset_reloc[i]);\n";
+  tout<<"int j,k;\n";
+  tout<<"for(j=0;j<len;++j)\n";
+  tout<<"for(k=0;k<8;++k)\n";
+  tout<<"f[j*8+k]=yyret[(len-1-j)*8+k];\n";
   tout<<"clear(&strsta);\n";
   tout<<"}\n";
   tout<<"void md_apply_fix(fixS * fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)\n";
   tout<<"{\n";
-  tout<<"bfd_byte *buf;\n";
+  //tout<<"bfd_byte *buf;\n";
   tout<<"reloc_howto_type *howto;\n";
   tout<<"howto = bfd_reloc_type_lookup(stdoutput, fixP->fx_r_type);\n";
   tout<<"if (!howto)\n";
   tout<<"return;\n";
-  tout<<"buf = (bfd_byte *) (fixP->fx_frag->fr_literal + fixP->fx_where);\n";
+  tout<<"bfd_byte * buf = (bfd_byte *) (fixP->fx_frag->fr_literal + fixP->fx_where);\n";
   tout<<"if (fixP->fx_addsy == NULL && !fixP->fx_pcrel && fixP->fx_tcbit == 0)\n";
   tout<<"fixP->fx_done = 1;\n";
   tout<<"switch (fixP->fx_r_type) {\n";
   FR(i,bfd_list)
     {
-      tout<<"case: "<<i->first<<endl;
+      tout<<"case "<<i->first.first<<":"<<endl;
       tout<<"if(fixP->fx_done)\n{\n";
-      tout<<"int val=(int)(*valP);\n";
-      int o=i->second.first,l=i->second.second;
-      assert(l<32);
-      tout<<"int v(0);\n";
-      tout<<"int i;\n";
-      tout<<"for(i=0;i<4;++i)\n";
-      tout<<"v=(v<<8)|val[3-i];\n";
-      tout<<"int k=val&((1<<"<<l<<")-1);\n";
-      tout<<"v|=(k<<"<<o<<");\n";
-      tout<<"for(i=0;i<4;++i,v>>=1)\n";
-      tout<<"buf[i]=v&((1<<8)-1);\n";
+      /*TODO may be not only long long*/
+      // tout<<"int val=int(*valP);\n";
+      // int o=i->second.first,l=i->second.second;
+      // int binary_len=i->first.second;
+      // /*TODO*/
+      // //assert((binary_len%8)==0);
+      // int bytes=binary_len/8;
+      // tout<<"int v(0);\n";
+      // tout<<"int i;\n";
+      // tout<<"for(i=0;i<"<<bytes<<";++i)\n";
+      // tout<<"v=(v<<8)|val["<<bytes-1<<"-i];\n";
+      // tout<<"int k=val&((1LL<<"<<l<<")-1);\n";
+      // tout<<"v|=(k<<"<<o<<");\n";
+      // tout<<"for(i=0;i<"<<bytes<<";++i,v>>=1)\n";
+      // tout<<"buf[i]=v&((1<<8)-1);\n";
       tout<<"}\n";
       tout<<"break;\n";
     }
@@ -403,7 +409,7 @@ indent ./tc-dummy.c");
     {
       if(i!=bfd_list.begin())
 	bout<<",\n";
-      bout<<"HOWTO ("<<i->first<<",	/* type */\n";
+      bout<<"HOWTO ("<<i->first.first<<",	/* type */\n";
       bout<<"2,			/* TODO rightshift */\n";//TODO my be variable
       bout<<"2,			/* TODO size (0 = byte, 1 = short, 2 = long) */\n";
       bout<<i->second.second<<",			/* bitsize */\n";
@@ -411,7 +417,7 @@ indent ./tc-dummy.c");
       bout<<i->second.first<<",			/* bitpos */\n";
       bout<<"complain_overflow_signed, /*TODO complain_on_overflow */\n";
       bout<<"mips_generic_reloc,			/* special_function */\n";
-      bout<<"\""<<i->first<<"\",		/* name */\n";
+      bout<<"\""<<i->first.first<<"\",		/* name */\n";
       bout<<"TRUE,			/* partial_inplace */\n";
       //calculate mask
       int msk(0);//now only 32bit
@@ -433,7 +439,7 @@ bfd_reloc_code_real_type code)\n{";
     {\n";
   FR(i,bfd_list)
     {
-      bout<<"case "<<i->first<<":"<<endl;
+      bout<<"case "<<i->first.first<<":"<<endl;
       bout<<"mips_type="<<(int)(i-bfd_list.begin())<<";\nbreak;"<<endl;
     }
   bout<<"default:\n\
@@ -446,21 +452,21 @@ bfd_reloc_code_real_type code)\n{";
   FR(i,bfd_list)
     {
       if(i==bfd_list.begin())
-	rout<<"ENUM\n  "<<i->first<<endl;
-      else rout<<"ENUMX\n  "<<i->first<<endl;
+	rout<<"ENUM\n  "<<i->first.first<<endl;
+      else rout<<"ENUMX\n  "<<i->first.first<<endl;
     }
   rout<<"ENUMDOC\n  DUMMY\n"<<endl;
   // for content in bfd/doc/reloc.texi
   FR(i,bfd_list)
     {
       if(i==bfd_list.begin())
-	rout<<"@deffn {} "<<i->first<<endl;
+	rout<<"@deffn {} "<<i->first.first<<endl;
       else
-	rout<<"@deffnx {} "<<i->first<<endl;
+	rout<<"@deffnx {} "<<i->first.first<<endl;
       //rout<<"Adapteva EPIPHANY -"<<i->first<<endl;
     }
   rout<<"@end deffn"<<endl;
-  rout<<"DUMMY\n@end deffn\n";
+  rout<<"DUMMY\n";
   rout.close();
 
 

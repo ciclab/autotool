@@ -1,11 +1,11 @@
 
 int/*TODO*/ get_expr(const char *str,int bfd_type)
 {
-  my_getExpression(expr+cnt,str);
-  offset_reloc[cnt]=bfd_type;
+  my_getExpression(expr+offset_cnt,str);
+  offset_reloc[offset_cnt]=bfd_type;
   if(expr[offset_cnt].X_op==O_constant)
   {
-    return imm_expr.X_add_number;
+    return expr[offset_cnt].X_add_number;
   }
   else if(expr[offset_cnt].X_op==O_symbol)
   {
@@ -26,7 +26,7 @@ static void my_getExpression(expressionS * ep, char *str)
 	save_in = input_line_pointer;
 	input_line_pointer = str;
 	expression(ep);
-	expr_end = input_line_pointer;
+	//expr_end = input_line_pointer;
 	input_line_pointer = save_in;
 
 	/* If we are in mips16 mode, and this is an expression based on `.',
@@ -42,7 +42,7 @@ static void my_getExpression(expressionS * ep, char *str)
 	   && (val = S_GET_VALUE (ep->X_add_symbol)) == frag_now_fix ())
 	   S_SET_VALUE (ep->X_add_symbol, val + 1); */
 }
-
+/*
 static void
 append_insn (struct expressionS *address_expr,
 	     bfd_reloc_code_real_type * reloc_type)
@@ -52,25 +52,19 @@ append_insn (struct expressionS *address_expr,
   if (howto == NULL)
     gas_assert (0);
   ip->fixp[0] = fix_new_exp (ip->frag, ip->where,	//创建一个fixup
-			     4, address_expr, reloc_type[0] == MIPS_RELOC_PCREL18 || reloc_type[0] == MIPS_RELOC_PCREL8	/*||
-															   reloc_type[0] ==
-															   MIPS_RELOC_PCREL5 */ ,
+			     4, address_expr, 1,
 			     //若结果为1，表示这个重定位是PC相关
 			     reloc_type[0]);
   //       printf("reloctype:%d\n",reloc_type[0]);
-  /* Tag symbols that have a R_MIPS16_26 relocation against them.
-     if (reloc_type[0] == BFD_RELOC_MIPS16_JMP&& ip->fixp[0]->fx_addsy)
-     *symbol_get_tc (ip->fixp[0]->fx_addsy) = 1;
-     These relocations can have an addend that won't
-     fit in 4 octets for 64bit assembly.  */
+
   add_fixed_insn (ip);
-}
+}*/
 
 void md_convert_frag(bfd * abfd ATTRIBUTE_UNUSED, segT asec, fragS * fragp)
 {
 DBG(("md_convert_frag\n"));
-	WST(asec);
-	WST(fragp);
+	asec=
+	fragp=0;
 }
 
 valueT md_section_align(asection * seg, valueT addr)
@@ -87,12 +81,12 @@ DBG(("md_section_align\n"));
   valueT addr = fixP->fx_where + fixP->fx_frag->fr_address;
   switch (fixP->fx_r_type)
     {
-    case MIPS_RELOC_PCREL18:
+/*    case MIPS_RELOC_PCREL18:
     case MIPS_RELOC_PCREL8:
     case MIPS_RELOC_PCREL3:
     case MIPS_RELOC_PCREL4:
     case MIPS_RELOC_PCREL5:
-      return addr + 4;
+      return addr + 4;*/
     default:
       /* We have no relocation type for PC relative MIPS16 instructions.  */
       if (fixP->fx_addsy && S_GET_SEGMENT (fixP->fx_addsy) != now_seg)
@@ -104,10 +98,3 @@ return 0;
 }
 
 
-int md_estimate_size_before_relax(fragS * fragp, asection * segtype)
-{
-	DBG(("md_estimate_size_before_relax\n"));
-	WST(fragp);
-	WST(segtype);
-	return 0;
-}

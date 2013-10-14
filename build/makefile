@@ -9,9 +9,13 @@ VPATH=../src/frontend:../src/lib:../src/ir:../src/as
 INCLUDE=-I../src/include
 LEX = flex -v
 YACC = bison -dv
+BINUTILS_DIR = ../../z/binutils-2.23-r
 
 # driver:y.o l.o strstack.o l.h  driver.cpp 
 # 	$(CXX) $(CXXFLAGS) $(INCLUDE) -I.  $^ -o $@
+
+binutils: y.c y.h l.c l.h coff-dummy.c tc-dummy.c
+	cp y.c y.h l.c l.h  $(BINUTILS_DIR)/gas;cp tc-dummy.c $(BINUTILS_DIR)/gas/config;cp coff-dummy.c $(BINUTILS_DIR)/bfd;cp ../src/as/strstack.cpp $(BINUTILS_DIR)/gas/strstack.c; cp ../src/include/strstack.h $(BINUTILS_DIR)/gas
 
 strstack.o: strstack.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
@@ -30,7 +34,7 @@ l.h: as.lex
 y.c y.h: _as.y
 	$(YACC) --name-prefix=dummy_ -o y.c $^
 
-as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4
+as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4 tc-dummy1 tc-dummy1 tc-dummy3
 	./asgen out as.lex as.y
 
 asgen: asGen.cpp libir.a

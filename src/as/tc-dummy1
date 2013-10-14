@@ -2,7 +2,7 @@
 #include "config.h"
 #include "subsegs.h"
 #include "safe-ctype.h"
-
+#include "bfd.h"
 #include "dwarf2dbg.h"
 #include "dw2gencfi.h"
 #include "l.h"
@@ -10,7 +10,6 @@
 struct strstack strsta;
 char *yyret;
 extern int dummy_parse (void);
-
 #ifdef DEBUG
 #define DBG(x) printf x
 #else
@@ -83,7 +82,7 @@ unsigned long mips_cprmask[4];
 struct option md_longopts[] = { };
 
 const char *md_shortopts = "O::g::G:";
-size_t md_longopts_size = sizeof (md_longopts);
+//size_t md_longopts_size = sizeof (md_longopts);
 enum mips_pic_level mips_pic;
 
 /* If we can determine in advance that GP optimization won't be
@@ -196,16 +195,15 @@ static segT pdr_seg;
 int mips_relax_frag(asection * sec, fragS * fragp, long stretch)
 {
 DBG(("mips_relax_frag\n"));
-	WST(sec);
-	WST(fragp);
-	WST(stretch);
+	sec=fragp=NULL;
+	strtch=0;
 	return 0;
 }
 
 int tc_get_register(int frame)
 {
 	DBG(("tc_get_register\n"));
-	WST(frame);
+	frame=0;
 	return 0;
 }
 
@@ -219,13 +217,13 @@ mips_target_format (void)
 void mips_define_label(symbolS * sym)
 {
 	DBG(("mips_define_label\n"));
-	WST(sym);
+	sym=NULL;
 }
 
 int mips_fix_adjustable(struct fix *fixp)
 {
 DBG(("mips_fix_adjustable\n"));
-WST(fixp);
+	fixp=NULL;
 	return 1;
 }
 
@@ -240,24 +238,21 @@ void md_mips_end(void)
 {
 }
 
-size_t md_longopts_size = sizeof(md_longopts);
 int md_parse_option(int c, char *arg)
 {
 DBG(("md_parse_option\n"));
-	WST(c);
-	WST(arg);
+	c=0;
+	arg=NULL;
 	return 0;
 }
 void md_show_usage(FILE * stream)
 {
 DBG(("md_show_usage\n"));
-	WST(stream);
+fprintf(stream,"");
 }
 void
 md_begin (void)
 {
-  const char *retval = NULL;
-  int i;
 
   if (!bfd_set_arch_mach (stdoutput, bfd_arch_dummy, 0))
     as_warn (_("Could not set architecture and machine"));
@@ -284,12 +279,12 @@ long md_pcrel_from(fixS * fixP)
   valueT addr = fixP->fx_where + fixP->fx_frag->fr_address;
   switch (fixP->fx_r_type)
     {
-    case MIPS_RELOC_PCREL18:
+/*    case MIPS_RELOC_PCREL18:
     case MIPS_RELOC_PCREL8:
     case MIPS_RELOC_PCREL3:
     case MIPS_RELOC_PCREL4:
     case MIPS_RELOC_PCREL5:
-      return addr + 4;
+      return addr + 4;*/
     default:
       /* We have no relocation type for PC relative MIPS16 instructions.  */
       if (fixP->fx_addsy && S_GET_SEGMENT (fixP->fx_addsy) != now_seg)
@@ -312,7 +307,7 @@ arelent **tc_gen_reloc(asection * section ATTRIBUTE_UNUSED, fixS * fixp)
 	reloc->address = fixp->fx_frag->fr_address + fixp->fx_where;
 	
 	if (fixp->fx_pcrel) {
-		gas_assert(fixp->fx_r_type == MIPS_RELOC_PCREL18||fixp->fx_r_type == MIPS_RELOC_PCREL8);
+//		gas_assert(fixp->fx_r_type == MIPS_RELOC_PCREL18||fixp->fx_r_type == MIPS_RELOC_PCREL8);
 //printf("fixp->fx_addnumber %d ,reloc->address %d \n",(int)fixp->fx_addnumber,(int)reloc->address);
 		/* At this point, fx_addnumber is "symbol offset - pcrel address".
 		   Relocations want only the symbol offset.  */
@@ -351,8 +346,8 @@ arelent **tc_gen_reloc(asection * section ATTRIBUTE_UNUSED, fixS * fixp)
 int md_estimate_size_before_relax(fragS * fragp, asection * segtype)
 {
 	DBG(("md_estimate_size_before_relax\n"));
-	WST(fragp);
-	WST(segtype);
+	fragp=NULL:
+	segtype=NULL;
 	return 0;
 }
 
@@ -364,7 +359,7 @@ static void my_getExpression(expressionS * ep, char *str)
 	save_in = input_line_pointer;
 	input_line_pointer = str;
 	expression(ep);
-	expr_end = input_line_pointer;
+	//expr_end = input_line_pointer;
 	input_line_pointer = save_in;
 
 	/* If we are in mips16 mode, and this is an expression based on `.',
