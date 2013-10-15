@@ -76,7 +76,7 @@ int main(int argc,char *argv[])
   tokout<<"extern void dummy_error(const char *s);\n";
   tokout<<"extern struct strstack strsta;\n";
   tokout<<"extern int dummy_lex(void);\n";
-  tokout<<"extern int get_expr(const char * str,int bfd_type);\n";
+  tokout<<"extern int get_expr(char * str,int bfd_type);\n";
   tokout<<"%}\n";
   tokout<<"%union{\n";
   tokout<<"int integer;\n";
@@ -364,6 +364,10 @@ int main(int argc,char *argv[])
   tout<<"}\n";
   tout<<"void md_apply_fix(fixS * fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)\n";
   tout<<"{\n";
+  /*TODO may be not only long long*/
+  tout<<"long long value=(long long)(*valP);\n";
+  tout<<"long long v;\n";
+  tout<<"int i;\n";
   //tout<<"bfd_byte *buf;\n";
   tout<<"reloc_howto_type *howto;\n";
   tout<<"howto = bfd_reloc_type_lookup(stdoutput, fixP->fx_r_type);\n";
@@ -377,21 +381,18 @@ int main(int argc,char *argv[])
     {
       tout<<"case "<<i->first.first<<":"<<endl;
       tout<<"if(fixP->fx_done)\n{\n";
-      /*TODO may be not only long long*/
-      // tout<<"int val=int(*valP);\n";
-      // int o=i->second.first,l=i->second.second;
-      // int binary_len=i->first.second;
-      // /*TODO*/
-      // //assert((binary_len%8)==0);
-      // int bytes=binary_len/8;
-      // tout<<"int v(0);\n";
-      // tout<<"int i;\n";
-      // tout<<"for(i=0;i<"<<bytes<<";++i)\n";
-      // tout<<"v=(v<<8)|val["<<bytes-1<<"-i];\n";
-      // tout<<"int k=val&((1LL<<"<<l<<")-1);\n";
-      // tout<<"v|=(k<<"<<o<<");\n";
-      // tout<<"for(i=0;i<"<<bytes<<";++i,v>>=1)\n";
-      // tout<<"buf[i]=v&((1<<8)-1);\n";
+      int o=i->second.first,l=i->second.second;
+      int binary_len=i->first.second;
+      /*TODO*/
+      //assert((binary_len%8)==0);
+      tout<<"v=0;\n";
+      int bytes=binary_len/8;
+      tout<<"for(i=0;i<"<<bytes<<";++i)\n";
+      tout<<"v=(v<<8)|buf["<<bytes-1<<"-i];\n";
+      tout<<"int k=value&((1LL<<"<<l<<")-1);\n";
+      tout<<"v|=(k<<"<<o<<");\n";
+      tout<<"for(i=0;i<"<<bytes<<";++i,v>>=1)\n";
+      tout<<"buf[i]=v&((1<<8)-1);\n";
       tout<<"}\n";
       tout<<"break;\n";
     }

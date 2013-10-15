@@ -546,7 +546,7 @@ static const struct ecoff_backend_data mips_ecoff_backend_data =
     NULL, NULL, NULL
   },
   /* Supported architecture.  */
-  bfd_arch_mips,
+  bfd_arch_dummy,
   /* Initial portion of armap string.  */
   "__________",
   /* The page boundary used to align sections in a demand-paged

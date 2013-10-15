@@ -10,6 +10,7 @@
 struct strstack strsta;
 char *yyret;
 extern int dummy_parse (void);
+#define WST(a) ((a)=(a))
 #ifdef DEBUG
 #define DBG(x) printf x
 #else
@@ -82,7 +83,7 @@ unsigned long mips_cprmask[4];
 struct option md_longopts[] = { };
 
 const char *md_shortopts = "O::g::G:";
-//size_t md_longopts_size = sizeof (md_longopts);
+size_t md_longopts_size = sizeof (md_longopts);
 enum mips_pic_level mips_pic;
 
 /* If we can determine in advance that GP optimization won't be
@@ -195,15 +196,16 @@ static segT pdr_seg;
 int mips_relax_frag(asection * sec, fragS * fragp, long stretch)
 {
 DBG(("mips_relax_frag\n"));
-	sec=fragp=NULL;
-	strtch=0;
+	WST(sec);
+	WST(fragp);
+	WST(stretch);
 	return 0;
 }
 
 int tc_get_register(int frame)
 {
 	DBG(("tc_get_register\n"));
-	frame=0;
+	WST(frame);
 	return 0;
 }
 
@@ -217,13 +219,13 @@ mips_target_format (void)
 void mips_define_label(symbolS * sym)
 {
 	DBG(("mips_define_label\n"));
-	sym=NULL;
+	WST(sym);
 }
 
 int mips_fix_adjustable(struct fix *fixp)
 {
 DBG(("mips_fix_adjustable\n"));
-	fixp=NULL;
+	WST(fixp);
 	return 1;
 }
 
@@ -241,20 +243,20 @@ void md_mips_end(void)
 int md_parse_option(int c, char *arg)
 {
 DBG(("md_parse_option\n"));
-	c=0;
-	arg=NULL;
+	WST(c);
+	WST(arg);
 	return 0;
 }
 void md_show_usage(FILE * stream)
 {
 DBG(("md_show_usage\n"));
-fprintf(stream,"");
+WST(stream);
 }
 void
 md_begin (void)
 {
 
-  if (!bfd_set_arch_mach (stdoutput, bfd_arch_dummy, 0))
+  if (!bfd_set_arch_mach (stdoutput, bfd_arch_dummy, 1))
     as_warn (_("Could not set architecture and machine"));
 
   bfd_set_section_alignment (stdoutput, text_section, 2);
@@ -346,12 +348,12 @@ arelent **tc_gen_reloc(asection * section ATTRIBUTE_UNUSED, fixS * fixp)
 int md_estimate_size_before_relax(fragS * fragp, asection * segtype)
 {
 	DBG(("md_estimate_size_before_relax\n"));
-	fragp=NULL:
-	segtype=NULL;
+	WST(fragp);
+	WST(segtype);
 	return 0;
 }
 
-static void my_getExpression(expressionS * ep, char *str)
+static void my_getExpression(expressionS * ep,char *str)
 {
 	char *save_in;
 //  valueT val;
@@ -376,4 +378,65 @@ static void my_getExpression(expressionS * ep, char *str)
 	   S_SET_VALUE (ep->X_add_symbol, val + 1); */
 }
 
+void mips_after_parse_args(void)
+{
+	DBG(("mips_after_parse_args\n"));
+}
 
+void mips_init_after_args(void)
+{
+	DBG(("mips_init_after_args\n"));
+}
+int mips_dwarf2_addr_size(void)
+{
+DBG(("mips_dwarf2_addr_size\n"));
+	return 0;
+}
+int tc_mips_regname_to_dw2regnum(char *regname)
+{
+DBG(("tc_mips_regname_to_dw2regnum \n"));
+	WST(regname);
+	return 0;
+}
+void mips_cfi_frame_initial_instructions(void)
+{
+}
+char mips_nop_opcode(void)
+{
+DBG(("mips_nop_opcode\n"));
+	return '\0';
+}void mips_emit_delays(void)
+{
+DBG(("mips_emit_delays\n"));
+}
+void mips_handle_align(fragS * fragp)
+{
+	WST(fragp);
+}
+
+void mips_frob_file_before_adjust(void)
+{
+}
+
+void mips_frob_file(void)
+{
+}
+void
+mips_record_label (symbolS *sym)
+{
+WST(sym);
+/*  segment_info_type *si = seg_info (now_seg);
+  struct insn_label_list *l;
+
+  if (free_insn_labels == NULL)
+    l = (struct insn_label_list *) xmalloc (sizeof *l);
+  else
+    {
+      l = free_insn_labels;
+      free_insn_labels = l->next;
+    }
+
+  l->label = sym;
+  l->next = si->label_list;
+  si->label_list = l;
+*/}

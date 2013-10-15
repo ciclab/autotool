@@ -1,13 +1,13 @@
 
-int/*TODO*/ get_expr(const char *str,int bfd_type)
+int/*TODO*/ get_expr(char *str,int bfd_type)
 {
-  my_getExpression(expr+offset_cnt,str);
+  my_getExpression(expr_list+offset_cnt,str);
   offset_reloc[offset_cnt]=bfd_type;
-  if(expr[offset_cnt].X_op==O_constant)
+  if(expr_list[offset_cnt].X_op==O_constant)
   {
-    return expr[offset_cnt].X_add_number;
+    return expr_list[offset_cnt].X_add_number;
   }
-  else if(expr[offset_cnt].X_op==O_symbol)
+  else if(expr_list[offset_cnt].X_op==O_symbol)
   {
     ++offset_cnt;
   }
@@ -18,16 +18,16 @@ int/*TODO*/ get_expr(const char *str,int bfd_type)
 
 
 
-static void my_getExpression(expressionS * ep, char *str)
-{
-	char *save_in;
+//static void my_getExpression(expressionS * ep, char *str)
+//{
+//	char *save_in;
 //  valueT val;
 
-	save_in = input_line_pointer;
-	input_line_pointer = str;
-	expression(ep);
+//	save_in = input_line_pointer;
+//	input_line_pointer = str;
+//	expression(ep);
 	//expr_end = input_line_pointer;
-	input_line_pointer = save_in;
+//	input_line_pointer = save_in;
 
 	/* If we are in mips16 mode, and this is an expression based on `.',
 	   then we bump the value of the symbol by 1 since that is how other
@@ -41,7 +41,7 @@ static void my_getExpression(expressionS * ep, char *str)
 	   && symbol_constant_p (ep->X_add_symbol)
 	   && (val = S_GET_VALUE (ep->X_add_symbol)) == frag_now_fix ())
 	   S_SET_VALUE (ep->X_add_symbol, val + 1); */
-}
+//}
 /*
 static void
 append_insn (struct expressionS *address_expr,
@@ -63,8 +63,8 @@ append_insn (struct expressionS *address_expr,
 void md_convert_frag(bfd * abfd ATTRIBUTE_UNUSED, segT asec, fragS * fragp)
 {
 DBG(("md_convert_frag\n"));
-	asec=
-	fragp=0;
+	WST(asec);
+	WST(fragp);
 }
 
 valueT md_section_align(asection * seg, valueT addr)
@@ -75,26 +75,6 @@ DBG(("md_section_align\n"));
 
 	return (addr + mask) & ~mask;
 }
-long md_pcrel_from(fixS * fixP)
-{
-DBG(("md_section_align\n"));
-  valueT addr = fixP->fx_where + fixP->fx_frag->fr_address;
-  switch (fixP->fx_r_type)
-    {
-/*    case MIPS_RELOC_PCREL18:
-    case MIPS_RELOC_PCREL8:
-    case MIPS_RELOC_PCREL3:
-    case MIPS_RELOC_PCREL4:
-    case MIPS_RELOC_PCREL5:
-      return addr + 4;*/
-    default:
-      /* We have no relocation type for PC relative MIPS16 instructions.  */
-      if (fixP->fx_addsy && S_GET_SEGMENT (fixP->fx_addsy) != now_seg)
-	as_bad_where (fixP->fx_file, fixP->fx_line,
-		      _("PC relative MIPS instruction references a different section"));
-      return addr;
-    }
-return 0;
-}
+
 
 
