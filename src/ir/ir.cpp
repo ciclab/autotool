@@ -256,10 +256,10 @@ void Ir::add_enum(string name)
   enumm.resize(t+1);
   enumm[t].set_name(name);
 }
-void Ir::add_enum_entry(string name,string code)
+void Ir::add_enum_entry(string name,string code,int value)
 {
   int t=enumm.size();
-  enumm[t-1].add(name,code);
+  enumm[t-1].add(name,code,value);
 }
 void Ir::output_enum(ofstream & fout)
 {

@@ -56,7 +56,7 @@ public:
   void output_type(ofstream &fout);
   void read_type(ifstream &fin);
   void add_enum(string name);
-  void add_enum_entry(string name,string code);
+  void add_enum_entry(string name,string code,int value);
   void read_enum(ifstream & fin);
   void output_enum(ofstream & fout);
   void add_memory(Memory m);

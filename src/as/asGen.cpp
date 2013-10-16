@@ -105,9 +105,7 @@ int main(int argc,char *argv[])
       Enum enu;
       ir.get_enum(i,enu);
       int enum_ent_size=enu.size();
-      int width=0;
-      for(;(1<<width)<enum_ent_size;++width)
-	;
+      int width=enu.width();
       string enum_name=enu.enum_name();
       tokout<<"%type <chp>"<<enum_name<<endl;
       yout<<enum_name<<": ";
@@ -128,7 +126,7 @@ int main(int argc,char *argv[])
 		int_list.push_back(make_pair((ll)en,strtoll(ent_code.c_str(),NULL,10)));
 	      lout<<"\""<<ent_code<<"\""<<" return TOK_"<<(ll)en<<";"<<endl;
 	    }
-	  yout<<"TOK_"<<(ll)en<<" {$$=(char*)\""<<int2binary(width,j)<<"\";}";
+	  yout<<"TOK_"<<(ll)en<<" {$$=(char*)\""<<int2binary(width,enu.ent_value(j))<<"\";}";
 	}
       yout<<";"<<endl;
     }

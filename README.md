@@ -67,7 +67,7 @@ TODO
 	//enum definition
 	(enum  
 		//name value value ... (value can be a pair or just a single value)
-		(s1 { (s2 s2) / s2 } ...)  
+		(s1 { (s2 s2 s2)/(s2 s2) / s2 } ...)  
 		...  
 	)  
 	//simple variable definition
