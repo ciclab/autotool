@@ -1,0 +1,81 @@
+(
+  (enum
+    (GR_E 
+      'GR0' 'GR1' 'GR2' 'GR3' 'GR4' 'GR5' 'GR6' 'GR7'
+      'GR8' 'GR9' 'GR10' 'GR11' 'GR12' 'GR13' 'GR14' 'GR15'
+      'GR16' 'GR17' 'GR18' 'GR19' 'GR20' 'GR21' 'GR22' 'GR23'
+      'GR24' 'GR25' 'GR26' 'GR27' 'GR28' 'GR29' 'GR30' 'GR31'
+    )
+    (VR_E
+      'VR0' 'VR1' 'VR2' 'VR3' 'VR4' 'VR5' 'VR6' 'VR7'
+      'VR8' 'VR9' 'VR10' 'VR11' 'VR12' 'VR13' 'VR14' 'VR15'
+    )
+    (OFF_E
+      'OFF0' 'OFF1' 'OFF2' 'OFF3'
+    )
+    (BAR_E
+      'BAR0' 'BAR1' 'BAR2' 'BAR3'
+    )
+    (MR_E
+      'MR0' 'MR1' 'MR2' 'MR3'
+    )
+    (J_E
+      'jmp' 'je' 'jne' 'jl' 'jnl'
+      'jg' 'jng' 'jca' 'call'
+    )
+  )
+  (wire
+  )
+  (stage)
+  (memory)
+  (function_unit)
+  (register)
+  (pipe_line)
+  (type
+    (addr21
+      (width 21)
+      (flag unsigned)
+    )
+  )
+  (instruction
+    (top jumpi)
+    (jumpi
+      (= c J_E)
+      (= a addr21)
+      (binary '110' a '0' c )
+      (code c a)
+      (do)
+    )
+    /*
+    (gr
+      (= i GR_E)
+      (binary '0' i)
+      (code i)
+      (do)
+    )
+    (vr
+      (= i VR_E)
+      (binary '1' i)
+      (code i)
+      (do )
+    )
+    (off
+      (= i OFF_V)
+      (binary '1101' i)
+      (code i)
+      (do)
+    )
+    (bar
+      (= i BAR_E)
+      (binary '1110' i)
+      (code i)
+      (do )
+    )
+    (mr
+      (= i mr)
+      (binary '1111' i)
+      (code i)
+      (do )
+    )*/
+  )
+)

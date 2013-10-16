@@ -23,7 +23,7 @@ static string int2binary(int w,int v)
   r.resize(w);
   FOR(i,0,w)
     {
-      r[i]=(v&1)?'1':'0';
+      r[w-i-1]=(v&1)?'1':'0';
       v>>=1;
     }
   return r;

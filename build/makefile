@@ -5,11 +5,12 @@ CXXFLAGS=-g -Wall \
 	-DINSTR_COUT=0 \
 	-DASGEN_COUT=0
 SRC=src
-VPATH=../src/frontend:../src/lib:../src/ir:../src/as
+VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor
 INCLUDE=-I../src/include
 LEX = flex -v
 YACC = bison -dv
 BINUTILS_DIR = ../../z/binutils-2.23-r
+input_file = ../swift.des
 
 # driver:y.o l.o strstack.o l.h  driver.cpp 
 # 	$(CXX) $(CXXFLAGS) $(INCLUDE) -I.  $^ -o $@
@@ -43,8 +44,14 @@ asgen: asGen.cpp libir.a
 rd: hash.o ir.o libir.a asem.o read.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE)  $^ -o $@
 
-out: rd in
-	./rd in $@
+out: rd $(input_file) pp
+	cpp $(input_file) | ./pp  >in.tmp && ./rd in.tmp $@
+
+pp: pp.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
+
+pp.cpp: pp.lex
+	$(LEX) -o $@ $^
 
 libir.a: hash.o wire.o stage.o enum.o instruction.o \
 memory.o pipeline.o register.o type.o do_content.o ir.o
@@ -89,4 +96,4 @@ type.o: type.cpp
 do_content.o: do_content.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 clean:
-	rm *.* rd asgen out
+	rm *.* rd asgen out pp

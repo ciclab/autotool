@@ -203,6 +203,7 @@ void Asem::eval_unfold(const string &rule_name,
 
   // 对code和binary的求值应该可以写成函数
   // 求出code
+  code.display(0);
   assert(code.ivec[0].name==(string)"code");
   for(int i=1;i<(int)code.ivec.size();++i)
     {
@@ -506,7 +507,11 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
   Asem & code=*(this->find("code"));
   Asem & binary=*(this->find("binary"));
   Asem * doo=this->find("do");
-  assert((&code!=0) && (&binary!=0) && (doo!=NULL));
+  if(!(&code!=0) && (&binary!=0) && (doo!=NULL))
+    {
+      cerr<<"rule "<<rule_name<<" code/binary/do empty"<<endl;
+      assert(0);
+    }
 
   // 在unfolded_list新增加一项
   int k=this->unfolded_list.size();
@@ -589,7 +594,11 @@ void Asem::dfs_insert_hash(string pwd)
 	return ;
       pwd+=ivec[0].name;
       // 不应该有重复定义
-      assert(NULL==hc.insert(pwd.c_str(),(void*)this));
+      if(NULL!=hc.insert(pwd,(void*)this))
+	{
+	  cerr<<pwd<<" redefined"<<endl;
+	  assert(0);
+	}
       //assert(sizeof(int)==sizeof(&asem));
       for(int i=1;i<(int)ivec.size();++i)
 	if(ivec[i].type==type_is_vector)
