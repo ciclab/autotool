@@ -1,7 +1,7 @@
 (
   (enum
     (GR_E 
-      ('GR0' 3) 'GR1' 'GR2' 'GR3' 'GR4' 'GR5' 'GR6' 'GR7'
+      'GR0' 'GR1' 'GR2' 'GR3' 'GR4' 'GR5' 'GR6' 'GR7'
       'GR8' 'GR9' 'GR10' 'GR11' 'GR12' 'GR13' 'GR14' 'GR15'
       'GR16' 'GR17' 'GR18' 'GR19' 'GR20' 'GR21' 'GR22' 'GR23'
       'GR24' 'GR25' 'GR26' 'GR27' 'GR28' 'GR29' 'GR30' 'GR31'
@@ -43,7 +43,7 @@
       (= c J_E)
       (= a addr21)
       (binary '110' a '0' c )
-      (code c a)
+      (code c ' ' a)
       (do)
     )
     /*

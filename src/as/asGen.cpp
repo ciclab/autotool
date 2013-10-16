@@ -33,7 +33,7 @@ static bool check_is_int(string c)
   FR(i,c)
     if(*i<'0' || *i>'9')
       return false;
-  return true;
+  return (int)c.length()>0;
 }
 int main(int argc,char *argv[])
 {
@@ -191,13 +191,15 @@ int main(int argc,char *argv[])
 	      ++seg;
 	      switch(*j)
 		{
-		case ' ':
-		  for(;j!=code.end() && *j==' ';++j,++off_in_code)
-		    ;
-		  yout<<"TOK_BLANK ";
-		  break;
 		case c_sep:
 		  ++j,++off_in_code;
+		  if(*j==' ')
+		    {
+		      for(;j!=code.end() && *j==' ';++j,++off_in_code)
+			;
+		      yout<<"TOK_BLANK ";
+		      break;
+		    }
 		default:
 		  string token;
 		  for(;offi<(int)off.size() && off[offi].first<off_in_code-1;++offi)
@@ -247,6 +249,8 @@ int main(int argc,char *argv[])
 			  tmp=++cnt;
 			  hc.insert(token,tmp);
 			  tokout<<"%token TOK_"<<(ll)tmp<<endl;
+			  if(token.length()==0)
+			    cout<<"!!!!!!!!!!!!!!"<<endl;
 			  if(check_is_int(token))
 			    int_list.push_back(make_pair((ll)tmp,strtoll(token.c_str(),NULL,10)));
 			  lout<<"\""<<token<<"\""<<" return TOK_"<<(ll)tmp<<";"<<endl;
