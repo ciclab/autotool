@@ -11,6 +11,7 @@ struct strstack strsta;
 char *yyret;
 extern int dummy_parse (void);
 #define WST(a) ((a)=(a))
+#define DEBUG
 #ifdef DEBUG
 #define DBG(x) printf x
 #else
