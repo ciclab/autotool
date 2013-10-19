@@ -1,0 +1,443 @@
+#include "as.h"
+#include "config.h"
+#include "subsegs.h"
+#include "safe-ctype.h"
+#include "bfd.h"
+#include "dwarf2dbg.h"
+#include "dw2gencfi.h"
+#include "l.h"
+#include "strstack.h"
+struct strstack strsta;
+char *yyret;
+extern int dummy_parse (void);
+#define WST(a) ((a)=(a))
+#define DEBUG
+#ifdef DEBUG
+#define DBG(x) printf x
+#else
+#define DBG(x)
+#endif
+
+#ifdef OBJ_MAYBE_ELF
+
+#undef OBJ_PROCESS_STAB
+#undef OUTPUT_FLAVOR
+#undef S_GET_ALIGN
+#undef S_GET_SIZE
+#undef S_SET_ALIGN
+#undef S_SET_SIZE
+#undef obj_frob_file
+#undef obj_frob_file_after_relocs
+#undef obj_frob_symbol
+#undef obj_pop_insert
+#undef obj_sec_sym_ok_for_reloc
+#undef OBJ_COPY_SYMBOL_ATTRIBUTES
+
+#include "obj-elf.h"
+/* Fix any of them that we actually care about.  */
+#undef OUTPUT_FLAVOR
+#define OUTPUT_FLAVOR mips_output_flavor()
+#endif
+
+#if defined (OBJ_ELF)
+#include "elf/mips.h"
+#endif
+
+#ifndef ECOFF_DEBUGGING
+#define NO_ECOFF_DEBUGGING
+#define ECOFF_DEBUGGING 0
+#endif
+
+#ifdef TE_IRIX
+int mips_flag_pdr = FALSE;
+#else
+int mips_flag_pdr = TRUE;
+#endif
+
+#include "ecoff.h"
+
+#if defined (OBJ_ELF) || defined (OBJ_MAYBE_ELF)
+static char *mips_regmask_frag;
+#endif
+
+/* Allow override of standard little-endian ECOFF format.  */
+
+#ifndef ECOFF_LITTLE_FORMAT
+#define ECOFF_LITTLE_FORMAT "ecoff-littlemips"
+#endif
+
+extern int target_big_endian;
+
+
+/* The name of the readonly data section.  */
+#define RDATA_SECTION_NAME (OUTPUT_FLAVOR == bfd_target_ecoff_flavour \
+			    ? ".rdata" \
+			    : OUTPUT_FLAVOR == bfd_target_coff_flavour \
+			    ? ".rdata" \
+			    : OUTPUT_FLAVOR == bfd_target_elf_flavour \
+			    ? ".rodata" \
+			    : (abort (), ""))
+
+unsigned long mips_gprmask;
+unsigned long mips_cprmask[4];
+
+struct option md_longopts[] = { };
+
+const char *md_shortopts = "O::g::G:";
+size_t md_longopts_size = sizeof (md_longopts);
+enum mips_pic_level mips_pic;
+
+/* If we can determine in advance that GP optimization won't be
+   possible, we can skip the relaxation stuff that tries to produce
+   GP-relative references.  This makes delay slot optimization work
+   better.
+
+   This function can only provide a guess, but it seems to work for
+   gcc output.  It needs to guess right for gcc, otherwise gcc
+   will put what it thinks is a GP-relative instruction in a branch
+   delay slot.
+
+   I don't know if a fix is needed for the SVR4_PIC mode.  I've only
+   fixed it for the non-PIC mode.  KR 95/04/07  */
+
+/* This array holds the chars that always start a comment.  If the
+    pre-processor is disabled, these aren't very useful */
+const char comment_chars[] = "#";
+
+/* This array holds the chars that only start a comment at the beginning of
+   a line.  If the line seems to have the form '# 123 filename'
+   .line and .file directives will appear in the pre-processed output */
+/* Note that input_file.c hand checks for '#' at the beginning of the
+   first line of the input file.  This is because the compiler outputs
+   #NO_APP at the beginning of its output.  */
+/* Also note that C style comments are always supported.  */
+const char line_comment_chars[] = "#";
+
+/* This array holds machine specific line separator characters.  */
+const char line_separator_chars[] = ";";
+
+/* Chars that can be used to separate mant from exp in floating point nums */
+const char EXP_CHARS[] = "eE";
+
+/* Chars that mean this number is a floating point constant */
+/* As in 0f12.456 */
+/* or    0d1.2345e12 */
+const char FLT_CHARS[] = "rRsSfFdDxXpP";
+
+
+#define internalError()							\
+    as_fatal (_("internal Error, line %d, %s"), __LINE__, __FILE__)
+
+/* Pseudo-op table.
+
+   The following pseudo-ops from the Kane and Heinrich MIPS book
+   should be defined here, but are currently unsupported: .alias,
+   .galive, .gjaldef, .gjrlive, .livereg, .noalias.
+
+   The following pseudo-ops from the Kane and Heinrich MIPS book are
+   specific to the type of debugging information being generated, and
+   should be defined by the object format: .aent, .begin, .bend,
+   .bgnb, .end, .endb, .ent, .fmask, .frame, .loc, .mask, .verstamp,
+   .vreg.
+
+   The following pseudo-ops from the Kane and Heinrich MIPS book are
+   not MIPS CPU specific, but are also not specific to the object file
+   format.  This file is probably the best place to define them, but
+   they are not currently supported: .asm0, .endr, .lab, .struct.  */
+
+
+/* Export the ABI address size for use by TC_ADDRESS_BYTES for the
+   purpose of the `.dc.a' internal pseudo-op.  */
+
+int
+mips_address_bytes (void)
+{
+  DBG (("INTERNAL ERROR: %s %d %s\n", __FUNCTION__, __LINE__, __FUNCTION__));
+  return 0;
+}
+
+extern void pop_insert (const pseudo_typeS *);
+
+void
+mips_pop_insert (void)
+{
+  DBG (("INTERNAL ERROR: %s %d %s\n", __FUNCTION__, __LINE__, __FUNCTION__));
+}
+
+/* Symbols labelling the current insn.  */
+
+struct insn_label_list
+{
+  struct insn_label_list *next;
+  symbolS *label;
+};
+
+#define label_list tc_segment_info_data.labels
+
+/* This is set to the resulting size of the instruction to be produced
+   by mips16_ip if an explicit extension is used or by mips_ip if an
+   explicit size is supplied.  */
+
+#ifdef OBJ_ELF
+/* The pdr segment for per procedure frame/regmask info.  Not used for
+   ECOFF debugging.  */
+
+static segT pdr_seg;
+#endif
+
+/* The default target format to use.  */
+
+#if defined (TE_FreeBSD)
+#define ELF_TARGET(PREFIX, ENDIAN) PREFIX "trad" ENDIAN "mips-freebsd"
+#elif defined (TE_TMIPS)
+#define ELF_TARGET(PREFIX, ENDIAN) PREFIX "trad" ENDIAN "mips"
+#else
+#define ELF_TARGET(PREFIX, ENDIAN) PREFIX ENDIAN "mips"
+#endif
+int mips_relax_frag(asection * sec, fragS * fragp, long stretch)
+{
+DBG(("mips_relax_frag\n"));
+	WST(sec);
+	WST(fragp);
+	WST(stretch);
+	return 0;
+}
+
+int tc_get_register(int frame)
+{
+	DBG(("tc_get_register\n"));
+	WST(frame);
+	return 0;
+}
+
+const char *
+mips_target_format (void)
+{
+  DBG (("INTERNAL ERROR: %s %d %s\n", __FUNCTION__, __LINE__, __FUNCTION__));
+  return NULL;
+}
+
+void mips_define_label(symbolS * sym)
+{
+	DBG(("mips_define_label\n"));
+	WST(sym);
+}
+
+int mips_fix_adjustable(struct fix *fixp)
+{
+DBG(("mips_fix_adjustable\n"));
+	WST(fixp);
+	return 1;
+}
+
+int mips_force_relocation(struct fix *fixp)
+{
+	if (generic_force_reloc(fixp))
+		return 1;
+
+	return 0;
+}
+void md_mips_end(void)
+{
+}
+
+int md_parse_option(int c, char *arg)
+{
+DBG(("md_parse_option\n"));
+	WST(c);
+	WST(arg);
+	return 0;
+}
+void md_show_usage(FILE * stream)
+{
+DBG(("md_show_usage\n"));
+WST(stream);
+}
+void
+md_begin (void)
+{
+
+  if (!bfd_set_arch_mach (stdoutput, bfd_arch_dummy, 1))
+    as_warn (_("Could not set architecture and machine"));
+
+  bfd_set_section_alignment (stdoutput, text_section, 2);
+  bfd_set_section_alignment (stdoutput, data_section, 2);
+  bfd_set_section_alignment (stdoutput, bss_section, 2);
+  
+  
+  ini(&strsta);
+}
+
+
+void md_number_to_chars(char *buf, valueT val, int n)
+{
+	number_to_chars_littleendian(buf, val, n);
+}
+char *md_atof(int type, char *litP, int *sizeP)
+{
+	return ieee_md_atof(type, litP, sizeP, target_big_endian);
+}
+long md_pcrel_from(fixS * fixP)
+{
+  valueT addr = fixP->fx_where + fixP->fx_frag->fr_address;
+  switch (fixP->fx_r_type)
+    {
+/*    case MIPS_RELOC_PCREL18:
+    case MIPS_RELOC_PCREL8:
+    case MIPS_RELOC_PCREL3:
+    case MIPS_RELOC_PCREL4:
+    case MIPS_RELOC_PCREL5:
+      return addr + 4;*/
+    default:
+      /* We have no relocation type for PC relative MIPS16 instructions.  */
+      if (fixP->fx_addsy && S_GET_SEGMENT (fixP->fx_addsy) != now_seg)
+	as_bad_where (fixP->fx_file, fixP->fx_line,
+		      _("PC relative MIPS instruction references a different section"));
+      return addr;
+    }
+return 0;
+}
+arelent **tc_gen_reloc(asection * section ATTRIBUTE_UNUSED, fixS * fixp)
+{
+	static arelent *retval[4];
+	arelent *reloc;
+	bfd_reloc_code_real_type code;
+
+	memset(retval, 0, sizeof(retval));
+	reloc = retval[0] = (arelent *) xcalloc(1, sizeof(arelent));
+	reloc->sym_ptr_ptr = (asymbol **) xmalloc(sizeof(asymbol *));
+	*reloc->sym_ptr_ptr = symbol_get_bfdsym(fixp->fx_addsy);
+	reloc->address = fixp->fx_frag->fr_address + fixp->fx_where;
+	
+	if (fixp->fx_pcrel) {
+//		gas_assert(fixp->fx_r_type == MIPS_RELOC_PCREL18||fixp->fx_r_type == MIPS_RELOC_PCREL8);
+//printf("fixp->fx_addnumber %d ,reloc->address %d \n",(int)fixp->fx_addnumber,(int)reloc->address);
+		/* At this point, fx_addnumber is "symbol offset - pcrel address".
+		   Relocations want only the symbol offset.  */
+		reloc->addend = fixp->fx_addnumber + reloc->address;
+		if (!IS_ELF) {
+			/* A gruesome hack which is a result of the gruesome gas
+			   reloc handling.  What's worse, for COFF (as opposed to
+			   ECOFF), we might need yet another copy of reloc->address.
+			   See bfd_install_relocation.  */
+			reloc->addend += reloc->address;
+		}
+	} else
+		reloc->addend = fixp->fx_addnumber;
+		//{;}
+	/* Since the old MIPS ELF ABI uses Rel instead of Rela, encode the vtable
+	   entry to be used in the relocation's section offset. 
+	   if (! HAVE_NEWABI && fixp->fx_r_type == BFD_RELOC_VTABLE_ENTRY)
+	   {
+	   reloc->address = reloc->addend;
+	   reloc->addend = 0;
+	   } */
+
+	code = fixp->fx_r_type;
+	reloc->howto = bfd_reloc_type_lookup(stdoutput, code);
+	if (reloc->howto == NULL) {
+		as_bad_where(fixp->fx_file, fixp->fx_line,
+			     _
+			     ("Can not represent %s relocation in this object file format"),
+			     bfd_get_reloc_code_name(code));
+		retval[0] = NULL;
+	}
+
+	return retval;
+}
+
+int md_estimate_size_before_relax(fragS * fragp, asection * segtype)
+{
+	DBG(("md_estimate_size_before_relax\n"));
+	WST(fragp);
+	WST(segtype);
+	return 0;
+}
+
+static void my_getExpression(expressionS * ep,char *str)
+{
+	char *save_in;
+//  valueT val;
+
+	save_in = input_line_pointer;
+	input_line_pointer = str;
+	expression(ep);
+	//expr_end = input_line_pointer;
+	input_line_pointer = save_in;
+
+	/* If we are in mips16 mode, and this is an expression based on `.',
+	   then we bump the value of the symbol by 1 since that is how other
+	   text symbols are handled.  We don't bother to handle complex
+	   expressions, just `.' plus or minus a constant.  
+	   if (mips_opts.mips16
+	   && ep->X_op == O_symbol
+	   && strcmp (S_GET_NAME (ep->X_add_symbol), FAKE_LABEL_NAME) == 0
+	   && S_GET_SEGMENT (ep->X_add_symbol) == now_seg
+	   && symbol_get_frag (ep->X_add_symbol) == frag_now
+	   && symbol_constant_p (ep->X_add_symbol)
+	   && (val = S_GET_VALUE (ep->X_add_symbol)) == frag_now_fix ())
+	   S_SET_VALUE (ep->X_add_symbol, val + 1); */
+}
+
+void mips_after_parse_args(void)
+{
+	DBG(("mips_after_parse_args\n"));
+}
+
+void mips_init_after_args(void)
+{
+	DBG(("mips_init_after_args\n"));
+}
+int mips_dwarf2_addr_size(void)
+{
+DBG(("mips_dwarf2_addr_size\n"));
+	return 0;
+}
+int tc_mips_regname_to_dw2regnum(char *regname)
+{
+DBG(("tc_mips_regname_to_dw2regnum \n"));
+	WST(regname);
+	return 0;
+}
+void mips_cfi_frame_initial_instructions(void)
+{
+}
+char mips_nop_opcode(void)
+{
+DBG(("mips_nop_opcode\n"));
+	return '\0';
+}void mips_emit_delays(void)
+{
+DBG(("mips_emit_delays\n"));
+}
+void mips_handle_align(fragS * fragp)
+{
+	WST(fragp);
+}
+
+void mips_frob_file_before_adjust(void)
+{
+}
+
+void mips_frob_file(void)
+{
+}
+void
+mips_record_label (symbolS *sym)
+{
+WST(sym);
+/*  segment_info_type *si = seg_info (now_seg);
+  struct insn_label_list *l;
+
+  if (free_insn_labels == NULL)
+    l = (struct insn_label_list *) xmalloc (sizeof *l);
+  else
+    {
+      l = free_insn_labels;
+      free_insn_labels = l->next;
+    }
+
+  l->label = sym;
+  l->next = si->label_list;
+  si->label_list = l;
+*/}

@@ -15,7 +15,7 @@ public:
      table.  */
   unsigned long hash;
   /* Pointer being stored in the hash table.  */
-  int data;	/*[void *data;]*/
+  void *data;
 };
 
 /* A hash table.  */
@@ -51,10 +51,10 @@ TODO  Note this value can be reduced to 4051 by using the command line
 public:
 	hash_control(unsigned int table_size=65537);
 	~hash_control();
-	const char *insert (const string &key, int val /*[void *val]*/);
-	int find (const string &key);
-	int replace (const string &key, int value);
-	int erase (const string &key);
+	const char *insert (const string &key, void *val);
+	void * find (const string &key);
+        void * replace (const string &key, void * value);
+	void * erase (const string &key);
 };
 
 hash_control::~hash_control()
@@ -94,7 +94,7 @@ class hash_entry *hash_control::
 #endif
 
   hash = 0;
-  int len=key.length();
+  size_t len=key.length();
   for (n = 0; n < len; n++)
     {
       c = key[n];
@@ -193,7 +193,7 @@ void hash_control::init ()
    is considered to be an error if the entry already exists in the
    hash table.  */
 
-const char * hash_control::insert (const string &key, int val /*[void *val]*/)
+const char * hash_control::insert (const string &key, void *val)
 {
   class hash_entry *p;
   class hash_entry **list;
@@ -222,7 +222,7 @@ const char * hash_control::insert (const string &key, int val /*[void *val]*/)
 /* Find an entry in a hash table, returning its value.  Returns NULL
    if the entry is not found.  */
 
-int hash_control::find (const string &key)
+void * hash_control::find (const string &key)
 {
   class hash_entry *p;
 
@@ -237,11 +237,10 @@ int hash_control::find (const string &key)
    value stored for the entry.  If the entry is not found in the hash
    table, this does nothing and returns NULL.  */
 
-int hash_control::replace (const string & key, int value
- /*[void *value]*/)
+void * hash_control::replace (const string & key,void *value)
 {
   class hash_entry *p;
-  int ret;/*[void *ret;]*/
+  void * ret;
 
   p = loopup ( key,  NULL, NULL);
   if (p == 0)
@@ -261,7 +260,7 @@ int hash_control::replace (const string & key, int value
 /* Delete an entry from a hash table.  This returns the value stored
    for that entry, or NULL if there is no such entry.*/  
 
-int hash_control::erase (const string &key)
+void * hash_control::erase (const string &key)
 {
   class hash_entry *p;
   class hash_entry **list;
@@ -278,7 +277,7 @@ int hash_control::erase (const string &key)
 #endif
 
   *list = p->next;
-  int tmp=p->data;
-	delete p;
+  void * tmp=p->data;
+  delete p;
   return tmp;
 }

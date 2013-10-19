@@ -1,18 +1,19 @@
-#ifndef WIRE_H
-#define WIRE_H
-#include <iostream>
+#ifndef _WIRE_H_
+#define _WIRE_H_
+#include <fstream>
 #include <string>
 using namespace std;
 class Wire
 {
-private:
+ private:
   string name;
   int width;
   string end[2];
-public:
+ public:
+  Wire(){};
   Wire(string &n,int w);
-  void input(istream fin);
-  void output(ostream fout);
+  void read(ifstream &fin);
+  void output(ofstream &fout);
   string get_name();
   int get_width();
 };

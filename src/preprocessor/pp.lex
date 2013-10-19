@@ -3,20 +3,11 @@
 %}
 
 %x IN_COMMENT
+%option nounput
 %option yylineno
 %%
-"//"[^\n]* {}
 
-<INITIAL>{
-"/*" BEGIN(IN_COMMENT);
-}
-
-<IN_COMMENT>{
-"*/" BEGIN(INITIAL);
-[^*\n]+ // eat comment in chunks
-"*" // eat the lone star
-\n {ECHO;PE}
-}
+"#"[^\n]* {}
 
 . {ECHO;}
 
