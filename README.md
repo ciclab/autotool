@@ -73,7 +73,7 @@ TODO
 	//simple variable definition
 	//variable name
 	(s1  
-		[(value int)]  
+		(value int)  
 	)
 	...
 	//memory definition
