@@ -16,7 +16,7 @@ input_file = ../swift.des
 # 	$(CXX) $(CXXFLAGS) $(INCLUDE) -I.  $^ -o $@
 
 binutils: y.c y.h l.c l.h coff-dummy.c tc-dummy.c
-	cp y.c y.h l.c l.h  $(BINUTILS_DIR)/gas;cp tc-dummy.c $(BINUTILS_DIR)/gas/config;cp coff-dummy.c $(BINUTILS_DIR)/bfd;cp ../src/as/strstack.cpp $(BINUTILS_DIR)/gas/strstack.c; cp ../src/include/strstack.h $(BINUTILS_DIR)/gas
+	cp y.c y.h l.c l.h  $(BINUTILS_DIR)/gas;cp tc-dummy.c $(BINUTILS_DIR)/gas/config;cp coff-dummy.c $(BINUTILS_DIR)/bfd;cp ../src/as/strstack.cpp $(BINUTILS_DIR)/gas/strstack.c; cp ../src/include/strstack.h $(BINUTILS_DIR)/gas ; cp ./reloc.c $(BINUTILS_DIR)/bfd ; cp ./reloc.texi $(BINUTILS_DIR)/bfd/doc
 
 strstack.o: strstack.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@

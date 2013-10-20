@@ -1,0 +1,103 @@
+
+@example
+
+typedef enum bfd_reloc_code_real bfd_reloc_code_real_type;
+@end example
+@findex bfd_reloc_type_lookup
+@subsubsection @code{bfd_reloc_type_lookup}
+@strong{Synopsis}
+@example
+reloc_howto_type *bfd_reloc_type_lookup
+   (bfd *abfd, bfd_reloc_code_real_type code);
+reloc_howto_type *bfd_reloc_name_lookup
+   (bfd *abfd, const char *reloc_name);
+@end example
+@strong{Description}@*
+Return a pointer to a howto structure which, when
+invoked, will perform the relocation @var{code} on data from the
+architecture noted.
+
+@findex bfd_default_reloc_type_lookup
+@subsubsection @code{bfd_default_reloc_type_lookup}
+@strong{Synopsis}
+@example
+reloc_howto_type *bfd_default_reloc_type_lookup
+   (bfd *abfd, bfd_reloc_code_real_type  code);
+@end example
+@strong{Description}@*
+Provides a default relocation lookup routine for any architecture.
+
+@findex bfd_get_reloc_code_name
+@subsubsection @code{bfd_get_reloc_code_name}
+@strong{Synopsis}
+@example
+const char *bfd_get_reloc_code_name (bfd_reloc_code_real_type code);
+@end example
+@strong{Description}@*
+Provides a printable name for the supplied relocation code.
+Useful mainly for printing error messages.
+
+@findex bfd_generic_relax_section
+@subsubsection @code{bfd_generic_relax_section}
+@strong{Synopsis}
+@example
+bfd_boolean bfd_generic_relax_section
+   (bfd *abfd,
+    asection *section,
+    struct bfd_link_info *,
+    bfd_boolean *);
+@end example
+@strong{Description}@*
+Provides default handling for relaxing for back ends which
+don't do relaxing.
+
+@findex bfd_generic_gc_sections
+@subsubsection @code{bfd_generic_gc_sections}
+@strong{Synopsis}
+@example
+bfd_boolean bfd_generic_gc_sections
+   (bfd *, struct bfd_link_info *);
+@end example
+@strong{Description}@*
+Provides default handling for relaxing for back ends which
+don't do section gc -- i.e., does nothing.
+
+@findex bfd_generic_lookup_section_flags
+@subsubsection @code{bfd_generic_lookup_section_flags}
+@strong{Synopsis}
+@example
+bfd_boolean bfd_generic_lookup_section_flags
+   (struct bfd_link_info *, struct flag_info *, asection *);
+@end example
+@strong{Description}@*
+Provides default handling for section flags lookup
+-- i.e., does nothing.
+Returns FALSE if the section should be omitted, otherwise TRUE.
+
+@findex bfd_generic_merge_sections
+@subsubsection @code{bfd_generic_merge_sections}
+@strong{Synopsis}
+@example
+bfd_boolean bfd_generic_merge_sections
+   (bfd *, struct bfd_link_info *);
+@end example
+@strong{Description}@*
+Provides default handling for SEC_MERGE section merging for back ends
+which don't have SEC_MERGE support -- i.e., does nothing.
+
+@findex bfd_generic_get_relocated_section_contents
+@subsubsection @code{bfd_generic_get_relocated_section_contents}
+@strong{Synopsis}
+@example
+bfd_byte *bfd_generic_get_relocated_section_contents
+   (bfd *abfd,
+    struct bfd_link_info *link_info,
+    struct bfd_link_order *link_order,
+    bfd_byte *data,
+    bfd_boolean relocatable,
+    asymbol **symbols);
+@end example
+@strong{Description}@*
+Provides default handling of relocation effort for back ends
+which can't be bothered to do it efficiently.
+

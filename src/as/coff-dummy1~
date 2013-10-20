@@ -33,8 +33,6 @@
 #include "coff/mips.h"
 #include "libcoff.h"
 #include "libecoff.h"
-#define PT printf("%s %s\n",__FILE__,__LINE__);
- 
 
 /* Prototypes for static functions.  */
 static bfd_reloc_status_type

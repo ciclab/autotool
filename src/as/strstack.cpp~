@@ -5,13 +5,6 @@
 #define DBG_STRSTACK
 #define STACK_SIZE (257)
 #include "strstack.h"
-int isnumber(const char *c)
-{
-  for(;*c;++c)
-    if(*c<'0' || *c>'9')
-      return 0;
-  return 1;
-}
 void i2bs(char *buf,int v,int len)
 {
   for(;len;v>>=1)
@@ -28,7 +21,7 @@ void clear(struct strstack *ss)
   for(;(*ss).used>0;--(*ss).used)
     free((*ss).sta[(*ss).used]);
 }
-char* newstr1(struct strstack *ss,const char str[])
+int newstr1(struct strstack *ss,const char str[])
 {
   ++(*ss).used;
   if((*ss).used>=(*ss).size)
@@ -45,7 +38,7 @@ char* newstr1(struct strstack *ss,const char str[])
     }
 #endif
   strcpy((*ss).sta[(*ss).used],str);
-  return (*ss).sta[(*ss).used];
+  return (*ss).used;
 }
 int newstr(struct strstack *ss,int num,const char *str[]) 
 {
@@ -56,11 +49,8 @@ int newstr(struct strstack *ss,int num,const char *str[])
       (*ss).sta=(char **)realloc((*ss).sta,(*ss).size*sizeof(char*));
     }
   int len=0;
-  {
-    int i;
-    for(i=0;i<num;++i)
-      len+=strlen(str[i]);
-  }
+  for(int i=0;i<num;++i)
+    len+=strlen(str[i]);
 	
   (*ss).sta[(*ss).used]=(char *)calloc(len+1,sizeof(char));
 #ifdef DBG_STRSTACK
@@ -70,11 +60,8 @@ int newstr(struct strstack *ss,int num,const char *str[])
 	return 0;
     }
 #endif
-  {
-    int i;
-    for(i=0;i<num;++i)
-      strcat((*ss).sta[(*ss).used],str[i]);
-  }
+  for(int i=0;i<num;++i)
+    strcat((*ss).sta[(*ss).used],str[i]);
   return (*ss).used;
 }
 const char * getstr(const struct strstack *ss,int k)
