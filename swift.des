@@ -42,7 +42,7 @@
     (jumpi
       (= c J_E)
       (= a addr21)
-      (binary '110' a '0' c )
+      (binary '000110' a '0' c )
       (code c ' ' a)
       (do)
     )

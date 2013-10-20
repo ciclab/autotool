@@ -1,0 +1,346 @@
+
+
+ENDSENUM
+  BFD_RELOC_UNUSED
+CODE_FRAGMENT
+.
+.typedef enum bfd_reloc_code_real bfd_reloc_code_real_type;
+*/
+
+/*
+FUNCTION
+	bfd_reloc_type_lookup
+	bfd_reloc_name_lookup
+
+SYNOPSIS
+	reloc_howto_type *bfd_reloc_type_lookup
+	  (bfd *abfd, bfd_reloc_code_real_type code);
+	reloc_howto_type *bfd_reloc_name_lookup
+	  (bfd *abfd, const char *reloc_name);
+
+DESCRIPTION
+	Return a pointer to a howto structure which, when
+	invoked, will perform the relocation @var{code} on data from the
+	architecture noted.
+
+*/
+
+reloc_howto_type *
+bfd_reloc_type_lookup (bfd *abfd, bfd_reloc_code_real_type code)
+{
+  return BFD_SEND (abfd, reloc_type_lookup, (abfd, code));
+}
+
+reloc_howto_type *
+bfd_reloc_name_lookup (bfd *abfd, const char *reloc_name)
+{
+  return BFD_SEND (abfd, reloc_name_lookup, (abfd, reloc_name));
+}
+
+static reloc_howto_type bfd_howto_32 =
+HOWTO (0, 00, 2, 32, FALSE, 0, complain_overflow_dont, 0, "VRT32", FALSE, 0xffffffff, 0xffffffff, TRUE);
+
+/*
+INTERNAL_FUNCTION
+	bfd_default_reloc_type_lookup
+
+SYNOPSIS
+	reloc_howto_type *bfd_default_reloc_type_lookup
+	  (bfd *abfd, bfd_reloc_code_real_type  code);
+
+DESCRIPTION
+	Provides a default relocation lookup routine for any architecture.
+
+*/
+
+reloc_howto_type *
+bfd_default_reloc_type_lookup (bfd *abfd, bfd_reloc_code_real_type code)
+{
+  switch (code)
+    {
+    case BFD_RELOC_CTOR:
+      /* The type of reloc used in a ctor, which will be as wide as the
+	 address - so either a 64, 32, or 16 bitter.  */
+      switch (bfd_arch_bits_per_address (abfd))
+	{
+	case 64:
+	  BFD_FAIL ();
+	case 32:
+	  return &bfd_howto_32;
+	case 16:
+	  BFD_FAIL ();
+	default:
+	  BFD_FAIL ();
+	}
+    default:
+      BFD_FAIL ();
+    }
+  return NULL;
+}
+
+/*
+FUNCTION
+	bfd_get_reloc_code_name
+
+SYNOPSIS
+	const char *bfd_get_reloc_code_name (bfd_reloc_code_real_type code);
+
+DESCRIPTION
+	Provides a printable name for the supplied relocation code.
+	Useful mainly for printing error messages.
+*/
+
+const char *
+bfd_get_reloc_code_name (bfd_reloc_code_real_type code)
+{
+  if (code > BFD_RELOC_UNUSED)
+    return 0;
+  return bfd_reloc_code_real_names[code];
+}
+
+/*
+INTERNAL_FUNCTION
+	bfd_generic_relax_section
+
+SYNOPSIS
+	bfd_boolean bfd_generic_relax_section
+	  (bfd *abfd,
+	   asection *section,
+	   struct bfd_link_info *,
+	   bfd_boolean *);
+
+DESCRIPTION
+	Provides default handling for relaxing for back ends which
+	don't do relaxing.
+*/
+
+bfd_boolean
+bfd_generic_relax_section (bfd *abfd ATTRIBUTE_UNUSED,
+			   asection *section ATTRIBUTE_UNUSED,
+			   struct bfd_link_info *link_info ATTRIBUTE_UNUSED,
+			   bfd_boolean *again)
+{
+  if (link_info->relocatable)
+    (*link_info->callbacks->einfo)
+      (_("%P%F: --relax and -r may not be used together\n"));
+
+  *again = FALSE;
+  return TRUE;
+}
+
+/*
+INTERNAL_FUNCTION
+	bfd_generic_gc_sections
+
+SYNOPSIS
+	bfd_boolean bfd_generic_gc_sections
+	  (bfd *, struct bfd_link_info *);
+
+DESCRIPTION
+	Provides default handling for relaxing for back ends which
+	don't do section gc -- i.e., does nothing.
+*/
+
+bfd_boolean
+bfd_generic_gc_sections (bfd *abfd ATTRIBUTE_UNUSED,
+			 struct bfd_link_info *info ATTRIBUTE_UNUSED)
+{
+  return TRUE;
+}
+
+/*
+INTERNAL_FUNCTION
+	bfd_generic_lookup_section_flags
+
+SYNOPSIS
+	bfd_boolean bfd_generic_lookup_section_flags
+	  (struct bfd_link_info *, struct flag_info *, asection *);
+
+DESCRIPTION
+	Provides default handling for section flags lookup
+	-- i.e., does nothing.
+	Returns FALSE if the section should be omitted, otherwise TRUE.
+*/
+
+bfd_boolean
+bfd_generic_lookup_section_flags (struct bfd_link_info *info ATTRIBUTE_UNUSED,
+				  struct flag_info *flaginfo,
+				  asection *section ATTRIBUTE_UNUSED)
+{
+  if (flaginfo != NULL)
+    {
+      (*_bfd_error_handler) (_("INPUT_SECTION_FLAGS are not supported.\n"));
+      return FALSE;
+    }
+  return TRUE;
+}
+
+/*
+INTERNAL_FUNCTION
+	bfd_generic_merge_sections
+
+SYNOPSIS
+	bfd_boolean bfd_generic_merge_sections
+	  (bfd *, struct bfd_link_info *);
+
+DESCRIPTION
+	Provides default handling for SEC_MERGE section merging for back ends
+	which don't have SEC_MERGE support -- i.e., does nothing.
+*/
+
+bfd_boolean
+bfd_generic_merge_sections (bfd *abfd ATTRIBUTE_UNUSED,
+			    struct bfd_link_info *link_info ATTRIBUTE_UNUSED)
+{
+  return TRUE;
+}
+
+/*
+INTERNAL_FUNCTION
+	bfd_generic_get_relocated_section_contents
+
+SYNOPSIS
+	bfd_byte *bfd_generic_get_relocated_section_contents
+	  (bfd *abfd,
+	   struct bfd_link_info *link_info,
+	   struct bfd_link_order *link_order,
+	   bfd_byte *data,
+	   bfd_boolean relocatable,
+	   asymbol **symbols);
+
+DESCRIPTION
+	Provides default handling of relocation effort for back ends
+	which can't be bothered to do it efficiently.
+
+*/
+
+bfd_byte *
+bfd_generic_get_relocated_section_contents (bfd *abfd,
+					    struct bfd_link_info *link_info,
+					    struct bfd_link_order *link_order,
+					    bfd_byte *data,
+					    bfd_boolean relocatable,
+					    asymbol **symbols)
+{
+  bfd *input_bfd = link_order->u.indirect.section->owner;
+  asection *input_section = link_order->u.indirect.section;
+  long reloc_size;
+  arelent **reloc_vector;
+  long reloc_count;
+
+  reloc_size = bfd_get_reloc_upper_bound (input_bfd, input_section);
+  if (reloc_size < 0)
+    return NULL;
+
+  /* Read in the section.  */
+  if (!bfd_get_full_section_contents (input_bfd, input_section, &data))
+    return NULL;
+
+  if (reloc_size == 0)
+    return data;
+
+  reloc_vector = (arelent **) bfd_malloc (reloc_size);
+  if (reloc_vector == NULL)
+    return NULL;
+
+  reloc_count = bfd_canonicalize_reloc (input_bfd,
+					input_section,
+					reloc_vector,
+					symbols);
+  if (reloc_count < 0)
+    goto error_return;
+
+  if (reloc_count > 0)
+    {
+      arelent **parent;
+      for (parent = reloc_vector; *parent != NULL; parent++)
+	{
+	  char *error_message = NULL;
+	  asymbol *symbol;
+	  bfd_reloc_status_type r;
+
+	  symbol = *(*parent)->sym_ptr_ptr;
+	  if (symbol->section && discarded_section (symbol->section))
+	    {
+	      bfd_byte *p;
+	      static reloc_howto_type none_howto
+		= HOWTO (0, 0, 0, 0, FALSE, 0, complain_overflow_dont, NULL,
+			 "unused", FALSE, 0, 0, FALSE);
+
+	      p = data + (*parent)->address * bfd_octets_per_byte (input_bfd);
+	      _bfd_clear_contents ((*parent)->howto, input_bfd, input_section,
+				   p);
+	      (*parent)->sym_ptr_ptr = bfd_abs_section_ptr->symbol_ptr_ptr;
+	      (*parent)->addend = 0;
+	      (*parent)->howto = &none_howto;
+	      r = bfd_reloc_ok;
+	    }
+	  else
+	    r = bfd_perform_relocation (input_bfd,
+					*parent,
+					data,
+					input_section,
+					relocatable ? abfd : NULL,
+					&error_message);
+
+	  if (relocatable)
+	    {
+	      asection *os = input_section->output_section;
+
+	      /* A partial link, so keep the relocs.  */
+	      os->orelocation[os->reloc_count] = *parent;
+	      os->reloc_count++;
+	    }
+
+	  if (r != bfd_reloc_ok)
+	    {
+	      switch (r)
+		{
+		case bfd_reloc_undefined:
+		  if (!((*link_info->callbacks->undefined_symbol)
+			(link_info, bfd_asymbol_name (*(*parent)->sym_ptr_ptr),
+			 input_bfd, input_section, (*parent)->address,
+			 TRUE)))
+		    goto error_return;
+		  break;
+		case bfd_reloc_dangerous:
+		  BFD_ASSERT (error_message != NULL);
+		  if (!((*link_info->callbacks->reloc_dangerous)
+			(link_info, error_message, input_bfd, input_section,
+			 (*parent)->address)))
+		    goto error_return;
+		  break;
+		case bfd_reloc_overflow:
+		  if (!((*link_info->callbacks->reloc_overflow)
+			(link_info, NULL,
+			 bfd_asymbol_name (*(*parent)->sym_ptr_ptr),
+			 (*parent)->howto->name, (*parent)->addend,
+			 input_bfd, input_section, (*parent)->address)))
+		    goto error_return;
+		  break;
+		case bfd_reloc_outofrange:
+		  /* PR ld/13730:
+		     This error can result when processing some partially
+		     complete binaries.  Do not abort, but issue an error
+		     message instead.  */
+		  link_info->callbacks->einfo
+		    (_("%X%P: %B(%A): relocation \"%R\" goes out of range\n"),
+		     abfd, input_section, * parent);
+		  goto error_return;
+
+		default:
+		  abort ();
+		  break;
+		}
+
+	    }
+	}
+    }
+
+  free (reloc_vector);
+  return data;
+
+error_return:
+  free (reloc_vector);
+  return NULL;
+}

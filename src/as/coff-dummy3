@@ -8,8 +8,8 @@ static bfd_boolean
 mips_ecoff_bad_format_hook (bfd * abfd, void * filehdr)
 {
   struct internal_filehdr *internal_f = (struct internal_filehdr *) filehdr;
-
-  switch (internal_f->f_magic)
+PT
+ switch (internal_f->f_magic)
     {
     case MIPS_MAGIC_1:
       /* I don't know what endianness this implies.  */
@@ -41,6 +41,7 @@ mips_ecoff_swap_reloc_in (bfd *  abfd,
 			  void * ext_ptr,
 			  struct internal_reloc *intern)
 {
+PT
   const RELOC *ext = (RELOC *) ext_ptr;
 
   intern->r_vaddr = H_GET_32 (abfd, ext->r_vaddr);
@@ -79,6 +80,7 @@ mips_ecoff_swap_reloc_out (bfd * abfd,
 			   const struct internal_reloc * intern,
 			   void * dst)
 {
+PT
   RELOC *ext = (RELOC *) dst;
   long r_symndx;
 
@@ -119,6 +121,7 @@ mips_adjust_reloc_in (bfd *abfd,
 		      const struct internal_reloc *intern,
 		      arelent *rptr)
 {
+PT
   if (intern->r_type > MIPS_R_PCREL16)
     abort ();
 
@@ -142,7 +145,7 @@ static void
 mips_adjust_reloc_out (bfd *abfd ATTRIBUTE_UNUSED,
 		       const arelent *rel ATTRIBUTE_UNUSED,
 		       struct internal_reloc *intern ATTRIBUTE_UNUSED)
-{
+{PT
 }
 
 /* ECOFF relocs are either against external symbols, or against
@@ -165,6 +168,7 @@ mips_generic_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		    bfd *output_bfd,
 		    char **error_message ATTRIBUTE_UNUSED)
 {
+PT
   if (output_bfd != (bfd *) NULL
       && (symbol->flags & BSF_SECTION_SYM) == 0
       && reloc_entry->addend == 0)
@@ -205,6 +209,7 @@ mips_refhi_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		  bfd *output_bfd,
 		  char **error_message ATTRIBUTE_UNUSED)
 {
+PT
   bfd_reloc_status_type ret;
   bfd_vma relocation;
   struct mips_hi *n;
@@ -264,6 +269,7 @@ mips_reflo_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		  bfd *output_bfd,
 		  char **error_message ATTRIBUTE_UNUSED)
 {
+PT
   if (mips_refhi_list != NULL)
     {
       struct mips_hi *l;
@@ -325,6 +331,7 @@ mips_gprel_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		  bfd *output_bfd,
 		  char **error_message ATTRIBUTE_UNUSED)
 {
+PT
   bfd_boolean relocatable;
   bfd_vma gp;
   bfd_vma relocation;

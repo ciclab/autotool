@@ -3,6 +3,7 @@ static reloc_howto_type *
 mips_bfd_reloc_name_lookup (bfd *abfd ATTRIBUTE_UNUSED,
 			    const char *r_name)
 {
+  PT
   unsigned int i;
 
   for (i = 0;
@@ -28,6 +29,7 @@ mips_relocate_hi (struct internal_reloc *refhi,
 		  bfd_byte *contents,
 		  bfd_vma relocation)
 {
+	PT
   unsigned long insn;
   unsigned long val;
   unsigned long vallo;
@@ -73,6 +75,7 @@ mips_relocate_section (bfd *output_bfd,
 		       bfd_byte *contents,
 		       void * external_relocs)
 {
+	PT
   asection **symndx_to_section;
   struct ecoff_link_hash_entry **sym_hashes;
   bfd_vma gp;
@@ -738,7 +741,7 @@ const bfd_target ecoff_big_vec =
 
 const bfd_target ecoff_biglittle_vec =
 {
-  "ecoff-biglittlemips",		/* name */
+  "ecoff-biglittledummy",		/* name */
   bfd_target_ecoff_flavour,
   BFD_ENDIAN_LITTLE,		/* data byte order is little */
   BFD_ENDIAN_BIG,		/* header byte order is big */

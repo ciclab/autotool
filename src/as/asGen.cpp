@@ -437,6 +437,7 @@ indent ./tc-dummy.c");
   bout<<"static reloc_howto_type *mips_bfd_reloc_type_lookup\
  (bfd *abfd ATTRIBUTE_UNUSED,\
 bfd_reloc_code_real_type code)\n{";
+  bout<<"PT\n";
   bout<<"  int mips_type;\n\
   switch (code)\n\
     {\n";
@@ -450,7 +451,7 @@ bfd_reloc_code_real_type code)\n{";
     }\n\
   return &mips_howto_table[mips_type];\n}\n";
   
-  ofstream rout("reloc.c");
+  ofstream rout("reloc2");
   // for content in bfd/doc/reloc.c
   FR(i,bfd_list)
     {
@@ -459,18 +460,23 @@ bfd_reloc_code_real_type code)\n{";
       else rout<<"ENUMX\n  "<<i->first.first<<endl;
     }
   rout<<"ENUMDOC\n  DUMMY\n"<<endl;
+  system("cat ../src/as/reloc1 ./reloc2 ../src/as/reloc3 > reloc.c;\
+indent ./reloc.c");
+  
+  ofstream rtout("reloct2");
   // for content in bfd/doc/reloc.texi
   FR(i,bfd_list)
     {
       if(i==bfd_list.begin())
-	rout<<"@deffn {} "<<i->first.first<<endl;
+	rtout<<"@deffn {} "<<i->first.first<<endl;
       else
-	rout<<"@deffnx {} "<<i->first.first<<endl;
+	rtout<<"@deffnx {} "<<i->first.first<<endl;
       //rout<<"Adapteva EPIPHANY -"<<i->first<<endl;
     }
-  rout<<"@end deffn"<<endl;
-  rout<<"DUMMY\n";
-  rout.close();
+  rtout<<"@end deffn"<<endl;
+  rtout<<"DUMMY\n";
+  system("cat ../src/as/reloct1 ./reloct2 ../src/as/reloct3 > reloc.texi");
+  rtout.close();
 
 
   //output rules for type

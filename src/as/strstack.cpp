@@ -9,8 +9,8 @@ int isnumber(const char *c)
 {
   for(;*c;++c)
     if(*c<'0' || *c>'9')
-      return 1;
-  return 0;
+      return 0;
+  return 1;
 }
 void i2bs(char *buf,int v,int len)
 {
