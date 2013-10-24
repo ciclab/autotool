@@ -96,6 +96,35 @@ int main(int argc,char *argv[])
   tokout<<"%token TOK_BLANK"<<endl;
   yout<<"%%\n";
 
+
+
+  //disassembler file
+  // ofstream dlout;
+  ofstream dyout,dtokout;
+  // string dl_file_name=argv[2];
+  // dl_file_name="dis_"+dl_file_name;
+  string dy_file_name=argv[3];
+  dy_file_name="dis_"+dy_file_name;
+  string dtok_file_name=dy_file_name+".tok";
+  // dlout.open(dl_file_name.c_str(),ofstream::out);
+  dyout.open(dy_file_name.c_str(),ofstream::out);  
+  dtokout.open(dtok_file_name.c_str(),ofstream::out);
+  dtokout<<"%{\n";
+  dtokout<<"#include <stdio.h>\n";
+  dtokout<<"#include <string.h>\n";
+  dtokout<<"extern char * dyyret;\n";
+  dtokout<<"extern int ddummy_lineno;\n";
+  dtokout<<"extern void ddummy_error(const char *s);\n";
+  dtokout<<"extern int ddummy_lex(void);\n";
+  dtokout<<"%}\n";
+  dtokout<<"%union{\n";
+  dtokout<<"int integer;\n";
+  dtokout<<"char ch;\n";
+  dtokout<<"char * chp;\n";
+  dtokout<<"}\n";
+  dtokout<<"%locations;\n";
+  
+
   //
   vector<pair<ll,ll> > int_list;
   //output rules for enum
@@ -108,12 +137,17 @@ int main(int argc,char *argv[])
       int width=enu.width();
       string enum_name=enu.enum_name();
       tokout<<"%type <chp>"<<enum_name<<endl;
+      dtokout<<"%type <chp>"<<enum_name<<endl;
       yout<<enum_name<<": ";
+      dyout<<enum_name<<":";
       // hc_len.insert(enum_name,(void*)width);
       FOR(j,0,enum_ent_size)
 	{
 	  if(j)
-	    yout<<"|"<<endl;
+	    {
+	      yout<<"|"<<endl;
+	      dyout<<"|"<<endl;
+	    }
 	  string ent_code=enu.ent_code(j);
 	  char *en=(char*)hc.find(ent_code);
 	  if(en==NULL)
@@ -127,8 +161,15 @@ int main(int argc,char *argv[])
 	      lout<<"\""<<ent_code<<"\""<<" return TOK_"<<(ll)en<<";"<<endl;
 	    }
 	  yout<<"TOK_"<<(ll)en<<" {$$=(char*)\""<<int2binary(width,enu.ent_value(j))<<"\";}";
+	  int v=enu.ent_value(j);
+	  for(int i=0,j=1;i<width;++i,j<<=1)
+	    if(v&j)
+	      dyout<<"TOK_1 ";
+	    else dyout<<"TOK_0 ";
+	  dyout<<"{return \""<<ent_code<<"\"}"<<endl;
 	}
       yout<<";"<<endl;
+      dyout<<";"<<endl;
     }
   
   tokout<<"%start "<<top_rule_name<<endl;
