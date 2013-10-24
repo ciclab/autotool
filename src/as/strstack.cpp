@@ -5,12 +5,28 @@
 #define DBG_STRSTACK
 #define STACK_SIZE (257)
 #include "strstack.h"
+#include <string.h>
 int isnumber(const char *c)
 {
   for(;*c;++c)
     if(*c<'0' || *c>'9')
       return 0;
   return 1;
+}
+int s2i(char *buf,int width)
+{
+	int i,r;
+	for(i=r=0;i<width;++i)
+		r=(r<<1)|buf[i];
+	return r;
+}
+char * get_entry(char ** a,int char * b,int num)
+{
+	int i;
+	for(i=0;i<num;++i)
+		if(strcmp(a[i<<1],b)==0)
+			return a[(i<<1)+1];
+	return NULL;
 }
 void i2bs(char *buf,int v,int len)
 {
