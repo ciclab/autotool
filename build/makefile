@@ -26,6 +26,9 @@ l.o: l.c
 y.o: y.c
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
+dy.o: dy.c
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
 l.c: as.lex y.h
 	$(LEX) --prefix=dummy_ -o l.c $^
 
@@ -35,7 +38,10 @@ l.h: as.lex
 y.c y.h: _as.y
 	$(YACC) --name-prefix=dummy_ -o y.c $^
 
-as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4 tc-dummy1 tc-dummy1 tc-dummy3
+dy.c dy.h: _disdis_as.y
+	$(YACC) --name-prefix=ddummy_ -o dy.c $^
+
+as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c _disdis_as.y : asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4 tc-dummy1 tc-dummy1 tc-dummy3
 	./asgen out as.lex as.y
 
 asgen: asGen.cpp libir.a

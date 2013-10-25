@@ -26,9 +26,10 @@ char * s2hex(char *buf,int len)
 	for(val=i=0;i<len;++i)
 		val=(val<<1)|(buf[i]=='1'?1:0);
 	static tmp[1000];/*TODO*/
-	
+	sprintf(tmp,"%X",val);
+	return tmp;
 }
-char * get_entry(char ** a,int char * b,int num)
+char * get_entry(const char * a[],const char * b,int num)
 {
 	int i,j;
 	for(i=0;i<num;++i)

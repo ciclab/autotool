@@ -112,9 +112,13 @@ int main(int argc,char *argv[])
   dcout.open(dc_file_name.c_str(),ofstream::out);
   dyout.open(dy_file_name.c_str(),ofstream::out);  
   dtokout.open(dtok_file_name.c_str(),ofstream::out);
+  dhout<<"#ifndef DH_H"<<endl;
+  dhout<<"#define DH_H"<<endl;
   dtokout<<"%{\n";
   dtokout<<"#include <stdio.h>\n";
   dtokout<<"#include <string.h>\n";
+  dtokout<<"#include \"strstack.h\"\n";
+  dtokout<<"extern void output(const char *,const char *);\n";
   // dtokout<<"char dyyret[1000]/*TODO*/;\n";
   dtokout<<"extern int ddummy_lineno;\n";
   dtokout<<"extern void ddummy_error(const char *s);\n";
@@ -194,7 +198,7 @@ int main(int argc,char *argv[])
 	      dyout<<"|"<<endl;
 	    }
 	  yout<<n<<"{yyret=$1;}"<<endl;
-	  dyout<<n<<"{yyret=$1;}"<<endl;
+	  dyout<<n<<"{}"<<endl;
 	  ++j;
 	}
     }
@@ -382,11 +386,11 @@ int main(int argc,char *argv[])
 	    {
 	      if(toks_in_binary[i]<0)
 	  	{
-		  dyout<<"(*info->fprintf_func) (info->stream, \"%s\",\""<<toks[i]<<"\");\n";
+		  dyout<<"output(\"%s\",\""<<toks[i]<<"\");\n";
 	  	}
 	      else
 	  	{
-		  dyout<<"(*info->fprintf_func) (info->stream, \"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
+		  dyout<<"output(\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
 	  	}
 	    }
 	  dyout<<"}\n";
@@ -608,7 +612,7 @@ indent ./reloc.c");
       yout<<";"<<endl;
 
       dcout<<"char *"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
-      dhout<<"char *"<<name<<"(char * c);";
+      dhout<<"char *"<<name<<"(char * c);\n";
     }
   bout.close();
   system("cat ../src/as/coff-dummy1 \
@@ -651,6 +655,7 @@ int yywrap()\n\
   dcout<<"}\n";
 
   dcout.close();
+  dhout<<"\n#endif"<<endl;
   dhout.close();
   cmd="cat "+dtok_file_name+" "+dy_file_name+" "+dc_file_name+" > _dis"+dy_file_name;
   system(cmd.c_str());
