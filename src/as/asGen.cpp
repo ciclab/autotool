@@ -100,24 +100,26 @@ int main(int argc,char *argv[])
 
   //disassembler file
   // ofstream dlout;
-  ofstream dyout,dtokout,dcout;
+  ofstream dyout,dtokout,dcout,dhout;
   // string dl_file_name=argv[2];
   // dl_file_name="dis_"+dl_file_name;
   string dy_file_name=argv[3];
   dy_file_name="dis_"+dy_file_name;
   string dc_file_name=dy_file_name+".tail";
   string dtok_file_name=dy_file_name+".tok";
-  // dlout.open(dl_file_name.c_str(),ofstream::out);
+  string dh_file_name=dy_file_name+".h";
+  dhout.open(dh_file_name.c_str(),ofstream::out);
   dcout.open(dc_file_name.c_str(),ofstream::out);
   dyout.open(dy_file_name.c_str(),ofstream::out);  
   dtokout.open(dtok_file_name.c_str(),ofstream::out);
   dtokout<<"%{\n";
   dtokout<<"#include <stdio.h>\n";
   dtokout<<"#include <string.h>\n";
-  dtokout<<"char dyyret[1000]/*TODO*/;\n";
+  // dtokout<<"char dyyret[1000]/*TODO*/;\n";
   dtokout<<"extern int ddummy_lineno;\n";
   dtokout<<"extern void ddummy_error(const char *s);\n";
   dtokout<<"extern int ddummy_lex(void);\n";
+  dtokout<<"#include \""<<dh_file_name<<"\""<<endl;
   dtokout<<"%}\n";
   dtokout<<"%union{\n";
   dtokout<<"int integer;\n";
@@ -143,6 +145,7 @@ int main(int argc,char *argv[])
       // hc_len.insert(enum_name,(void*)width);
 
       dcout<<"char *"<<enum_name<<"(char *c)\n";
+      dhout<<"char *"<<enum_name<<"(char *c);\n";
       dcout<<"{\n";
       dcout<<"const static char * tmp[]={";
       FOR(j,0,enum_ent_size)
@@ -172,12 +175,12 @@ int main(int argc,char *argv[])
 	}
       yout<<";"<<endl;
       dcout<<"};\n";
-      dcout<<"return get_entry(tmp,c,"<<enum_ent_size<<")];\n}\n";
+      dcout<<"return get_entry(tmp,c,"<<enum_ent_size<<");\n}\n";
     }
   tokout<<"%start "<<top_rule_name<<endl;
   dtokout<<"%start "<<top_rule_name<<endl;
   tokout<<"%type<chp> "<<top_rule_name<<endl;
-  dtokout<<"%type<chp> "<<top_rule_name<<endl;
+  // dtokout<<"%type<chp> "<<top_rule_name<<endl;
   yout<<top_rule_name<<": "<<endl;
   dyout<<top_rule_name<<": "<<endl;
   for(int i=0,j=0;i<instr_size;++i)
@@ -198,6 +201,10 @@ int main(int argc,char *argv[])
   yout<<";\n";
   dyout<<";\n";
 
+  dtokout<<"%type<ch> TOK_01"<<endl;
+  dtokout<<"%token TOK_0"<<endl;
+  dtokout<<"%token TOK_1"<<endl;
+  dyout<<"TOK_01: TOK_0 {return '1';}|TOK_1 {return '0';};\n";
   //output rules for instructions
   int max_reloc_num(0);//record max relocation number
   FOR(i,0,instr_size)
@@ -211,7 +218,7 @@ int main(int argc,char *argv[])
 	  cout<<endl<<endl;
 #endif
 	  tokout<<"%type<chp> "<<n<<endl;
-	  dtokout<<"%type<chp> "<<n<<endl;
+	  // dtokout<<"%type<chp> "<<n<<endl;
 	  vector<ppi> off;
 	  ir.get_instr_off(i,off);
 	  string code=ir.get_instr_code(i);
@@ -239,7 +246,8 @@ int main(int argc,char *argv[])
 	  vector<bool> need_reloc;
 	  len.resize(off.size());
 	  need_reloc.resize(off.size());
-	  vector<string> toks(0);//record string tokens in code
+ 	  vector<string> toks;//record string tokens in code
+	  vector<int> toks_in_binary;
 	  for(typeof(code.begin()) j=code.begin();j!=code.end();)
 	    {
 	      ++seg;
@@ -253,6 +261,7 @@ int main(int argc,char *argv[])
 			;
 		      yout<<"TOK_BLANK ";
 		      toks.push_back(" ");
+		      toks_in_binary.push_back(-1);
 		      break;
 		    }
 		default:
@@ -281,7 +290,8 @@ int main(int argc,char *argv[])
 		      ++off_in_code;
 		      ++j;
 		    }
-		  else {
+		  else
+		    {
 		      //cout<<*j<<endl;
 		      // if((*j==c_type_beg || *j==c_enum_beg))
 		      // 	{
@@ -292,7 +302,7 @@ int main(int argc,char *argv[])
 		      // 	  cout<<binary<<endl;
 		      // 	}
 		      assert(!(*j==c_type_beg || *j==c_enum_beg));
-		  }
+		    }
 		  for(;j!=code.end() && *j!=' ' && *j!='\1';++j,++off_in_code)
 		    token+=*j;
 		  if(is_string)
@@ -312,6 +322,7 @@ int main(int argc,char *argv[])
 			}
 		      yout<<"TOK_"<<(ll)tmp<<" ";
 		      toks.push_back(token);
+		      toks_in_binary.push_back(-1);
 		    }
 		  else
 		    {
@@ -335,7 +346,8 @@ int main(int argc,char *argv[])
 			  Enum tmp=ir.find_enum(token);
 			  len[offi-1]=tmp.width();
 			}
-		      toks.push_back("");
+		      toks.push_back(token);
+		      toks_in_binary.push_back(offi-1);
 		    }
 		  break;
 		}
@@ -355,29 +367,29 @@ int main(int argc,char *argv[])
 	    else if(*i=='1')
 	      dyout<<"TOK_1 ";
 	    else dyout<<"TOK_01 ";
-	  dyout<<"\n{";
-	  dyout<<"static char tmp[]="<<'"'<<binary<<'"'<<endl;
+	  dyout<<"\n{\n";
+	  dyout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
 	  for(int i=0;i<(int)rbinary.length();++i)
 	    if(rbinary[i]=='-')
 	      {
 		dyout<<"tmp[";
 		int z=(rbinary.length()/8-1-i/8)*8+(i%8);
 		dyout<<z;
-		dyout<<"]"<<"$"<<(i+1)<<";\n";
+		dyout<<"]=$"<<(i+1)<<";\n";
 	      }
-	  dyout<<"dyyret[0]='\\0';";
-	  // FR(i,toks)
-	  //   {
-	  //     if((*i).length()>0)
-	  // 	{
-	  // 	  dyout<<"con(dyyret,"<<'"'<<*i<<'"'<<");\n";
-	  // 	}
-	  //     else
-	  // 	{
-	  // 	  dyout<<"
-	  // 	}
-	  //   }
-
+	  // dyout<<"dyyret[0]='\\0';";
+	  for(int i=0;i<(int)toks.size();++i)
+	    {
+	      if(toks_in_binary[i]<0)
+	  	{
+		  dyout<<"(*info->fprintf_func) (info->stream, \"%s\",\""<<toks[i]<<"\");\n";
+	  	}
+	      else
+	  	{
+		  dyout<<"(*info->fprintf_func) (info->stream, \"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
+	  	}
+	    }
+	  dyout<<"}\n";
 	  // if(n=="tctcore_0")
 	  //   {
 	  //     cout<<code<<endl;
@@ -579,7 +591,7 @@ indent ./reloc.c");
       Type ty=ir.get_type(i);
       string name=ty.get_name();
       int len=ty.get_len();
-      name="type_"+name+"_"+int2string(ty.len)+"_"+ty.get_type();
+      name="type_"+name+"_"+int2string(len)+"_"+ty.get_type();
       tokout<<"%type<chp> "<<name<<endl;
       yout<<name<<": ";
       yout<<"rule_int" ;
@@ -594,6 +606,9 @@ indent ./reloc.c");
       yout<<"tmp[i]='L';"<<endl;
       yout<<"$$=tmp;}"<<endl;
       yout<<";"<<endl;
+
+      dcout<<"char *"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
+      dhout<<"char *"<<name<<"(char * c);";
     }
   bout.close();
   system("cat ../src/as/coff-dummy1 \
@@ -626,6 +641,18 @@ int yywrap()\n\
   tokout.close();
   string cmd="cat "+token_file_name+" "+y_file_name+" > "+"_"+y_file_name;
   system(cmd.c_str());
+
+  dyout<<"%%"<<endl;
+  dyout.close();
+  dtokout<<"%%"<<endl;
+  dtokout.close();
+  dcout<<"void yyerror(const char *s)\n";
+  dcout<<"{fprintf (stderr, \"L%d: %s \\n\",ddummy_lineno,s);\n";
+  dcout<<"}\n";
+
+  dcout.close();
+  dhout.close();
+  cmd="cat "+dtok_file_name+" "+dy_file_name+" "+dc_file_name+" > _dis"+dy_file_name;
+  system(cmd.c_str());
   return 0;
 }
-
