@@ -1,8 +1,9 @@
 
 int/*TODO*/ get_expr(char *str,int bfd_type)
 {
-  my_getExpression(expr_list+offset_cnt,str);
+  expr_list[offset_cnt].X_op = O_absent;
   offset_reloc[offset_cnt]=bfd_type;
+  my_getExpression(expr_list+offset_cnt,str);
   if(expr_list[offset_cnt].X_op==O_constant)
   {
     return expr_list[offset_cnt].X_add_number;

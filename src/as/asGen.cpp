@@ -456,7 +456,7 @@ int main(int argc,char *argv[])
 		  yout<<bfd_name<<");"<<endl;
 		  yout<<"int j="<<(1<<(l-1))<<";"<<endl;
 		  yout<<"for(i=0;i<"<<l<<";++i,j>>=1)//l<31\n";
-		  yout<<"tmp["<<i->second<<"+i]=(j&t)?\'1\':\'0\';";
+		  yout<<"tmp["<<i->second<<"+i]=(t&j)?\'1\':\'0\';";
 		  yout<<"}"<<endl;
 		}
 	    }
@@ -502,7 +502,11 @@ int main(int argc,char *argv[])
   tout<<"int i;\n";
   tout<<"char * f=frag_more(len);\n";      //TODO should be a variable
   tout<<"for(i=0;i<offset_cnt;++i)\n";
-  tout<<"fix_new_exp(frag_now,f-frag_now->fr_literal,len,expr_list+i,TRUE,offset_reloc[i]);\n";
+  tout<<"{\n";
+  tout<<"fixS * tmp=fix_new_exp(/*frag_now*/NULL,/*f-frag_now->fr_literal*/0,len,expr_list+i,TRUE,offset_reloc[i]);\n";
+  tout<<"tmp->fx_frag=frag_now;\n";
+  tout<<"tmp->fx_where=f-frag_now->fr_literal;\n";
+  tout<<"}\n";
   tout<<"int j,k;\n";
   tout<<"for(j=0;j<len;++j)\n";
   tout<<"{f[j]=0;\n";
@@ -586,18 +590,18 @@ indent ./tc-dummy.c");
  (bfd *abfd ATTRIBUTE_UNUSED,\
 bfd_reloc_code_real_type code)\n{";
   bout<<"PT\n";
-  bout<<"  int mips_type;\n\
+  bout<<"\
   switch (code)\n\
     {\n";
   FR(i,bfd_list)
     {
       bout<<"case "<<i->first.first<<":"<<endl;
-      bout<<"mips_type="<<(int)(i-bfd_list.begin())<<";\nbreak;"<<endl;
+      bout<<"return "<<"mips_howto_table+"<<(int)(i-bfd_list.begin())<<";\nbreak;"<<endl;
     }
   bout<<"default:\n\
       return (reloc_howto_type *) NULL;\n\
     }\n\
-  return &mips_howto_table[mips_type];\n}\n";
+  return NULL;\n}\n";
   
   ofstream rout("reloc2");
   // for content in bfd/doc/reloc.c
@@ -643,11 +647,12 @@ indent ./reloc.c");
       yout<<"i2bs(tmp,$1,"<<len<<");"<<endl;
       yout<<"$$=tmp;}"<<endl;
       yout<<"|"<<" TOK_LABEL{"<<endl;
-      yout<<"static char tmp["<<len<<"];"<<endl;
-      yout<<"int i;\ni^=i;\n";
-      yout<<"for(i=0;i<"<<len<<";++i)"<<endl;
-      yout<<"tmp[i]='L';"<<endl;
-      yout<<"$$=tmp;}"<<endl;
+      // yout<<"static char tmp["<<len<<"];"<<endl;
+      // yout<<"int i;\ni^=i;\n";
+      // yout<<"for(i=0;i<"<<len<<";++i)"<<endl;
+      // yout<<"tmp[i]=$1[i];"<<endl;
+      // yout<<"$$=tmp;}"<<endl;
+      yout<<"$$=$1;}\n";
       yout<<";"<<endl;
 
       dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
