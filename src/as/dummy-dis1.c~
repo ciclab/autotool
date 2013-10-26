@@ -67,7 +67,7 @@ static const char * get_entry(const char * a[],const char * b,int num)
   return NULL;
 }
 
-static void output(struct disassemble_info *info,const char *format,const char * arg)
+static void output(struct disassemble_info *info,const char *format,const char * arg);
 static void output(struct disassemble_info *info,const char *format,const char * arg)
 {
   (*info->fprintf_func) (info->stream, format, arg);

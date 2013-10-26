@@ -409,7 +409,7 @@ int main(int argc,char *argv[])
 	  	dcout<<"tmp[";
 	  	int z=(rbinary.length()/8-1-i/8)*8+(i%8);
 	  	dcout<<z;
-	  	dcout<<"]=c["<<(i+1)<<"];\n";
+	  	dcout<<"]=c["<<i<<"];\n";
 	      }
 	  for(int i=0;i<(int)toks.size();++i)
 	    {
@@ -502,18 +502,20 @@ int main(int argc,char *argv[])
   tout<<"int i;\n";
   tout<<"char * f=frag_more(len);\n";      //TODO should be a variable
   tout<<"for(i=0;i<offset_cnt;++i)\n";
-  tout<<"fix_new_exp(frag_now,f-frag_now->fr_literal,4/*TODO*/,expr_list+i,TRUE,offset_reloc[i]);\n";
+  tout<<"fix_new_exp(frag_now,f-frag_now->fr_literal,len,expr_list+i,TRUE,offset_reloc[i]);\n";
   tout<<"int j,k;\n";
   tout<<"for(j=0;j<len;++j)\n";
+  tout<<"{f[j]=0;\n";
   tout<<"for(k=0;k<8;++k)\n";
-  tout<<"f[j*8+k]=yyret[(len-1-j)*8+k];\n";
+  tout<<"f[j]=(f[j]<<1)|('1'==yyret[(len-1-j)*8+k]?1:0);\n";
+  tout<<"}\n";
   tout<<"clear(&strsta);\n";
   tout<<"}\n";
   tout<<"void md_apply_fix(fixS * fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)\n";
   tout<<"{\n";
   /*TODO may be not only long long*/
   tout<<"long long value=(long long)(*valP);\n";
-  tout<<"long long v;\n";
+  tout<<"long long v,k,c;\n";
   tout<<"int i;\n";
   //tout<<"bfd_byte *buf;\n";
   tout<<"reloc_howto_type *howto;\n";
@@ -536,8 +538,9 @@ int main(int argc,char *argv[])
       int bytes=binary_len/8;
       tout<<"for(i=0;i<"<<bytes<<";++i)\n";
       tout<<"v=(v<<8)|buf["<<bytes-1<<"-i];\n";
-      tout<<"int k=value&((1LL<<"<<l<<")-1);\n";
-      tout<<"v|=(k<<"<<o<<");\n";
+      tout<<"k=value&((1LL<<"<<l<<")-1);\n";
+      tout<<"c=((1LL<<"<<l<<")-1)<<"<<o<<";\n";
+      tout<<"v=(v&(~c))|(k<<"<<o<<");\n";
       tout<<"for(i=0;i<"<<bytes<<";++i,v>>=1)\n";
       tout<<"buf[i]=v&((1<<8)-1);\n";
       tout<<"}\n";

@@ -50,7 +50,7 @@ static char * s2hex(char *buf,int len)
   for(val=i=0;i<len;++i)
     val=(val<<1)|(buf[i]=='1'?1:0);
   static char tmp[1000];/*TODO*/
-  sprintf(tmp,"%X",val);
+  sprintf(tmp,"0X%X",val);
   return tmp;
 }
 static const char * get_entry(const char * a[],const char * b,int num)

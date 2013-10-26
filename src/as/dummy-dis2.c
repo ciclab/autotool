@@ -22,7 +22,7 @@ _print_insn_mips(bfd_vma memaddr,
     static char buf[MAX_BINARY_LEN];
     int i;
     for(i=0;i<MAX_BINARY_LEN;++i)
-      buf[i]=(buffer[i/8]&(1<<(i%8)))?'1':'0';
+      buf[i]=(buffer[i/8]&(1<<(7-(i%8))))?'1':'0';
     return dis(info,buf);
   } 
 	
