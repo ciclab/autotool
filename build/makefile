@@ -16,7 +16,7 @@ input_file = ../swift.des
 # 	$(CXX) $(CXXFLAGS) $(INCLUDE) -I.  $^ -o $@
 
 binutils: y.c y.h l.c l.h coff-dummy.c tc-dummy.c
-	cp y.c y.h l.c l.h  $(BINUTILS_DIR)/gas;cp tc-dummy.c $(BINUTILS_DIR)/gas/config;cp coff-dummy.c $(BINUTILS_DIR)/bfd;cp ../src/as/strstack.cpp $(BINUTILS_DIR)/gas/strstack.c; cp ../src/include/strstack.h $(BINUTILS_DIR)/gas ; cp ./reloc.c $(BINUTILS_DIR)/bfd ; cp ./reloc.texi $(BINUTILS_DIR)/bfd/doc
+	cp y.c y.h l.c l.h  $(BINUTILS_DIR)/gas;cp tc-dummy.c $(BINUTILS_DIR)/gas/config;cp coff-dummy.c $(BINUTILS_DIR)/bfd;cp ../src/as/strstack.cpp $(BINUTILS_DIR)/gas/strstack.c; cp ../src/include/strstack.h $(BINUTILS_DIR)/gas ; cp ./reloc.c $(BINUTILS_DIR)/bfd ; cp ./reloc.texi $(BINUTILS_DIR)/bfd/doc ;cp ../src/include/strstack.h $(BINUTILS_DIR)/binutils ; cp ../src/as/strstack.cpp $(BINUTILS_DIR)/binutils/strstack.c ; cp ./dummy-dis.c $(BINUTILS_DIR)/opcodes
 
 strstack.o: strstack.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
@@ -24,9 +24,6 @@ strstack.o: strstack.cpp
 l.o: l.c
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 y.o: y.c
-	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
-
-dy.o: dy.c
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
 l.c: as.lex y.h
@@ -38,10 +35,7 @@ l.h: as.lex
 y.c y.h: _as.y
 	$(YACC) --name-prefix=dummy_ -o y.c $^
 
-dy.c dy.h: _disdis_as.y
-	$(YACC) --name-prefix=ddummy_ -o dy.c $^
-
-as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c _disdis_as.y : asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4 tc-dummy1 tc-dummy1 tc-dummy3
+as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c dummy-dis.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4 tc-dummy1 tc-dummy1 tc-dummy3 dummy-dis1.c dummy-dis2.c
 	./asgen out as.lex as.y
 
 asgen: asGen.cpp libir.a

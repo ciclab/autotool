@@ -8,6 +8,45 @@
 #include <algorithm>
 #include <string>
 using namespace std;
+static void dfs_gen(ofstream & out,vector<pps> &binary_func,vector<int> &in,int depth)
+{
+  if(in.size()==0)
+    return;
+  if(in.size()==1)
+    {
+      out<<"return "<<binary_func[in[0]].second<<"(info,c);\n";
+      return;
+    }
+  //test if all depth bit in existing binary is '-'
+  FR(i,in)
+    if((int)binary_func[*i].first.length()<=depth)
+      {
+	cerr<<"binary ambitious definition\n";
+	FR(j,in)
+	  cerr<<binary_func[*j].second<<endl;
+	assert(0);
+      }
+  vector<int> tmp;
+  FR(i,in)
+    {
+      char z=(binary_func[*i].first)[depth];
+      if(z=='0' || z=='-')
+	tmp.push_back(*i);
+    }
+  out<<"if(buf["<<depth<<"]=='0')\n{";
+  dfs_gen(out,binary_func,tmp,depth+1);
+  out<<"}\n";
+  tmp.resize(0);
+  FR(i,in)
+    {
+      char z=(binary_func[*i].first)[depth];
+      if(z=='1' || z=='-')
+	tmp.push_back(*i);
+    }
+  out<<"else\n{";
+  dfs_gen(out,binary_func,tmp,depth+1);
+  out<<"}\n";
+}
 static string int2string(int v)
 {
   if(v==0)
@@ -100,37 +139,36 @@ int main(int argc,char *argv[])
 
   //disassembler file
   // ofstream dlout;
-  ofstream dyout,dtokout,dcout,dhout;
+  ofstream dcout,dhout;
   // string dl_file_name=argv[2];
   // dl_file_name="dis_"+dl_file_name;
   string dy_file_name=argv[3];
   dy_file_name="dis_"+dy_file_name;
-  string dc_file_name=dy_file_name+".tail";
-  string dtok_file_name=dy_file_name+".tok";
-  string dh_file_name=dy_file_name+".h";
+  string dc_file_name=argv[3];
+  dc_file_name="dis_"+dc_file_name+".c";
+  string dh_file_name=argv[3];
+  dh_file_name="dis_"+dh_file_name+".h";
   dhout.open(dh_file_name.c_str(),ofstream::out);
   dcout.open(dc_file_name.c_str(),ofstream::out);
-  dyout.open(dy_file_name.c_str(),ofstream::out);  
-  dtokout.open(dtok_file_name.c_str(),ofstream::out);
   dhout<<"#ifndef DH_H"<<endl;
   dhout<<"#define DH_H"<<endl;
-  dtokout<<"%{\n";
-  dtokout<<"#include <stdio.h>\n";
-  dtokout<<"#include <string.h>\n";
-  dtokout<<"#include \"strstack.h\"\n";
-  dtokout<<"extern void output(const char *,const char *);\n";
+  // dtokout<<"%{\n";
+  // dtokout<<"#include <stdio.h>\n";
+  // dtokout<<"#include <string.h>\n";
+  // dtokout<<"#include \"strstack.h\"\n";
+  // dtokout<<"extern void output(const char *,const char *);\n";
   // dtokout<<"char dyyret[1000]/*TODO*/;\n";
-  dtokout<<"extern int ddummy_lineno;\n";
-  dtokout<<"extern void ddummy_error(const char *s);\n";
-  dtokout<<"extern int ddummy_lex(void);\n";
-  dtokout<<"#include \""<<dh_file_name<<"\""<<endl;
-  dtokout<<"%}\n";
-  dtokout<<"%union{\n";
-  dtokout<<"int integer;\n";
-  dtokout<<"char ch;\n";
-  dtokout<<"char * chp;\n";
-  dtokout<<"}\n";
-  dtokout<<"%locations;\n";
+  // dtokout<<"extern int ddummy_lineno;\n";
+  // dtokout<<"extern void ddummy_error(const char *s);\n";
+  // dtokout<<"extern int ddummy_lex(void);\n";
+  // dtokout<<"#include \""<<dh_file_name<<"\""<<endl;
+  // dtokout<<"%}\n";
+  // dtokout<<"%union{\n";
+  // dtokout<<"int integer;\n";
+  // dtokout<<"char ch;\n";
+  // dtokout<<"char * chp;\n";
+  // dtokout<<"}\n";
+  // dtokout<<"%locations;\n";
   
 
   //
@@ -148,10 +186,10 @@ int main(int argc,char *argv[])
       yout<<enum_name<<": ";
       // hc_len.insert(enum_name,(void*)width);
 
-      dcout<<"char *"<<enum_name<<"(char *c)\n";
-      dhout<<"char *"<<enum_name<<"(char *c);\n";
+      dcout<<"const char *"<<enum_name<<"(char *c)\n";
+      dhout<<"const char *"<<enum_name<<"(char *c);\n";
       dcout<<"{\n";
-      dcout<<"const static char * tmp[]={";
+      dcout<<"static const char * tmp[]={";
       FOR(j,0,enum_ent_size)
 	{
 	  if(j)
@@ -182,11 +220,11 @@ int main(int argc,char *argv[])
       dcout<<"return get_entry(tmp,c,"<<enum_ent_size<<");\n}\n";
     }
   tokout<<"%start "<<top_rule_name<<endl;
-  dtokout<<"%start "<<top_rule_name<<endl;
+  // dtokout<<"%start "<<top_rule_name<<endl;
   tokout<<"%type<chp> "<<top_rule_name<<endl;
   // dtokout<<"%type<chp> "<<top_rule_name<<endl;
   yout<<top_rule_name<<": "<<endl;
-  dyout<<top_rule_name<<": "<<endl;
+  // dyout<<top_rule_name<<": "<<endl;
   for(int i=0,j=0;i<instr_size;++i)
     {
       string n=ir.get_instr_name(i);
@@ -195,22 +233,24 @@ int main(int argc,char *argv[])
 	  if(j)
 	    {
 	      yout<<"|"<<endl;
-	      dyout<<"|"<<endl;
+	      // dyout<<"|"<<endl;
 	    }
 	  yout<<n<<"{yyret=$1;}"<<endl;
-	  dyout<<n<<"{}"<<endl;
+	  // dyout<<n<<"{}"<<endl;
 	  ++j;
 	}
     }
   yout<<";\n";
-  dyout<<";\n";
+  // dyout<<";\n";
 
-  dtokout<<"%type<ch> TOK_01"<<endl;
-  dtokout<<"%token TOK_0"<<endl;
-  dtokout<<"%token TOK_1"<<endl;
-  dyout<<"TOK_01: TOK_0 {return '1';}|TOK_1 {return '0';};\n";
+  // dtokout<<"%type<ch> TOK_01"<<endl;
+  // dtokout<<"%token TOK_0"<<endl;
+  // dtokout<<"%token TOK_1"<<endl;
+  // dyout<<"TOK_01: TOK_0 {return '1';}|TOK_1 {return '0';};\n";
   //output rules for instructions
   int max_reloc_num(0);//record max relocation number
+  int max_binary_len(0);
+  vector<pps> binary_func;
   FOR(i,0,instr_size)
     {
       string n=ir.get_instr_name(i);
@@ -230,22 +270,9 @@ int main(int argc,char *argv[])
 	  int off_in_code=0,offi=0;
 	  sort(off.begin(),off.end());
 	  yout<<n<<": ";
-	  dyout<<n<<": ";
+	  dcout<<"int "<<n<<"(struct disassemble_info *info,char *c){\n";
+	  dhout<<"int "<<n<<"(struct disassemble_info *,char *);\n";
 	  int seg(0);
-	  // if(n=="tctcore_0")
-	  //   {
-	  //     FR(i,off)
-	  //   	cout<<i->first<<' '<<i->second<<endl;
-	  //     FR(j,code)
-	  //   	if(*j==c_enum_beg)
-	  //   	  cout<<"E";
-	  //   	else if(*j==c_type_beg)
-	  //   	  cout<<"T";
-	  //   	else if(*j==c_sep)
-	  //   	  cout<<"S";
-	  //   	else cout<<*j;
-	  //     cout<<endl;
-	  //   }
 	  vector<int> len;
 	  vector<bool> need_reloc;
 	  len.resize(off.size());
@@ -362,38 +389,41 @@ int main(int argc,char *argv[])
 	  //output disassembler rules
 	  // swap binary for little end
 	  string rbinary=binary;
+	  assert((rbinary.length()%8)==0);
 	  for(int i=0,j=rbinary.length()-8;i<j;i+=8,j-=8)
 	    for(int k=0;k<8;++k)
 	      swap(rbinary[i+k],rbinary[j+k]);
-	  FR(i,rbinary)
-	    if(*i=='0')
-	      dyout<<"TOK_0 ";
-	    else if(*i=='1')
-	      dyout<<"TOK_1 ";
-	    else dyout<<"TOK_01 ";
-	  dyout<<"\n{\n";
-	  dyout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
+	  // FR(i,rbinary)
+	  //   if(*i=='0')
+	  //     dyout<<"TOK_0 ";
+	  //   else if(*i=='1')
+	  //     dyout<<"TOK_1 ";
+	  //   else dyout<<"TOK_01 ";
+	  // dyout<<"\n{\n";
+	  binary_func.push_back(pps(rbinary,n));
+	  dcout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
+	  max_binary_len=max(max_binary_len,(int)binary.length());
 	  for(int i=0;i<(int)rbinary.length();++i)
 	    if(rbinary[i]=='-')
 	      {
-		dyout<<"tmp[";
-		int z=(rbinary.length()/8-1-i/8)*8+(i%8);
-		dyout<<z;
-		dyout<<"]=$"<<(i+1)<<";\n";
+	  	dcout<<"tmp[";
+	  	int z=(rbinary.length()/8-1-i/8)*8+(i%8);
+	  	dcout<<z;
+	  	dcout<<"]=c["<<(i+1)<<"];\n";
 	      }
-	  // dyout<<"dyyret[0]='\\0';";
 	  for(int i=0;i<(int)toks.size();++i)
 	    {
 	      if(toks_in_binary[i]<0)
 	  	{
-		  dyout<<"output(\"%s\",\""<<toks[i]<<"\");\n";
+	  	  dcout<<"output(info,\"%s\",\""<<toks[i]<<"\");\n";
 	  	}
 	      else
 	  	{
-		  dyout<<"output(\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
+	  	  dcout<<"output(info,\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
 	  	}
 	    }
-	  dyout<<"}\n";
+	  dcout<<"return "<<rbinary.length()/8<<";\n";
+	  dcout<<"}\n";
 	  // if(n=="tctcore_0")
 	  //   {
 	  //     cout<<code<<endl;
@@ -448,8 +478,14 @@ int main(int argc,char *argv[])
 	  max_reloc_num=max(max_reloc_num,(int)relocinfo.size());
 	}
     }
-  
-
+  dhout<<"#define MAX_BINARY_LEN "<<max_binary_len<<endl;
+  dhout<<"int dis(struct disassemble_info *,char *c);\n";
+  dcout<<"int dis(struct disassemble_info *info,char * c)\n{";
+  vector<int> tmp;
+  FR(i,binary_func)
+    tmp.push_back(i-binary_func.begin());
+  dfs_gen(dcout,binary_func,tmp,0);
+  dcout<<"}\n";
   ofstream tout("tc-dummy2");
   tout<<"static bfd_reloc_code_real_type offset_reloc["<<max_reloc_num<<"];\n";
   tout<<"static expressionS expr_list["<<max_reloc_num<<"];\n";
@@ -611,8 +647,8 @@ indent ./reloc.c");
       yout<<"$$=tmp;}"<<endl;
       yout<<";"<<endl;
 
-      dcout<<"char *"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
-      dhout<<"char *"<<name<<"(char * c);\n";
+      dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
+      dhout<<"const char *"<<name<<"(char * c);\n";
     }
   bout.close();
   system("cat ../src/as/coff-dummy1 \
@@ -646,18 +682,18 @@ int yywrap()\n\
   string cmd="cat "+token_file_name+" "+y_file_name+" > "+"_"+y_file_name;
   system(cmd.c_str());
 
-  dyout<<"%%"<<endl;
-  dyout.close();
-  dtokout<<"%%"<<endl;
-  dtokout.close();
-  dcout<<"void yyerror(const char *s)\n";
-  dcout<<"{fprintf (stderr, \"L%d: %s \\n\",ddummy_lineno,s);\n";
-  dcout<<"}\n";
+  // dyout<<"%%"<<endl;
+  // dyout.close();
+  // dtokout<<"%%"<<endl;
+  // dtokout.close();
+  // dcout<<"void yyerror(const char *s)\n";
+  // dcout<<"{fprintf (stderr, \"L%d: %s \\n\",ddummy_lineno,s);\n";
+  // dcout<<"}\n";
 
   dcout.close();
   dhout<<"\n#endif"<<endl;
   dhout.close();
-  cmd="cat "+dtok_file_name+" "+dy_file_name+" "+dc_file_name+" > _dis"+dy_file_name;
+  cmd=(string)"cat "+(string)"../src/as/dummy-dis1.c"+(string)" "+dh_file_name+" "+"../src/as/dummy-dis2.c"+" "+dc_file_name+(string)" > dummy-dis.c";
   system(cmd.c_str());
   return 0;
 }

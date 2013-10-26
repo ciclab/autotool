@@ -15,5 +15,5 @@ int getsize(const struct strstack *ss);
 void i2bs(char *,int,int);
 int isnumber(const char*);
 char * s2hex(char *buf,int len);
-char * get_entry(const char * a[],const char * b,int num);
+const char * get_entry(const char * a[],const char * b,int num);
 #endif

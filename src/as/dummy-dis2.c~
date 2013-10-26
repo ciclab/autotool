@@ -1,0 +1,48 @@
+static int
+_print_insn_mips(bfd_vma memaddr,
+		 struct disassemble_info *info, enum bfd_endian endianness)
+{
+  bfd_byte buffer[MAX_BINARY_LEN/8]; 
+  int status;
+
+  //set_default_mips_dis_options(info);
+  //parse_mips_dis_options(info->disassembler_options);
+
+  WST(endianness);/*TODO*/
+    
+  status = (*info->read_memory_func) (memaddr, buffer, MAX_BINARY_LEN/8, info);
+	
+  if (status == 0) {
+    /* unsigned long int insn; */
+	
+    /* if (endianness == BFD_ENDIAN_BIG) */
+    /*   insn = (unsigned long int)bfd_getb32(buffer); */
+    /* else */
+    /*   insn = (unsigned long int)bfd_getl32(buffer); */
+    static char buf[MAX_BINARY_LEN];
+    int i;
+    for(i=0;i<MAX_BINARY_LEN;++i)
+      buf[i]=(buffer[i/8]&(1<<(i%8)))?'1':'0';
+    return dis(buf);
+  } 
+	
+  else {
+    (*info->memory_error_func) (status, memaddr, info);
+    return -1;
+  }
+}
+
+int print_insn_big_mips(bfd_vma memaddr, struct disassemble_info *info)
+{
+  return _print_insn_mips(memaddr, info, BFD_ENDIAN_BIG);
+}
+
+int print_insn_little_mips(bfd_vma memaddr, struct disassemble_info *info)
+{
+  return _print_insn_mips(memaddr, info, BFD_ENDIAN_LITTLE);
+}
+
+void print_mips_disassembler_options(FILE * stream)
+{
+  WST(stream);
+}

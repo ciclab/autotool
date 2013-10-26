@@ -1,0 +1,52 @@
+static int
+_print_insn_mips(bfd_vma memaddr,
+		 struct disassemble_info *info, enum bfd_endian endianness)
+{
+	bfd_byte buffer[MAX_BINARY_LEN]; 
+	//int status;
+
+	//set_default_mips_dis_options(info);
+	//parse_mips_dis_options(info->disassembler_options);
+
+#if SYMTAB_AVAILABLE
+	if (info->mach == bfd_mach_mips16
+	    || (info->symbols != NULL
+		&& bfd_asymbol_flavour(*info->symbols) == bfd_target_elf_flavour
+		&& ELF_ST_IS_MIPS16((*(elf_symbol_type **) info->symbols)
+				    ->internal_elf_sym.st_other)))
+		return print_insn_mips16(memaddr, info);
+#endif
+    
+    status = (*info->read_memory_func) (memaddr, buffer, MAX_BINARY_LEN, info);
+	
+	if (status == 0) {
+		unsigned long int insn;
+	
+		if (endianness == BFD_ENDIAN_BIG)
+			insn = (unsigned long int)bfd_getb32(buffer);
+		else
+			insn = (unsigned long int)bfd_getl32(buffer);
+		return print_insn_mips(memaddr, insn, info);
+	} 
+	
+	
+	else {
+		(*info->memory_error_func) (status, memaddr, info);
+		return -1;
+	}
+}
+
+int print_insn_big_mips(bfd_vma memaddr, struct disassemble_info *info)
+{
+	return _print_insn_mips(memaddr, info, BFD_ENDIAN_BIG);
+}
+
+int print_insn_little_mips(bfd_vma memaddr, struct disassemble_info *info)
+{
+	return _print_insn_mips(memaddr, info, BFD_ENDIAN_LITTLE);
+}
+
+void print_mips_disassembler_options(FILE * stream)
+{
+	WST(stream);
+}
