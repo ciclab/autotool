@@ -32,12 +32,12 @@ _print_insn_mips(bfd_vma memaddr,
   }
 }
 
-int print_insn_big_mips(bfd_vma memaddr, struct disassemble_info *info)
+int print_insn_big_dummy(bfd_vma memaddr, struct disassemble_info *info)
 {
   return _print_insn_mips(memaddr, info, BFD_ENDIAN_BIG);
 }
 
-int print_insn_little_mips(bfd_vma memaddr, struct disassemble_info *info)
+int print_insn_little_dummy(bfd_vma memaddr, struct disassemble_info *info)
 {
   return _print_insn_mips(memaddr, info, BFD_ENDIAN_LITTLE);
 }
