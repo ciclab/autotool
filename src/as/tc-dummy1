@@ -289,7 +289,8 @@ long md_pcrel_from(fixS * fixP)
     case MIPS_RELOC_PCREL5:
       return addr + 4;*/
     default:
-      return addr + 4;
+    //printf("!md_pcrel_from %d",(int)fixP->fx_size);
+      return addr + fixP->fx_size;
       /* We have no relocation type for PC relative MIPS16 instructions.  */
       if (fixP->fx_addsy && S_GET_SEGMENT (fixP->fx_addsy) != now_seg)
 	as_bad_where (fixP->fx_file, fixP->fx_line,

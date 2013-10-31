@@ -518,7 +518,7 @@ int main(int argc,char *argv[])
   tout<<"void md_apply_fix(fixS * fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)\n";
   tout<<"{\n";
   /*TODO may be not only long long*/
-  tout<<"long long value=(long long)(*valP);\n";
+  tout<<"long long value=(int)(*valP);/*TODO*/\n";
   tout<<"long long v,k,c;\n";
   tout<<"int i;\n";
   //tout<<"bfd_byte *buf;\n";
@@ -545,7 +545,7 @@ int main(int argc,char *argv[])
       tout<<"k=value&((1LL<<"<<l<<")-1);\n";
       tout<<"c=((1LL<<"<<l<<")-1)<<"<<o<<";\n";
       tout<<"v=(v&(~c))|(k<<"<<o<<");\n";
-      tout<<"for(i=0;i<"<<bytes<<";++i,v>>=1)\n";
+      tout<<"for(i=0;i<"<<bytes<<";++i,v>>=8)\n";
       tout<<"buf[i]=v&((1<<8)-1);\n";
       tout<<"}\n";
       tout<<"break;\n";

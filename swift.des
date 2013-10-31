@@ -7,17 +7,17 @@
       'GR24' 'GR25' 'GR26' 'GR27' 'GR28' 'GR29' 'GR30' 'GR31'
     )
     (VR_E
-      'VR0' 'VR1' 'VR2' 'VR3' 'VR4' 'VR5' 'VR6' 'VR7'
+      ('VR0' 32) 'VR1' 'VR2' 'VR3' 'VR4' 'VR5' 'VR6' 'VR7'
       'VR8' 'VR9' 'VR10' 'VR11' 'VR12' 'VR13' 'VR14' 'VR15'
     )
     (OFF_E
-      'OFF0' 'OFF1' 'OFF2' 'OFF3'
+      ('OFF0' 52) 'OFF1' 'OFF2' 'OFF3'
     )
     (BAR_E
-      'BAR0' 'BAR1' 'BAR2' 'BAR3'
+      ('BAR0' 56) 'BAR1' 'BAR2' 'BAR3'
     )
     (MR_E
-      'MR0' 'MR1' 'MR2' 'MR3'
+      ('MR0' 60) 'MR1' 'MR2' 'MR3'
     )
     (J_E
       'jmp' 'je' 'jne' 'jl' 'jnl'

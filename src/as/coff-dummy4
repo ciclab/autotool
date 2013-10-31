@@ -161,8 +161,8 @@ mips_relocate_section (bfd *output_bfd,
 	  got_lo = FALSE;
 	}
 
-      BFD_ASSERT (int_rel.r_type
-		  < sizeof mips_howto_table / sizeof mips_howto_table[0]);
+      BFD_ASSERT (int_rel.r_type 
+		  < sizeof mips_howto_table / sizeof mips_howto_table[0] + (unsigned int)BFD_DUMMY_OFF /*TODO*/);
 
       /* The REFHI reloc requires special handling.  It must be followed
 	 by a REFLO reloc, and the addend is formed from both relocs.  */
