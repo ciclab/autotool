@@ -1,0 +1,6 @@
+#include "enum.h"
+void Enum::add(string name)
+{
+void add_list(string name);
+void output(ofstream & fout);
+void read(ifstream & fin);

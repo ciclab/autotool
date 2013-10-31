@@ -63,6 +63,7 @@ void Ir::read_all(ifstream &fin)
   read_register(fin);
   read_pipeline(fin);
   read_instr(fin);
+  read_addr(fin);
 }
 void Ir::add_top_name(string n)
 {
@@ -79,6 +80,7 @@ void Ir::output_all(ofstream &fout)
   output_register(fout);
   output_pipeline(fout);
   output_instruction_set(fout);
+  output_addr(fout);
 }
 void Ir::read_pipeline(ifstream &fin)
 {
@@ -278,4 +280,26 @@ void Ir::read_enum(ifstream & fin)
   enumm.resize(num);
   for(int i=0;i<num;++i)
     enumm[i].read(fin);
+}
+
+void Ir::add_addr(Addr a)
+{
+  addr.push_back(a);
+}
+
+void Ir::read_addr(ifstream & fin)
+{
+  int num;
+  fin>>num;
+  addr.resize(num);
+  for(int i=0;i<num;++i)
+    addr[i].read(fin);
+}
+
+void Ir::output_addr(ofstream &fout)
+{
+  fout<<addr.size()<<endl;
+  FR(i,addr)
+    i->output(fout);
+  fout<<endl;
 }

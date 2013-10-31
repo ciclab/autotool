@@ -3,6 +3,7 @@
 #include <utility>
 #include <vector>
 #include <string>
+#include <cassert>
 using namespace std;
 #define FOR(a,b,c) for(typeof(b) a=b;a<c;++a)
 typedef long long ll;

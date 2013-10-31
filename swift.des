@@ -24,6 +24,18 @@
       'jg' 'jng' 'jca' 'call'
     )
   )
+  (address
+    (_addr21
+      (width 21)
+      (pcrel TRUE)
+      (right_shift 2)
+    )
+    (_addr_tmp
+      (width 21)
+      (pcrel TRUE)
+      (right_shift 2)
+    )
+  )
   (wire
   )
   (stage)

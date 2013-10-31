@@ -54,7 +54,8 @@ pp.cpp: pp.lex
 	$(LEX) -o $@ $^
 
 libir.a: hash.o wire.o stage.o enum.o instruction.o \
-memory.o pipeline.o register.o type.o do_content.o ir.o
+memory.o pipeline.o register.o type.o do_content.o ir.o\
+addr.o
 	ar crv $@ $^
 
 asem.o: asem.cpp
@@ -95,5 +96,9 @@ type.o: type.cpp
 
 do_content.o: do_content.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+addr.o: addr.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
 clean:
 	rm *.* rd asgen out pp
