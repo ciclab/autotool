@@ -14,6 +14,8 @@ const string s_type_beg="\2";
 const char c_type_beg='\2';
 const string s_enum_beg="\3";
 const char c_enum_beg='\3';
+const char c_addr_beg='\4';
+const string s_addr_beg="\4";
 typedef pair<int,int> ppi;
 typedef pair<string,string> pps;
 #endif

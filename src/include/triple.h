@@ -16,6 +16,7 @@ class triple
   do_content doo;
   vector<int> off_in_code;
   vector<int> off_in_binary;
+  vector<int> reloc_info;
   vector<string> enum_name;
  triple(string n,string c,string b):rulename(n),code(c),binary(b){};
   triple(){};

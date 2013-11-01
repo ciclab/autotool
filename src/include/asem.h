@@ -39,6 +39,7 @@ class Asem{
 			vector<triple> &r);			// 保存展开结果
   int unfold_enum(ofstream & yout,ofstream & dot_c_out);
   int unfold_type(ofstream & yout,ofstream & dot_c_out);
+  int unfold_addr(ofstream & yout,ofstream & dot_c_out);
   int unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out);
   void switch_chg(vector<string> &var_name,
 		  vector<vector<string> >&var_choose_name,
@@ -79,6 +80,7 @@ class Asem{
   bool is_instr(string name);
   bool is_type(string name);
   bool is_enum(string name);
+  bool is_addr(string name);
   string get_string();
   Asem *get_asem(string name);
   string get_full_name(string name,string pwd);

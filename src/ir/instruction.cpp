@@ -17,7 +17,10 @@
 // {
 //   ent=et;
 // }
-
+void Instruction::set_reloc_info(vector<int> & ri)
+{
+  reloc_info=ri;
+}
 void Instruction::output_do(ofstream & fout)
 {
   if(!doo.is_empty())
@@ -82,7 +85,10 @@ int Instruction::get_off_size()
 {
   return off.size();
 }
-
+void Instruction::get_reloc_info(vector<int> &ri)
+{
+  ri=reloc_info;
+}
 void Instruction::get_off(vector<ppi> &roff)
 {
   roff=off;
@@ -153,6 +159,7 @@ void Instruction::read(ifstream &fin)
     enum_var[i]=read_quoted_str(fin);
   read_arglist(fin);
   read_do(fin);
+  read_reloc_info(fin);
 }
 void Instruction::output(ofstream &fout)
 {
@@ -175,4 +182,20 @@ void Instruction::output(ofstream &fout)
   //fout<<"!!do_beg"<<endl;
   output_do(fout);
   //fout<<"!!do_end"<<endl;
+  output_reloc_info(fout);
+}
+void Instruction::read_reloc_info(ifstream &fin)
+{
+  int num;
+  fin>>num;
+  reloc_info.resize(num);
+  for(int i=0;i<num;++i)
+    fin>>reloc_info[i];
+}
+void Instruction::output_reloc_info(ofstream &fout)
+{
+  fout<<reloc_info.size()<<endl;
+  FR(i,reloc_info)
+    fout<<*i<<' ';
+  fout<<endl;
 }

@@ -22,9 +22,11 @@ private:
   vector<string> enum_var;
   do_content doo;
   vector<pair<string,string>  > arglist;
+  vector<int> reloc_info;
 public:
   void output_arglist(ofstream &fout);
   void read_arglist(ifstream &fin);
+  void read_reloc_info(ifstream &fin);
   void set_arglist(vector<pair<string,string>  > & al);
   void set_code(string &code);
   void set_binary(string &b);
@@ -32,15 +34,18 @@ public:
   void set_do(do_content &d);
   void set_name(const string & n);
   void set_enum_var(vector<string> &ev);
+  void set_reloc_info(vector<int> &);
   string get_code();
   string get_binary();
   int get_off_size();
+  void get_reloc_info(vector<int> &);
   string get_name();
   // int get_do_size();
   // int get_do(int id);
   int get_enum_var_size();
   void output_do(ofstream & fout);
   void read_do(ifstream &fin);
+  void output_reloc_info(ofstream &);
   string get_enum_var(int id);
   void get_off(vector<ppi> &);
   void read(ifstream &);

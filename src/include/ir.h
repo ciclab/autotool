@@ -42,7 +42,10 @@ public:
   string get_top_rule_name();
   string get_instr_name(int);
   string get_instr_code(int);
+  void get_instr_reloc_info(int , vector<int> &);
   //reader writer interface
+  int addr_size();
+  void get_addr(int,Addr &);
   void add_addr(Addr);
   void read_addr(ifstream &fin);
   void output_addr(ofstream &fout);
@@ -55,7 +58,9 @@ public:
   void add_wire(Wire w);
   void output_wire(ofstream &fout);
   void read_wire(ifstream &fin);
-  void add_instruction(const string &name,string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al);
+  void add_instruction(const string &name,string &c,string &b,do_content &d,
+		       vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al,
+		       vector<int> &ri);
   void output_instruction_set(ofstream &fout);
   void read_instr(ifstream &fin);
   void output_type(ofstream &fout);

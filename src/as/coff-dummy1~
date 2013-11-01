@@ -34,7 +34,7 @@
 #include "libcoff.h"
 #include "libecoff.h"
 #define PT printf("%s %d\n",__FILE__,__LINE__);
-#define BFD_DUMMY_OFF
+#define BFD_DUMMY_OFF 1747
 
 static bfd_reloc_status_type
 mips_generic_reloc

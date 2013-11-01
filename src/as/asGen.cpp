@@ -8,6 +8,19 @@
 #include <algorithm>
 #include <string>
 using namespace std;
+class bfd_info
+{
+public:
+  string name;
+  int off;
+  int off_len;
+  int instr_len;
+  int right_shift;
+  bool pcrel;
+  bfd_info(string n,int o,int ol,int il,int rs,bool p):
+    name(n),off(o),off_len(ol),instr_len(il),right_shift(rs),pcrel(p){};
+};
+static vector<bfd_info> bfd_list;
 static void dfs_gen(ofstream & out,vector<pps> &binary_func,vector<int> &in,int depth)
 {
   if(in.size()==0)
@@ -126,7 +139,6 @@ int main(int argc,char *argv[])
   //lex rule name should be unique
   hash_control hc;
   hash_control hc_bfd;
-  vector<pair<pair<string,int>,ppi> > bfd_list;
   // hash_control hc_len;
   char * cnt(NULL);
   tokout<<"%type<integer> rule_int"<<endl;
@@ -264,19 +276,31 @@ int main(int argc,char *argv[])
 	  tokout<<"%type<chp> "<<n<<endl;
 	  // dtokout<<"%type<chp> "<<n<<endl;
 	  vector<ppi> off;
+	  vector<int> reloc_info;
+	  ir.get_instr_reloc_info(i,reloc_info);
 	  ir.get_instr_off(i,off);
 	  string code=ir.get_instr_code(i);
 	  string binary=ir.get_instr_binary(i);
 	  int off_in_code=0,offi=0;
+	  vector<ppi> tmp=off;
+	  // just make sequence of reloc_info the same as off
+	  for(int i=0;i<(int)tmp.size();++i)
+	    tmp[i].second=reloc_info[i];
+	  sort(tmp.begin(),tmp.end());
+	  for(int i=0;i<(int)tmp.size();++i)
+	    reloc_info[i]=tmp[i].second;
+
 	  sort(off.begin(),off.end());
 	  yout<<n<<": ";
 	  dcout<<"int "<<n<<"(struct disassemble_info *info,char *c){\n";
 	  dhout<<"int "<<n<<"(struct disassemble_info *,char *);\n";
 	  int seg(0);
 	  vector<int> len;
-	  vector<bool> need_reloc;
+	  vector<bool> need_bfd;
 	  len.resize(off.size());
-	  need_reloc.resize(off.size());
+	  need_bfd.resize(off.size());
+	  vector<int> right_shift;
+	  right_shift.resize(off.size());
  	  vector<string> toks;//record string tokens in code
 	  vector<int> toks_in_binary;
 	  for(typeof(code.begin()) j=code.begin();j!=code.end();)
@@ -317,7 +341,7 @@ int main(int argc,char *argv[])
 		      // 	  FR(i,off)
 		      // 	    yout<<i->first<<' '<<i->second<<endl;
 		      // 	}
-		      assert(*j==c_type_beg || *j==c_enum_beg);
+		      assert(*j==c_type_beg || *j==c_enum_beg || *j==c_addr_beg);
 		      ++off_in_code;
 		      ++j;
 		    }
@@ -332,7 +356,7 @@ int main(int argc,char *argv[])
 		      // 	    cout<<i->first<<' '<<i->second<<endl;
 		      // 	  cout<<binary<<endl;
 		      // 	}
-		      assert(!(*j==c_type_beg || *j==c_enum_beg));
+		      assert(!(*j==c_type_beg || *j==c_enum_beg || *j==c_addr_beg));
 		    }
 		  for(;j!=code.end() && *j!=' ' && *j!='\1';++j,++off_in_code)
 		    token+=*j;
@@ -358,7 +382,7 @@ int main(int argc,char *argv[])
 		  else
 		    {
 		      yout<<token<<' ';
-		      if(token.compare(0,5,"type_")==0)
+		      if(token.compare(0,5,"type_")==0 || token.compare(0,5,"addr_")==0)
 			{// is type
 			  for(typeof(token.rbegin()) i=token.rbegin();;++i)
 			    if(*i=='_')
@@ -368,13 +392,14 @@ int main(int argc,char *argv[])
 				for(int j=1;*i!='_';++i,j*=10)
 				  num=num+j*(*i-'0');
 				len[offi-1]=num;
-				need_reloc[offi-1]=true;
+				need_bfd[offi-1]=true;
 				break;
 			      }
 			}
 		      else
 			{//is enum
 			  Enum tmp=ir.find_enum(token);
+			  //cout<<n<<endl;
 			  len[offi-1]=tmp.width();
 			}
 		      toks.push_back(token);
@@ -432,19 +457,19 @@ int main(int argc,char *argv[])
 	  // 	yout<<i->first<<' '<<i->second<<endl;
 	  //   }
 	  yout<<"int i;\ni^=i;\n";
-	  vector<ppi> relocinfo;
+	  vector<bfd_info> instr_bfd_info;
 	  FR(i,off)
 	    {
 	      //yout<<"for(i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
-	      if(need_reloc[(int)(i-off.begin())])
+	      if(need_bfd[(int)(i-off.begin())])
 		{
-		  relocinfo.push_back(ppi(i->second,len[(int)(i-off.begin())]));
+		  // instr_bfd_info.push_back(ppi(i->second,len[(int)(i-off.begin())]));
 		  yout<<"if(isnumber($"<<(i->first)<<"))"<<endl;
 		  yout<<"{"<<endl;
 		}
 	      yout<<"for(i=0"<<";i<"<<len[(int)(i-off.begin())]<<";"<<"++i)"<<endl;
 	      yout<<"tmp[i+"<<i->second<<"]=$"<<(i->first)<<"[i];"<<endl;
-	      if(need_reloc[(int)(i-off.begin())])
+	      if(need_bfd[(int)(i-off.begin())])
 		{
 		  int l=len[(int)(i-off.begin())];
 		  int o=binary.length()-(i->second+l);
@@ -452,30 +477,41 @@ int main(int argc,char *argv[])
 		  yout<<"else"<<endl;
 		  yout<<"{\nint t=get_expr($"<<i->first<<",";
 		  string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+
-		    int2string(l)+"_"+int2string((int)binary.length());
+		    int2string(l)+"_"+int2string((int)binary.length())+"_"+
+		    ((reloc_info[(int)(i-off.begin())]&1)?(string)"true":(string)"false")+"_"+
+		    int2string(reloc_info[(int)(i-off.begin())]>>1);
 		  yout<<bfd_name<<");"<<endl;
 		  yout<<"int j="<<(1<<(l-1))<<";"<<endl;
 		  yout<<"for(i=0;i<"<<l<<";++i,j>>=1)//l<31\n";
 		  yout<<"tmp["<<i->second<<"+i]=(t&j)?\'1\':\'0\';";
 		  yout<<"}"<<endl;
+		  //bfd_info(string n,int o,int ol,int il,int rs,bool p):
+		  int ri=reloc_info[(int)(i-off.begin())];
+		  instr_bfd_info.push_back(bfd_info(bfd_name,o,l,(int)binary.length(),ri>>1,
+						    ri&1));
 		}
 	    }
 	  yout<<"$$=tmp;";
 	  yout<<"}"<<endl;
 	  yout<<";"<<endl;
-	  //gether relocinfo for bfd
-	  FR(i,relocinfo)
+	  //gether bfd_info for bfd
+	  FR(i,instr_bfd_info)
 	    {
-	      int o=binary.length()-(i->first+i->second);
-	      int l=i->second;
-	      string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+int2string(l)+"_"+int2string((int)binary.length());
-	      if(hc_bfd.find(bfd_name)==NULL)
+	      //bfd_info(string n,int o,int ol,int il,int rs,bool p):
+	      // int o=binary.length()-(i->first+i->second);//off set
+	      // int l=i->second;// off len
+	      // bool pcrel=reloc_info[(int)(i-off.begin())]&1;
+	      // int rs=reloc_info[(int)(i-off.begin())]>>1;
+	      // string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+int2string(l)+"_"+int2string((int)binary.length())+"_"+
+	      // 	(pcrel?"true":"false")+"_"+
+	      // 	int2string(rs);
+	      if(hc_bfd.find(i->name)==NULL)
 		{
-		  hc_bfd.insert(bfd_name,(void*)(bfd_list.size()+1));
-		  bfd_list.push_back(make_pair(make_pair(bfd_name,(int)binary.length()),ppi(o,l)));
+		  hc_bfd.insert(i->name,(void*)(bfd_list.size()+1));
+		  bfd_list.push_back(*i);
 		}
 	    }
-	  max_reloc_num=max(max_reloc_num,(int)relocinfo.size());
+	  max_reloc_num=max(max_reloc_num,(int)instr_bfd_info.size());
 	}
     }
   dhout<<"#define MAX_BINARY_LEN "<<max_binary_len<<endl;
@@ -532,10 +568,10 @@ int main(int argc,char *argv[])
   tout<<"switch (fixP->fx_r_type) {\n";
   FR(i,bfd_list)
     {
-      tout<<"case "<<i->first.first<<":"<<endl;
+      tout<<"case "<<i->name<<":"<<endl;
       tout<<"if(fixP->fx_done)\n{\n";
-      int o=i->second.first,l=i->second.second;
-      int binary_len=i->first.second;
+      int o=i->off,l=i->off_len;
+      int binary_len=i->instr_len;
       /*TODO*/
       //assert((binary_len%8)==0);
       tout<<"v=0;\n";
@@ -558,26 +594,28 @@ int main(int argc,char *argv[])
   tout.close();
   system("cat ../src/as/tc-dummy1 ./tc-dummy2 ../src/as/tc-dummy3 > tc-dummy.c;\
 indent ./tc-dummy.c");
+
+  // output reloc info 
   ofstream bout("coff-dummy2");
   bout<<"static reloc_howto_type mips_howto_table[] =\n{\n";
   FR(i,bfd_list)
     {
       if(i!=bfd_list.begin())
 	bout<<",\n";
-      bout<<"HOWTO ("<<i->first.first<<",	/* type */\n";
-      bout<<"2,			/* TODO rightshift */\n";//TODO my be variable
-      bout<<"2,			/* TODO size (0 = byte, 1 = short, 2 = long) */\n";
-      bout<<i->second.second<<",			/* bitsize */\n";
-      bout<<"TRUE,			/* pc_relative */\n";
-      bout<<i->second.first<<",			/* bitpos */\n";
+      bout<<"HOWTO ("<<i->name<<",	/* type */\n";
+      bout<<i->right_shift<<",			/* TODO rightshift */\n";//TODO my be variable
+      bout<<(i->instr_len>=32?2:1)<<",			/* TODO!! size (0 = byte, 1 = short, 2 = long) */\n";
+      bout<<i->instr_len<<",			/* bitsize */\n";
+      bout<<i->pcrel<<",			/* pc_relative */\n";
+      bout<<i->off<<",			/* bitpos */\n";
       bout<<"complain_overflow_signed, /*TODO complain_on_overflow */\n";
       bout<<"mips_generic_reloc,			/* special_function */\n";
-      bout<<"\""<<i->first.first<<"\",		/* name */\n";
+      bout<<"\""<<i->name<<"\",		/* name */\n";
       bout<<"TRUE,			/* partial_inplace */\n";
       //calculate mask
       int msk(0);//now only 32bit
-      for(int j=0;j<i->second.second;++j)
-	msk|=(1<<(j+i->second.first));
+      for(int j=0;j<i->off_len;++j)
+	msk|=(1<<(j+i->off));
       bout<<"0X"<<std::hex<<msk<<",			/* TODO src_mask */\n";
       bout<<"0X"<<std::hex<<msk<<",			/* TODO dst_mask */\n";
       bout<<"TRUE)		/* TODO pcrel_offset */\n";
@@ -595,7 +633,7 @@ bfd_reloc_code_real_type code)\n{";
     {\n";
   FR(i,bfd_list)
     {
-      bout<<"case "<<i->first.first<<":"<<endl;
+      bout<<"case "<<i->name<<":"<<endl;
       bout<<"return "<<"mips_howto_table+"<<(int)(i-bfd_list.begin())<<";\nbreak;"<<endl;
     }
   bout<<"default:\n\
@@ -608,8 +646,8 @@ bfd_reloc_code_real_type code)\n{";
   FR(i,bfd_list)
     {
       if(i==bfd_list.begin())
-	rout<<"ENUM\n  "<<i->first.first<<endl;
-      else rout<<"ENUMX\n  "<<i->first.first<<endl;
+	rout<<"ENUM\n  "<<i->name<<endl;
+      else rout<<"ENUMX\n  "<<i->name<<endl;
     }
   rout<<"ENUMDOC\n  DUMMY\n"<<endl;
   system("cat ../src/as/reloc1 ./reloc2 ../src/as/reloc3 > reloc.c;\
@@ -620,9 +658,9 @@ indent ./reloc.c");
   FR(i,bfd_list)
     {
       if(i==bfd_list.begin())
-	rtout<<"@deffn {} "<<i->first.first<<endl;
+	rtout<<"@deffn {} "<<i->name<<endl;
       else
-	rtout<<"@deffnx {} "<<i->first.first<<endl;
+	rtout<<"@deffnx {} "<<i->name<<endl;
       //rout<<"Adapteva EPIPHANY -"<<i->first<<endl;
     }
   rtout<<"@end deffn"<<endl;
@@ -631,7 +669,7 @@ indent ./reloc.c");
   rtout.close();
 
 
-  //output rules for type
+  //output rules for type 
   int type_size=(int)ir.type_size();
   FOR(i,0,type_size)
     {
@@ -658,6 +696,36 @@ indent ./reloc.c");
       dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
       dhout<<"const char *"<<name<<"(char * c);\n";
     }
+  //output rules for addr
+  int addr_size=(int)ir.addr_size();
+  FOR(i,0,addr_size)
+    {
+      Addr ta;
+      ir.get_addr(i,ta);
+      string name=ta.get_name();
+      int width=ta.get_width();
+      int rs=ta.get_right_shift();
+      name="addr_"+name+"_"+(ta.get_pcrel()?"true":"false")+"_"+int2string(width)+"_"+int2string(rs);
+      tokout<<"%type<chp> "<<name<<endl;
+      yout<<name<<": ";
+      yout<<"rule_int" ;
+      yout<<"{\n";
+      yout<<"static char tmp["<<width<<"];"<<endl;
+      yout<<"i2bs(tmp,$1,"<<width<<");"<<endl;
+      yout<<"$$=tmp;}"<<endl;
+      yout<<"|"<<" TOK_LABEL{"<<endl;
+      // yout<<"static char tmp["<<width<<"];"<<endl;
+      // yout<<"int i;\ni^=i;\n";
+      // yout<<"for(i=0;i<"<<width<<";++i)"<<endl;
+      // yout<<"tmp[i]=$1[i];"<<endl;
+      // yout<<"$$=tmp;}"<<endl;
+      yout<<"$$=$1;}\n";
+      yout<<";"<<endl;
+
+      dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<width<<");}\n";
+      dhout<<"const char *"<<name<<"(char * c);\n";
+    }
+
   bout.close();
   system("cat ../src/as/coff-dummy1 \
 ./coff-dummy2 \

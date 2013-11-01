@@ -28,7 +28,7 @@
     (_addr21
       (width 21)
       (pcrel TRUE)
-      (right_shift 2)
+      (right_shift 0)
     )
     (_addr_tmp
       (width 21)
@@ -53,7 +53,7 @@
     (top jumpi)
     (jumpi
       (= c J_E)
-      (= a addr21)
+      (= a _addr21)
       (binary '000110' a '0' c )
       (code c ' ' a)
       (do)

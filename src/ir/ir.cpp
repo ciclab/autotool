@@ -32,6 +32,10 @@ void Ir::get_instr_off(int i,vector<ppi> &roff)
 {
   instruction_set[i].get_off(roff);
 }
+void Ir::get_instr_reloc_info(int i,vector<int> &ri)
+{
+  instruction_set[i].get_reloc_info(ri);
+}
 string Ir::get_instr_binary(int i)
 {
   return instruction_set[i].get_binary();
@@ -170,7 +174,9 @@ void Ir::read_instr(ifstream &fin)
   for(int i=0;i<num;++i)
     instruction_set[i].read(fin);
 }
-void Ir::add_instruction(const string &name,string &c,string &b,do_content &d,vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al)
+void Ir::add_instruction(const string &name,string &c,string &b,do_content &d,
+			 vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al,
+			 vector<int> & ri)
 {
   int t=instruction_set.size();
   instruction_set.resize(t+1);
@@ -181,8 +187,16 @@ void Ir::add_instruction(const string &name,string &c,string &b,do_content &d,ve
   instruction_set[t].set_enum_var(enum_var);
   instruction_set[t].set_arglist(al);
   instruction_set[t].set_name(name);
+  instruction_set[t].set_reloc_info(ri);
 }
-
+int Ir::addr_size()
+{
+  return addr.size();
+}
+void Ir::get_addr(int i,Addr &a)
+{
+  a=addr[i];
+}
 void Ir::add_wire(Wire w)
 {
   wire.push_back(w);

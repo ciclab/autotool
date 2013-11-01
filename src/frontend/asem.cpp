@@ -111,12 +111,14 @@ void Asem::gen(FILE * & input){
   }
 }
 
+// unfold a description, including enum, instruction, type and addr
 // 展开一个描述，包括枚举，指令，类型
 int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
 {
   string & name=ivec[0].name;
 
   // 如果已经展开过
+  // if done
   if(hc_unfold.find(name)!=0)
     {
       return (long long)hc_unfold.find(name)-1; // 由于加入hash表的时候加过1
@@ -133,6 +135,8 @@ int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
     r=unfold_enum(yout,dot_c_out);
   else if(is_type(name))
     r=unfold_type(yout,dot_c_out);
+  else if(is_addr(name))
+    r=unfold_addr(yout,dot_c_out);
   else assert(0);
   if((int)unfolded_list_name.size()<=r)
     unfolded_list_name.resize(r+1);
@@ -189,7 +193,7 @@ void Asem::eval_unfold(const string &rule_name,
   vector<int> var_off_in_code;
   // 记录变量在binary中出现的位置，目前认为一个变量在binary中只出现一次
   vector<int> var_off_in_bin;
-
+  vector<int> var_reloc_info;
   var_off_in_code.resize(var_name.size());
   var_off_in_bin.resize(var_name.size());
 
@@ -288,6 +292,7 @@ void Asem::eval_unfold(const string &rule_name,
 	{
 	  r[k].off_in_code.push_back(unfolded_list[a][b].off_in_code[j]+oc);
 	  r[k].off_in_binary.push_back(unfolded_list[a][b].off_in_binary[j]+ob);
+	  r[k].reloc_info.push_back(unfolded_list[a][b].reloc_info[j]);
 	  if(unfolded_list[a][b].enum_name[j].length()>0)
 	    r[k].enum_name.push_back(var_name[i]+(string)"#"+unfolded_list[a][b].enum_name[j]);
 	  else r[k].enum_name.push_back((string)"");
@@ -365,6 +370,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
     binary+="-";
   //cout<<(ivec.size()-1)<<' '<<binary<<endl;
   unfolded_list[k].push_back(triple(ivec[0].name,s_enum_beg+ivec[0].name,binary));
+  unfolded_list[k][0].reloc_info.push_back(0);
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back(ivec[0].name);
@@ -426,6 +432,45 @@ int Asem::unfold_type(ofstream &yout,ofstream & dot_c_out)
 				    "_"+tmpw.ivec[1].name+
 				    "_"+tmpf.ivec[1].name,
 				    binary));
+  unfolded_list[k][0].reloc_info.push_back(0);
+  unfolded_list[k][0].off_in_code.push_back(0);
+  unfolded_list[k][0].off_in_binary.push_back(0);
+  unfolded_list[k][0].enum_name.push_back((string)"");
+  return k;
+}
+// process addr description
+// (name (width num) (pcrel TRUE/FALSE) (right_shift num) )
+// generate corresponding code: name_width_TRUE/FALSE_num
+// generate corresponding binary: '----...'
+int Asem::unfold_addr(ofstream &yout,ofstream & dot_c_out)
+{
+  // 4 fileds
+  assert(ivec.size()==4);
+
+  Asem & tmp_w=*find("width");
+  assert(tmp_w.ivec.size()==2 && tmp_w.ivec[1].type==type_is_string1);
+  int width=string2num(tmp_w.ivec[1].name);
+
+  Asem & tmp_pcrel=*find("pcrel");
+  assert(tmp_pcrel.ivec.size()==2 && tmp_pcrel.ivec[1].type==type_is_string1);
+  bool pcrel=tmp_pcrel.ivec[1].name=="TRUE";
+
+  Asem & tmp_rs=*find("right_shift");
+  assert(tmp_rs.ivec.size()==2 && tmp_pcrel.ivec[1].type==type_is_string1);
+  int right_shift=string2num(tmp_rs.ivec[1].name);
+  int k=unfolded_list.size();
+  unfolded_list.resize(k+1);
+
+  string binary;
+  for(int i=0;i<width;++i)
+    binary+=(string)"-";
+  unfolded_list[k].push_back(triple(ivec[0].name,
+				    s_addr_beg+"addr_"+ivec[0].name+
+				    "_"+(pcrel?"true":"false")+
+				    "_"+tmp_w.ivec[1].name+/*TODO sequence of name corresponds to code of info extract in asGen.cpp*/
+				    "_"+tmp_rs.ivec[1].name,
+				    binary));
+  unfolded_list[k][0].reloc_info.push_back((right_shift<<1)|(pcrel?1:0));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back((string)"");
@@ -468,9 +513,12 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
 	    // 保存可选的值的名字
 	    var_choose_name[k].push_back(name);
 	    // 如果变量对应的是一个instruction 或者是type或者是枚举 递归地展开先
-	    if(this->is_instr(name) || this->is_type(name) || this->is_enum(name))
+	    if(this->is_instr(name) || this->is_type(name) || this->is_enum(name) || this->is_addr(name))
 	      {
-		int val=(*get_asem(name)).unfold(yout,dot_c_out,dot_h_out);
+		//cout<<name<<"!"<<endl;
+		Asem * tmp=get_asem(name);
+		assert(tmp!=NULL);
+		int val=(*tmp).unfold(yout,dot_c_out,dot_h_out);
 		// 保存展开的索引
 		var_val[k].push_back(val);
 	      }
@@ -653,6 +701,10 @@ bool Asem::is_enum(string name)
 {
   return (hc.find((string)"...enum."+name)!=0);
 }
+bool Asem::is_addr(string name)
+{
+  return (hc.find("...address."+name)!=0);
+}
 // 返回name对应的那一项asem地址，现在的实现是首先假设是instruction，
 // 然后是type最后是enum。对这些可能依次查找
 Asem * Asem::get_asem(string name)
@@ -663,6 +715,8 @@ Asem * Asem::get_asem(string name)
       tmp=hc.find((string)"...type."+name);
       if(tmp==NULL)
 	tmp=hc.find((string)"...enum."+name);
+      if(tmp==NULL)
+	tmp=hc.find((string)"...address."+name);
     }
   return (Asem*)tmp;
 }

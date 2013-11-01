@@ -14,11 +14,12 @@ void Addr::set_right_shift(int r)
   assert(r>0 && r<32);
   right_shift=r;
 }
-void Addr::set(int w,bool p,int r)
+void Addr::set(int w,bool p,int r,string n)
 {
   set_width(w);
   set_pcrel(p);
   set_right_shift(r);
+  set_name(n);
 }
 int Addr::get_width()
 {
@@ -34,9 +35,17 @@ int Addr::get_right_shift()
 }
 void Addr::read(ifstream & fin)
 {
-  fin>>width>>pcrel>>right_shift;
+  fin>>name>>width>>pcrel>>right_shift;
 }
 void Addr::output(ofstream & fout)
 {
-  fout<<width<<' '<<pcrel<<' '<<right_shift<<endl;
+  fout<<name<<' '<<width<<' '<<pcrel<<' '<<right_shift<<endl;
+}
+void Addr::set_name(string n)
+{
+  name=n;
+}
+string Addr::get_name()
+{
+  return name;
 }
