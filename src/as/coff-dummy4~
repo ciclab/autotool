@@ -194,7 +194,7 @@ mips_relocate_section (bfd *output_bfd,
 	    }
 	}
 
-      howto = &mips_howto_table[int_rel.r_type-BFD_DUMMY_OFF/*TODO*/];
+      howto = &mips_howto_table[int_rel.r_type-BFD_DUMMY_OFF];
 
       if (int_rel.r_extern)
 	{

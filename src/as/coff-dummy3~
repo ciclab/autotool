@@ -35,7 +35,6 @@ PT
    is external.  */
 
 /* Swap a reloc in.  */
-#define BFD_DUMMY_OFF 1714
 static void
 mips_ecoff_swap_reloc_in (bfd *  abfd,
 			  void * ext_ptr,
@@ -134,7 +133,7 @@ PT
      the absolute section so that the reloc is ignored.  */
   if (intern->r_type == MIPS_R_IGNORE)
     rptr->sym_ptr_ptr = bfd_abs_section_ptr->symbol_ptr_ptr;
-
+	assert(intern->r_type<sizeof(mips_howto_table)/sizeof(mips_howto_table[0]));
   rptr->howto = &mips_howto_table[intern->r_type];
 }
 

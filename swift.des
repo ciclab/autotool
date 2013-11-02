@@ -28,7 +28,7 @@
     (_addr21
       (width 21)
       (pcrel TRUE)
-      (right_shift 0)
+      (right_shift 2)
     )
     (_addr_tmp
       (width 21)
