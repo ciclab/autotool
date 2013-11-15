@@ -572,6 +572,7 @@ int main(int argc,char *argv[])
       tout<<"if(fixP->fx_done)\n{\n";
       int o=i->off,l=i->off_len;
       int binary_len=i->instr_len;
+      int rs=i->right_shift;
       /*TODO*/
       //assert((binary_len%8)==0);
       tout<<"v=0;\n";
@@ -579,6 +580,7 @@ int main(int argc,char *argv[])
       tout<<"for(i=0;i<"<<bytes<<";++i)\n";
       tout<<"v=(v<<8)|buf["<<bytes-1<<"-i];\n";
       tout<<"k=value&((1LL<<"<<l<<")-1);\n";
+      tout<<"k>>="<<rs<<';'<<endl;
       tout<<"c=((1LL<<"<<l<<")-1)<<"<<o<<";\n";
       tout<<"v=(v&(~c))|(k<<"<<o<<");\n";
       tout<<"for(i=0;i<"<<bytes<<";++i,v>>=8)\n";
