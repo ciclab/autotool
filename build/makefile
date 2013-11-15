@@ -45,7 +45,7 @@ rd: hash.o ir.o libir.a asem.o read.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE)  $^ -o $@
 
 out: rd $(input_file) pp
-	cpp $(input_file) | ./pp  >in.tmp && ./rd in.tmp $@
+	cpp $(input_file) | ./pp  > in.tmp && ./rd in.tmp $@
 
 pp: pp.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@

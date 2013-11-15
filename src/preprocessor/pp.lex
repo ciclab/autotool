@@ -7,7 +7,7 @@
 %option yylineno
 %%
 
-"#"[^\n]* {}
+"#"[^\n]*\n {}
 
 . {ECHO;}
 

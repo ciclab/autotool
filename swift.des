@@ -20,8 +20,7 @@
       ('MR0' 60) 'MR1' 'MR2' 'MR3'
     )
     (J_E
-      'jmp' 'je' 'jne' 'jl' 'jnl'
-      'jg' 'jng' 'jca' 'call'
+      'jmp' 'jc' 'jnc'
     )
   )
   (address
@@ -50,44 +49,55 @@
     )
   )
   (instruction
-    (top jumpi)
-    (jumpi
-      (= c J_E)
+    (top instrs)
+    (instrs
+      (= i NOP RET RTT JMP)
+      (do)
+      (code i)
+      (binary i)
+    )
+    (NOP
+      (do)
+      (code 'nop')
+      (binary '000' '000' '000000' '000000' '000000' '00000000') 
+    )
+    (RET
+      (do)
+      (code 'ret')
+      (binary '000' '000' '000000' '000000' '000000' '000001' '00')
+    )
+    (RTT
+      (do)
+      (code 'rtt')
+      (binary '000' '000' '000000' '000000' '000000' '000010' '00')
+    )
+     /*(VSEL_20
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (= rs1 VR_E)
+      (do)
+      (code 'vsel_20' rd rs rt rs1)
+      (binary '000' '000' rd rs rt rs1 '01')
+    )*/
+    (JMP
+      (= j J_E)
       (= a _addr21)
-      (binary '000110' a '0' c )
-      (code c ' ' a)
       (do)
+      (code j a)
+      (binary '000' '000' a '0' j '10')
     )
-    /*
-    (gr
-      (= i GR_E)
-      (binary '0' i)
-      (code i)
+    /*(JMPR
       (do)
+      (rs GR_E)
+      (code 'jmpr' rs)
+      (binary '000' '000' '000000' '000000' '000000' '11')
     )
-    (vr
-      (= i VR_E)
-      (binary '1' i)
-      (code i)
-      (do )
-    )
-    (off
-      (= i OFF_V)
-      (binary '1101' i)
-      (code i)
+    (callr
       (do)
-    )
-    (bar
-      (= i BAR_E)
-      (binary '1110' i)
-      (code i)
-      (do )
-    )
-    (mr
-      (= i mr)
-      (binary '1111' i)
-      (code i)
-      (do )
+      (rs GR_E)
+      (code 'callr' rs)
+      (binary '000' '000' '000000' rs '000000' '000001' '11')
     )*/
   )
 )

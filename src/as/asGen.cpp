@@ -644,31 +644,38 @@ bfd_reloc_code_real_type code)\n{";
   return NULL;\n}\n";
   
   ofstream rout("reloc2");
-  // for content in bfd/doc/reloc.c
-  FR(i,bfd_list)
+  if(bfd_list.size()>0)
     {
-      if(i==bfd_list.begin())
-	rout<<"ENUM\n  "<<i->name<<endl;
-      else rout<<"ENUMX\n  "<<i->name<<endl;
+      // for content in bfd/doc/reloc.c
+      FR(i,bfd_list)
+	{
+	  if(i==bfd_list.begin())
+	    rout<<"ENUM\n  "<<i->name<<endl;
+	  else rout<<"ENUMX\n  "<<i->name<<endl;
+	}
+      rout<<"ENUMDOC\n  DUMMY\n"<<endl;
     }
-  rout<<"ENUMDOC\n  DUMMY\n"<<endl;
+  rout.close();
   system("cat ../src/as/reloc1 ./reloc2 ../src/as/reloc3 > reloc.c;\
 indent ./reloc.c");
-  
+
   ofstream rtout("reloct2");
-  // for content in bfd/doc/reloc.texi
-  FR(i,bfd_list)
+  if(bfd_list.size()>0)
     {
-      if(i==bfd_list.begin())
-	rtout<<"@deffn {} "<<i->name<<endl;
-      else
-	rtout<<"@deffnx {} "<<i->name<<endl;
-      //rout<<"Adapteva EPIPHANY -"<<i->first<<endl;
-    }
-  rtout<<"@end deffn"<<endl;
-  rtout<<"DUMMY\n";
-  system("cat ../src/as/reloct1 ./reloct2 ../src/as/reloct3 > reloc.texi");
+      // for content in bfd/doc/reloc.texi
+      FR(i,bfd_list)
+	{
+	  if(i==bfd_list.begin())
+	    rtout<<"@deffn {} "<<i->name<<endl;
+	  else
+	    rtout<<"@deffnx {} "<<i->name<<endl;
+	  //rout<<"Adapteva EPIPHANY -"<<i->first<<endl;
+	}
+      rtout<<"@end deffn"<<endl;
+      rtout<<"DUMMY\n";
+      }
   rtout.close();
+  system("cat ../src/as/reloct1 ./reloct2 ../src/as/reloct3 > reloc.texi");
 
 
   //output rules for type 
