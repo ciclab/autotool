@@ -67,13 +67,13 @@ TODO
 	//enum definition
 	(enum  
 		//name value value ... (value can be a pair or just a single value)
-		(s1 { (s2 s2 s2)/(s2 s2) / s2 } ...)  
+		(s1 { (s2 s2 int)/(s2 s2) / s2 } ...)  
 		...  
 	)  
 	//simple variable definition
 	//variable name
 	(s1  
-		[(value int)]  
+		(value int)  
 	)
 	...
 	//memory definition

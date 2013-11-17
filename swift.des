@@ -1,6 +1,6 @@
 (
   (enum
-    (GR_E 
+    (GR_E
       'GR0' 'GR1' 'GR2' 'GR3' 'GR4' 'GR5' 'GR6' 'GR7'
       'GR8' 'GR9' 'GR10' 'GR11' 'GR12' 'GR13' 'GR14' 'GR15'
       'GR16' 'GR17' 'GR18' 'GR19' 'GR20' 'GR21' 'GR22' 'GR23'

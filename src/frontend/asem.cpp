@@ -848,3 +848,406 @@ void Asem::doo_output_switch_beg(ofstream &dot_c_out)
 {
   dot_c_out<<"switch";
 }
+
+
+/* check */
+
+string Asem::type_str[TYPE_C]={"type","stage","enum","pm_size","dm_size","memory",
+				"wire","pipe_line","register","function_unit","instruction"
+				};
+string Asem::attr[TYPE_C][ATTR_C]={{"width","flag"},//type_attr
+                                          {},
+                                          {},
+                                          {"value"},//pm_size_attr
+                                          {"value"},//dm_size_attr
+                                          {"size","type","index","read","write"},//memory_attr
+                                          {"width"},//wire_attr
+                                          {"width"},//pipe_line_attr
+                                          {"size","type","index","read","write"}//register_attr
+                                          };
+string Asem::inst_str[INST_C]={"code","do","binary"};
+
+
+/* check whether type strings */
+string *  Asem::type_is_valid(string s)
+{
+    for(int i=0;i<TYPE_C;++i)
+    {
+        if(s==type_str[i])
+        return &type_str[i];
+    }
+    return NULL;
+}
+
+/* no repeat */
+/* allowed attribute */
+/* correct format */
+/* attribute value be valid */
+int  Asem::subcheck(int n)
+{
+    string var[VAR_C];
+    int var_c=0;
+    bool attr_visit[ATTR_C];
+    for(int i=0;i<ivec.size();++i)
+    {
+        //initial
+        for(int t=0;t<ATTR_C;++t)
+            attr_visit[t]=false;
+
+        //check variable
+        if(ivec[i].type!=type_is_vector)
+        {
+            cerr<<"ERROR:line "<<line<<" column "<<column<<":Type variable must be a vector!"<<endl;
+            exit (0);
+        }
+        else
+        {
+            for(int j=0;j<ivec[i].ivec.size();++j)
+            {
+                if(j==0)
+                {
+                    //be a string
+                    if(ivec[i].ivec[j].type!=type_is_string1)
+                    {
+                        cerr<<"ERROR:line "<<line<<" column "<<column<<":Variable name must be a string!"<<endl;
+                        exit (0);
+                    }
+                    else
+                    {
+                        //not repeat
+                        for(int c=0;c<var_c;++c)
+                        {
+                            if(var[c]==ivec[i].ivec[j].name)
+                            {
+                                cerr<<"ERROR:line "<<line<<" column "<<column<<":This name has been defined!"<<endl;
+                                exit (1);
+                            }
+                        }
+                        var[var_c++]=ivec[i].ivec[j].name;
+                    }
+                }
+                //check attributes
+                else
+                {
+                    if(ivec[i].ivec[j].type!=type_is_vector)
+                    {
+                        cerr<<"ERROR:line "<<line<<" column "<<column<<":Attribute should be defined in vector!"<<endl;
+                        exit (0);
+                    }
+                    else
+                    {
+                        //attribute vector only include its name and value
+                        if(ivec[i].ivec[j].ivec.size()!=2)
+                        {
+                            cerr<<"ERROR:line "<<line<<" column "<<column<<":Attribute has useless values!"<<endl;
+                            exit (0);
+                        }
+                        else
+                        {
+                            //check attribute name
+                            int k;
+                            for(k=0;k<ATTR_C;++k)
+                            {
+                                //should be allowed
+                                if(ivec[i].ivec[j].ivec[0].name==attr[i][k])
+                                {
+                                    //not repeat
+                                    if(attr_visit[k]==true)
+                                    {
+                                        cerr<<"ERROR:line "<<line<<" column "<<column<<":Attribute has been defined!"<<endl;
+                                        exit (0);
+                                    }
+                                    else
+                                    {
+                                        attr_visit[k]==true;
+                                        //TODO check the value of this kind of attribute
+                                    }
+                                    break;
+                                }
+                            }
+                            if(k==ATTR_C)
+                            {
+                                cerr<<"ERROR:line "<<line<<" column "<<column<<":This attribute is not allowed!"<<endl;
+                                exit (0);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+/* check whether stage name repeat and value allowed */
+int Asem::stage_check()
+{
+    string substage[SUBSTAGE_C];
+    int substage_c=0;
+
+    for(int i=1;i<this->ivec.size();++i)
+    {
+        if(ivec[i].type!=type_is_vector)
+        {
+            cerr<<"ERROR:line "<<line<<" column "<<column<<":substage must be a vector!"<<endl;
+            exit (0);
+        }
+        else
+        {
+            for(int j=0;j<substage_c;++j)
+            {
+                if(ivec[i].ivec[0].name==substage[j])
+                {
+                    cerr<<"ERROR:line "<<line<<" column "<<column<<":This substage has been defined!"<<endl;
+                    exit (0);
+                }
+            }
+            substage[substage_c++]=ivec[i].name;
+            if(ivec[i].ivec[1].name!="true"||ivec[i].ivec[1].name!="false")
+            {
+                cerr<<"ERROR:line "<<line<<" column "<<column<<":value is wrong!"<<endl;
+                exit (0);
+            }
+        }
+    }
+}
+
+/* check whether name repeat and whether the format is correct */
+int Asem::enum_check()
+{
+    string enum_var[ENUM_VAR_C];            //enum variables
+    int enum_var_c=0;
+    for(int i=1;i<this->ivec.size();++i)
+    {
+        if(ivec[i].type!=type_is_vector)
+        {
+            cerr<<"ERROR:line "<<line<<" column "<<column<<":enum variable should be vector !"<<endl;
+            exit (0);
+        }
+        else
+        {
+            //name should be a string1
+            for(int j=0;j<ivec[i].ivec.size();++j)
+            {
+                if(j==0)
+                {
+                    if(ivec[i].ivec[j].type!=type_is_string1)
+                    {
+                        cerr<<"ERROR:line "<<line<<" column "<<column<<":enum name should be string !"<<endl;
+                        exit (0);
+                    }
+                    else
+                    {
+                        //name should be unique
+                        for(int t=0;t<enum_var_c;++t)
+                        {
+                            if(ivec[i].ivec[j].name==enum_var[t])
+                            {
+                                cerr<<"ERROR:line "<<line<<" column "<<column<<":This enum has been defined !"<<endl;
+                                exit (0);
+                            }
+                        }
+                        enum_var[enum_var_c++]=ivec[i].ivec[j].name;
+                    }
+                }
+                //name should be followed by vector or string2
+                else if(ivec[i].ivec[j].type!=type_is_vector||ivec[i].ivec[j].type!=type_is_string2)
+                {
+                    cerr<<"ERROR:line "<<line<<" column "<<column<<": name should be followed by vector or string2!"<<endl;
+                    exit (0);
+                }
+            }
+        }
+    }
+}
+
+int Asem::instruction_check()
+{
+    if(ivec[1].type!=type_is_vector||ivec[1].ivec[0].name!="top")
+    {
+        cerr<<"ERROR:line "<<line<<" column "<<column<<":Lack of top instruction!"<<endl;
+        exit (0);
+    }
+    else
+    {
+        for(int i=2;i<ivec.size();++i)
+        {
+            if(ivec[i].type!=type_is_vector)
+            {
+                cerr<<"ERROR:line "<<line<<" column "<<column<<":Instruction should be a vector!"<<endl;
+                exit (0);
+            }
+            else
+            {
+                for(int j=0;j<ivec[i].ivec.size();++j)
+                {
+                    vector<string> v_code;
+                    vector<string> v_binary;
+		    bool inst_visit[INST_C];
+                    for(int k=0;k<INST_C;++k)
+                        inst_visit[INST_C]=false;
+                    if(ivec[i].ivec[j].type!=type_is_vector)
+                    {
+                        cerr<<"ERROR:line "<<line<<" column "<<column<<":Here should be a vector!"<<endl;
+                        exit (0);
+                    }
+                    else if(ivec[i].ivec[j].ivec[0].name=="="&&
+                            (ivec[i].ivec[j].ivec.size()<3||ivec[i].ivec[j].ivec[1].type!=type_is_string1||ivec[i].ivec[j].ivec[2].type!=type_is_string1))
+                    {
+                        cerr<<"ERROR:line "<<line<<" column "<<column<<":Subinstruction has error!"<<endl;
+                        exit (0);
+                    }
+                    else if(ivec[i].ivec[j].ivec[0].name=="code")
+                    {
+                        if(ivec[i].ivec[j].ivec.size()<2)
+                        {
+                            cerr<<"ERROR:line "<<line<<" column "<<column<<":Code is empty!"<<endl;
+                            exit (0);
+                        }
+                        else for(int r=0;r<ivec[i].ivec[j].ivec.size();++r)
+                                    v_code.push_back(ivec[i].ivec[j].ivec[r].name);
+                        if(inst_visit[0]==true)
+                        {
+                            cerr<<"ERROR:line "<<line<<" column "<<column<<":There has been code!"<<endl;
+                            exit (0);
+                        }
+                        else inst_visit[0]=true;
+                    }
+                    else if(ivec[i].ivec[j].ivec[0].name=="do")
+                    {
+                        if(ivec[i].ivec[j].ivec.size()<2)
+                        {
+                            cerr<<"ERROR:line "<<line<<" column "<<column<<":Do is empty!"<<endl;
+                            exit (0);
+                        }
+                        if(inst_visit[1]==true)
+                        {
+                            cerr<<"ERROR:line "<<line<<" column "<<column<<":There has been do!"<<endl;
+                            exit (0);
+                        }
+                        else inst_visit[1]=true;
+                    }
+                    else if(ivec[i].ivec[j].ivec[0].name=="binary")
+                    {
+                        if(ivec[i].ivec[j].ivec.size()<2)
+                        {
+                            cerr<<"ERROR:line "<<line<<" column "<<column<<":Bianry is empty!"<<endl;
+                            exit (0);
+                        }
+                        else for(int r=0;r<ivec[i].ivec[j].ivec.size();++r)
+                        {
+                            if(ivec[i].ivec[j].ivec[r].type!=type_is_vector)
+                                v_binary.push_back(ivec[i].ivec[j].ivec[r].name);
+                        }
+                        if(inst_visit[2]==true)
+                        {
+                            cerr<<"ERROR:line "<<line<<" column "<<column<<":There has been binary!"<<endl;
+                            exit (0);
+                        }
+                        else inst_visit[2]=true;
+                    }
+                    for(int k=0;k<INST_C;++k)
+                    {
+                        if(!inst_visit[k])
+                        {
+                            cerr<<"ERROR:line "<<line<<" column "<<column<<":There is no code do or binary!!"<<endl;
+                            exit (0);
+                        }
+                    }
+		    if(v_code.size()!=v_binary.size())
+            	    {
+                	cerr<<"ERROR:line "<<line<<" column "<<column<<":Code and binary are not the same!"<<endl;
+               	 	exit (0);
+                    }
+            	    else
+                    {
+                	for(int k=0;k<v_code.size();++k)
+                            if(v_code[k]!=v_binary[k])
+                    	    {
+                        	 cerr<<"ERROR:line "<<line<<" column "<<column<<":There has been binary!"<<endl;
+                        	 exit (0);
+                    	    }
+            	    }
+                }
+            }
+            
+        }
+    }
+}
+
+int Asem::check_type()
+{
+    if(this->ivec.empty())
+    {
+        cerr<<"ERROR:line "<<line<<" column "<<column<<":Type vector cann't be empty!"<<endl;
+        exit (0);
+    }
+    else
+    {
+        if(this->ivec.size()==1)
+        {
+            cerr<<"WARNING:line "<<line<<" column "<<column<<":This type has no variable!"<<endl;
+            return 1;
+        }
+        else
+        {
+            //the first element of type vector must be string1
+            if(ivec[0].type!=type_is_string1)
+            {
+                cerr<<"ERROR:line "<<line<<" column "<<column<<":This type has no name!"<<endl;
+                exit(2);
+            }
+            //whether type is valid
+            string *s0=type_is_valid(ivec[0].name);
+            if(s0==NULL)
+            {
+                cerr<<"ERROR:line "<<line<<" column "<<column<<":This type is invalid!"<<endl;
+                exit(3);
+            }
+            else
+            {
+		for(int i=0;i<TYPE_C;++i)
+                switch (i)
+                {
+                    case 0:subcheck(0);break;
+                    case 1:stage_check();break;
+                    case 2:enum_check();break;
+                    case 3:subcheck(3);break;
+                    case 4:subcheck(4);break;
+                    case 5:subcheck(5);break;
+                    case 6:subcheck(6);break;
+                    case 7:subcheck(7);break;
+                    case 8:subcheck(8);break;
+                    case 9:subcheck(9);break;
+                    case 10:instruction_check();break;
+                    default:{cerr<<"ERROR:line "<<line<<" column "<<column<<":Type strings have errors!"<<endl;
+                exit(3);}
+                }
+            }
+        }
+    }
+}
+
+
+int Asem::check()
+{
+    //if a is empty , return
+    if(this->ivec.empty())
+    {
+        cerr<<"ERROR:line "<<line<<" column "<<column<<":This Asem is empty!"<<endl;
+        exit (0);
+    }
+
+    //check the next level
+    for(int i=0;i<ivec.size();++i)
+    {
+        // the second level must be vector
+        if(ivec[i].type!=type_is_vector)
+        {
+            cerr<<"ERROR:line "<<this->line<<" column "<<this->column<<":The second level must be vector"<<endl;
+            exit  (1);
+        }
+        else ivec[i].check_type();
+    }
+}
+

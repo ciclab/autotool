@@ -16,6 +16,12 @@ using namespace std;
 //表示有引号的string
 #define type_is_string2 2
 
+#define TYPE_C 11		//max types
+#define VAR_C 20            //max variables
+#define ATTR_C 20           //max attributes
+#define INST_C 3           //max instruction attribution
+#define SUBSTAGE_C 20		//max substages
+#define ENUM_VAR_C 20
 
 class Asem{
  private:
@@ -71,6 +77,7 @@ class Asem{
   vector<Asem> ivec;
   string name;
   int type;
+  int line,column;
   //用于保存do的数据结构
   //vector<Asem*> do_list;
   // 哈希表 hash controller
@@ -87,5 +94,22 @@ class Asem{
   void display(int lev);// output content in ivec recursively
   void gen(FILE * &input);// read from file
   int unfold(ofstream &yout,ofstream &dot_c_out,ofstream &dot_h_out);// analysize conten in ivec
+
+  /* check */ 
+  //allowed type strings
+  static string type_str[TYPE_C];
+
+  //attributes of each type
+  static string attr[TYPE_C][ATTR_C];
+
+  static string inst_str[INST_C];
+
+  string *type_is_valid(string s);	//check whether the top type
+  int subcheck(int n);			//check the top type
+  int stage_check();			//check stage type
+  int enum_check();			//check enum type
+  int instruction_check();		//check instruction rule
+  int check_type();			//classify the top type
+  int check();				//Asem check
 };
 #endif
