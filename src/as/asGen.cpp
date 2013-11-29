@@ -46,7 +46,7 @@ static void dfs_gen(ofstream & out,vector<pps> &binary_func,vector<int> &in,int 
       if(z=='0' || z=='-')
 	tmp.push_back(*i);
     }
-  out<<"if(buf["<<depth<<"]=='0')\n{";
+  out<<"if(c["<<depth<<"]=='0')\n{";
   dfs_gen(out,binary_func,tmp,depth+1);
   out<<"}\n";
   tmp.resize(0);
@@ -530,6 +530,8 @@ int main(int argc,char *argv[])
   FR(i,binary_func)
     tmp.push_back(i-binary_func.begin());
   dfs_gen(dcout,binary_func,tmp,0);
+  dcout<<"assert(0);\n";// there may be some problem with assembler
+  dcout<<"return 0;\n";
   dcout<<"}\n";
   ofstream tout("tc-dummy2");
   tout<<"static bfd_reloc_code_real_type offset_reloc["<<max_reloc_num<<"];\n";
