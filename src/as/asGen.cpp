@@ -427,6 +427,10 @@ int main(int argc,char *argv[])
 	  // dyout<<"\n{\n";
 	  binary_func.push_back(pps(rbinary,n));
 	  dcout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
+
+	  dcout<<"assert(tmp!=0);\n";// suppress compiler warning:  unused variable ‘tmp’ [-Werror=unused-variable]
+	  dcout<<"assert(c!=NULL);\n";// suppress compiler warning:  unused variable ‘c’ [-Werror=unused-variable]
+
 	  max_binary_len=max(max_binary_len,(int)binary.length());
 	  for(int i=0;i<(int)rbinary.length();++i)
 	    if(rbinary[i]=='-')

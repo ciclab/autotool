@@ -26,7 +26,7 @@
 #include "libiberty.h"
 #include "opcode/mips.h"
 #include "opintl.h"
-
+#include "assert.h"
 //下面是我们加的include！
 #include "../gas/hash.h"
 
