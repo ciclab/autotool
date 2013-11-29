@@ -202,6 +202,10 @@ int main(int argc,char *argv[])
       dhout<<"const char *"<<enum_name<<"(char *c);\n";
       dcout<<"{\n";
       dcout<<"static const char * tmp[]={";
+
+      dcout<<"assert(tmp!=0);\n";// suppress compiler warning:  unused variable ‘tmp’ [-Werror=unused-variable]
+      dcout<<"assert(c!=NULL);\n";// suppress compiler warning:  unused variable ‘c’ [-Werror=unused-variable]
+
       FOR(j,0,enum_ent_size)
 	{
 	  if(j)
