@@ -84,7 +84,7 @@
       (= j J_E)
       (= a _addr21)
       (do)
-      (code j a)
+      (code j ' ' a)
       (binary '000' '000' a '0' j '10')
     )
     /*(JMPR

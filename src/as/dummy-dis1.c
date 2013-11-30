@@ -43,7 +43,20 @@
 #endif
 
 #define WST(a) ((a)=(a))
-
+static int s2int(char *buf,int len)
+{
+  int r=0,i=0;
+  for(;i<len;++i)
+    r=(r<<1)|(buf[i]=='1'?1:0);
+  int j=0;
+  // negative number, complete leading 1s
+  if(r&(1<<(len-1)))
+    {
+      for(;j<(int)sizeof(int)*8-len;++j)
+	r|=(1<<(j+len));
+    }
+  return r;
+}
 static char * s2hex(char *buf,int len)
 {
   int val,i;
@@ -71,4 +84,9 @@ static void output(struct disassemble_info *info,const char *format,const char *
 static void output(struct disassemble_info *info,const char *format,const char * arg)
 {
   (*info->fprintf_func) (info->stream, format, arg);
+}
+
+static void outputAddr(struct disassemble_info *info,int addr)
+{
+  (*info->print_address_func) (info->target=addr, info);
 }

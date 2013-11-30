@@ -20,6 +20,25 @@ public:
   bfd_info(string n,int o,int ol,int il,int rs,bool p):
     name(n),off(o),off_len(ol),instr_len(il),right_shift(rs),pcrel(p){};
 };
+
+// check if a token name is type or addr 
+static bool isTypeAddr(const string s)
+{
+  // TODO this may confuse other name definition
+  return (s.compare(0,5,"type_")==0 || s.compare(0,5,"addr_")==0);
+}
+static int getRightShiftByName(const string s)
+{
+  assert(isTypeAddr(s));
+  if(s.compare(0,5,"type_")==0)
+    return 0;
+  // is addr
+  int r=0;
+  int i=s.length()-1,j=1;
+  for(;s[i]!='_';--i)
+    r=r+j*(int)(s[i]-'0');
+  return r;
+}
 static vector<bfd_info> bfd_list;
 static void dfs_gen(ofstream & out,vector<pps> &binary_func,vector<int> &in,int depth)
 {
@@ -27,7 +46,7 @@ static void dfs_gen(ofstream & out,vector<pps> &binary_func,vector<int> &in,int 
     return;
   if(in.size()==1)
     {
-      out<<"return "<<binary_func[in[0]].second<<"(info,c);\n";
+      out<<"return "<<binary_func[in[0]].second<<"(info,c,"<<binary_func[in[0]].first.length()<<",pc);\n";
       return;
     }
   //test if all depth bit in existing binary is '-'
@@ -297,15 +316,16 @@ int main(int argc,char *argv[])
 
 	  sort(off.begin(),off.end());
 	  yout<<n<<": ";
-	  dcout<<"int "<<n<<"(struct disassemble_info *info,char *c){\n";
-	  dhout<<"int "<<n<<"(struct disassemble_info *,char *);\n";
+	  dhout<<"int "<<n<<"(struct disassemble_info *,char *,int insnLen,bfd_vma pc);\n";
+	  dcout<<"int "<<n<<"(struct disassemble_info *info,char *c,int insnLen,bfd_vma pc){\n";
+	  dcout<<"WST(insnLen);\nWST(pc);\n";
 	  int seg(0);
 	  vector<int> len;
 	  vector<bool> need_bfd;
 	  len.resize(off.size());
 	  need_bfd.resize(off.size());
-	  vector<int> right_shift;
-	  right_shift.resize(off.size());
+	  // vector<int> right_shift;
+	  // right_shift.resize(off.size());
  	  vector<string> toks;//record string tokens in code
 	  vector<int> toks_in_binary;
 	  for(typeof(code.begin()) j=code.begin();j!=code.end();)
@@ -387,8 +407,9 @@ int main(int argc,char *argv[])
 		  else
 		    {
 		      yout<<token<<' ';
-		      if(token.compare(0,5,"type_")==0 || token.compare(0,5,"addr_")==0)
-			{// is type
+		      // if(token.compare(0,5,"type_")==0 || token.compare(0,5,"addr_")==0)
+		      if(isTypeAddr(token))
+			{// is type or addr 
 			  for(typeof(token.rbegin()) i=token.rbegin();;++i)
 			    if(*i=='_')
 			      {
@@ -453,7 +474,16 @@ int main(int argc,char *argv[])
 	  	}
 	      else
 	  	{
-	  	  dcout<<"output(info,\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
+		  //if(toks[i].compare(0,5,"type_")!=0 && toks[i].compare(0,5,"addr_")!=0)
+		  if(!isTypeAddr(toks[i]))
+		    dcout<<"output(info,\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
+		  else // is an addr
+		    {
+	  // (*info->print_address_func) (info->target, info);
+	  // info->target = (GET_OP_S (l, DELTA) << 2) + pc + INSNLEN;
+		      dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
+			   <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+pc+insnLen/8);\n";
+		    }
 	  	}
 	    }
 	  dcout<<"return "<<rbinary.length()/8<<";\n";
@@ -524,8 +554,9 @@ int main(int argc,char *argv[])
 	}
     }
   dhout<<"#define MAX_BINARY_LEN "<<max_binary_len<<endl;
-  dhout<<"int dis(struct disassemble_info *,char *c);\n";
-  dcout<<"int dis(struct disassemble_info *info,char * c)\n{";
+  dhout<<"int dis(struct disassemble_info *,char *c,bfd_vma pc);\n";
+  dcout<<"int dis(struct disassemble_info *info,char * c,bfd_vma pc)\n{";
+  dcout<<"void * unusd=(void*)s2hex;WST(unusd);unusd=(void*)s2int;WST(unusd);\n";
   vector<int> tmp;
   FR(i,binary_func)
     tmp.push_back(i-binary_func.begin());
@@ -592,6 +623,13 @@ int main(int argc,char *argv[])
       tout<<"v=(v<<8)|buf["<<bytes-1<<"-i];\n";
       tout<<"k=value&((1LL<<"<<l<<")-1);\n";
       tout<<"k>>="<<rs<<';'<<endl;
+      // k may be negative, so after left shift, complete leading 1s
+      ll msk=0,mm=(1LL<<(l))>>rs;
+      for(int i=0;i<rs;++i,mm<<=1)
+	msk|=mm;
+      tout<<"if(k&((1LL<<"<<(l-1)<<")>>"<<rs<<"))\n";
+      tout<<"k|="<<msk<<"LL;\n";
+
       tout<<"c=((1LL<<"<<l<<")-1)<<"<<o<<";\n";
       tout<<"v=(v&(~c))|(k<<"<<o<<");\n";
       tout<<"for(i=0;i<"<<bytes<<";++i,v>>=8)\n";
@@ -712,9 +750,17 @@ indent ./reloc.c");
       // yout<<"$$=tmp;}"<<endl;
       yout<<"$$=$1;}\n";
       yout<<";"<<endl;
-
-      dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
-      dhout<<"const char *"<<name<<"(char * c);\n";
+      
+      if(isTypeAddr(name))
+	{
+	  dcout<<"int "<<name<<"(char * c)\n{return s2int(c,"<<len<<");}\n";
+	  dhout<<"int "<<name<<"(char * c);\n";
+	}
+      else
+	{
+	  dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
+	  dhout<<"const char *"<<name<<"(char * c);\n";
+	}
     }
   //output rules for addr
   int addr_size=(int)ir.addr_size();
@@ -742,8 +788,18 @@ indent ./reloc.c");
       yout<<"$$=$1;}\n";
       yout<<";"<<endl;
 
-      dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<width<<");}\n";
-      dhout<<"const char *"<<name<<"(char * c);\n";
+      if(isTypeAddr(name))
+	{
+	  dcout<<"int "<<name<<"(char * c)\n{return s2int(c,"<<width<<");}\n";
+	  dhout<<"int "<<name<<"(char * c);\n";
+	}
+      else
+	{
+	  dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<width<<");}\n";
+	  dhout<<"const char *"<<name<<"(char * c);\n";
+	}
+    //   dcout<<"const char *"<<name<<"(char * c,int insnLen,bfd_vma pc)\n{WST(insnLen);WST(pc);return s2hex(c,"<<width<<");}\n";
+    //   dhout<<"const char *"<<name<<"(char * c,int insnLen,bfd_vma pc);\n";
     }
 
   bout.close();
