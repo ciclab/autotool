@@ -27,6 +27,7 @@ static bool isTypeAddr(const string s)
   // TODO this may confuse other name definition
   return (s.compare(0,5,"type_")==0 || s.compare(0,5,"addr_")==0);
 }
+// now every addr type name is translated to addr_name_true/false_width_rightshift
 static int getRightShiftByName(const string s)
 {
   assert(isTypeAddr(s));
@@ -38,6 +39,16 @@ static int getRightShiftByName(const string s)
   for(;s[i]!='_';--i)
     r=r+j*(int)(s[i]-'0');
   return r;
+}
+static bool AddrIsPcrel(const string s)
+{
+  int i=s.length()-1;
+  for(;s[i]!='_';--i)
+    ;
+  for(--i;s[i]!='_';--i)
+    ;
+  --i;
+  return s[i-1]=='u';
 }
 static vector<bfd_info> bfd_list;
 static void dfs_gen(ofstream & out,vector<pps> &binary_func,vector<int> &in,int depth)
@@ -481,8 +492,12 @@ int main(int argc,char *argv[])
 		    {
 	  // (*info->print_address_func) (info->target, info);
 	  // info->target = (GET_OP_S (l, DELTA) << 2) + pc + INSNLEN;
-		      dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
-			   <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+pc+insnLen/8);\n";
+		      if(AddrIsPcrel(toks[i]))
+			dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
+			     <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+pc+insnLen/8);\n";
+		      else
+			dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
+			     <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<"));\n";
 		    }
 	  	}
 	    }
@@ -662,7 +677,8 @@ indent ./tc-dummy.c");
       bout<<"complain_overflow_signed, /*TODO complain_on_overflow */\n";
       bout<<"mips_generic_reloc,			/* special_function */\n";
       bout<<"\""<<i->name<<"\",		/* name */\n";
-      bout<<"TRUE,			/* partial_inplace */\n";
+      bout<<i->pcrel<<",\n"; // TODO this need a new attr in deslanguage
+      // bout<<"TRUE,			/* partial_inplace */\n";
       //calculate mask
       int msk(0);//now only 32bit
       for(int j=0;j<i->off_len;++j)

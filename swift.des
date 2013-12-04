@@ -24,14 +24,14 @@
     )
   )
   (address
-    (_addr21
+    (addr21Rel
       (width 21)
       (pcrel TRUE)
       (right_shift 2)
     )
-    (_addr_tmp
+    (addr21Abs
       (width 21)
-      (pcrel TRUE)
+      (pcrel false)
       (right_shift 2)
     )
   )
@@ -43,7 +43,7 @@
   (register)
   (pipe_line)
   (type
-    (addr21
+    (_addr21
       (width 21)
       (flag unsigned)
     )
@@ -51,7 +51,7 @@
   (instruction
     (top instrs)
     (instrs
-      (= i NOP RET RTT JMP)
+      (= i NOP RET RTT JC JNC JMP CALL VSEL20)
       (do)
       (code i)
       (binary i)
@@ -71,21 +71,38 @@
       (code 'rtt')
       (binary '000' '000' '000000' '000000' '000000' '000010' '00')
     )
-     /*(VSEL_20
+    (VSEL20
       (= rd VR_E)
       (= rs VR_E)
       (= rt VR_E)
-      (= rs1 VR_E)
+      (= rs1 GR_E)
       (do)
-      (code 'vsel_20' rd rs rt rs1)
-      (binary '000' '000' rd rs rt rs1 '01')
-    )*/
+      (code 'vsel20' ' ' rd ' ' rs ' ' rt ' ' rs1)
+      (binary '000' '000' rd rs rt '0'  rs1 '10')
+    )
     (JMP
-      (= j J_E)
-      (= a _addr21)
+      (= a addr21Rel)
       (do)
-      (code j ' ' a)
-      (binary '000' '000' a '0' j '10')
+      (code 'jmp' ' ' a)
+      (binary '000' '000' a '0' '00' '01')
+    )
+    (JC
+      (= a addr21Rel)
+      (do)
+      (code 'jc' ' ' a)
+      (binary '000' '000' a '0' '01' '01')
+    )
+    (JNC
+      (= a addr21Rel)
+      (do)
+      (code 'jnc' ' ' a)
+      (binary '000' '000' a '0' '10' '01')
+    )
+    (CALL
+      (= a addr21Abs)
+      (do)
+      (code 'call' ' ' a)
+      (binary '000' '000' a '0' '11' '01')
     )
     /*(JMPR
       (do)

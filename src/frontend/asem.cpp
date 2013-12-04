@@ -16,6 +16,14 @@
 // }
 
 // v should be positive
+bool isNumber(const string s)
+{
+  FR(i,s)
+    if(*i<'0' || *i>'9')
+      return false;
+  return true;
+}
+
 static string int2string(int v)
 {
   char tmp[330];
@@ -365,8 +373,26 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
 
 #ifdef ENUM_NOT_UNFOLDED
   //cout<<"enum_"<<ivec[0].name<<":"<<endl;
+  int cnt=0,m=0;
+  for(int i=1;i<(int)ivec.size();++i)
+    {
+      if(ivec[i].is_string())
+	{
+	}
+      else if(isNumber(ivec[i].ivec[1].name))
+	{
+	  cnt=string2num(ivec[i].ivec[1].name);
+	}
+      else if(ivec[i].ivec.size()==3 && isNumber(ivec[i].ivec[2].name))
+	{
+	  cnt=string2num(ivec[i].ivec[2].name);
+	}
+      if(m<cnt)
+	m=cnt;
+      ++cnt;
+    }
   string binary;
-  for(int i=1;i<(int)(ivec.size()-1);i<<=1)
+  for(long long i=1;i<=m;i<<=1)
     binary+="-";
   //cout<<(ivec.size()-1)<<' '<<binary<<endl;
   unfolded_list[k].push_back(triple(ivec[0].name,s_enum_beg+ivec[0].name,binary));
@@ -375,16 +401,16 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back(ivec[0].name);
 #endif
-  for(int i=1;i<(int)ivec.size();++i)
+  for(int i=0;i<(int)ivec.size();++i)
     {
       if(ivec[i].type==type_is_vector)
 	{
+#ifndef ENUM_NOT_UNFOLDED
 	  // 如果是ivec那么只有两个元素,且都是有引号的string
 	  assert(ivec[i].ivec.size()==2 && 
 		 ivec[i].ivec[0].type==type_is_string2 && 
 		 ivec[i].ivec[1].type==type_is_string2);
 	  
-#ifndef ENUM_NOT_UNFOLDED
 	  unfolded_list[k].push_back(triple((string)"#ENUM_"+
 					    ivec[i].ivec[1].name,num2string(i-1,ivec.size()-1)));
 	  cout<<"!!"<<ivec[1].name<<endl;
@@ -402,6 +428,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
 	  // TODO 产生这个枚举相应的lex规则和处理函数
 	}
     }
+  
   return k;
 }
 
