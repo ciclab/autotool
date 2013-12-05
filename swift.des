@@ -22,6 +22,41 @@
     (J_E
       'jmp' 'jc' 'jnc'
     )
+    (SCALER_E
+      'add' 'addc' 'sub' 'subc' 'and' 'or' 'xor'
+      'max' 'min' 'sl' 'sra' 'srl' 'mul32' 'mulu32'
+      'mul64'
+    )
+    (V10BIT_E
+      'veq10' 'vgt10' 'vlt10' 'vge10' 'vle10'
+    )
+    (V20BIT_E
+      'veq20' 'vgt20' 'vlt20' 'vge20' 'vle20'
+    )
+    (V40BIT_E
+      'veq40' 'vgt40' 'vlt40' 'vge40' 'vle40'
+    )
+    (V10BIT11_E
+      'vadd10' 'vsub10' 'vmax10' 'vmin10'
+      'vsl10' 'vsls10' 'vsra10' 'vsrl10'
+    )
+    (V20BIT10_E
+      'vadd20' 'vsub20' 'vmax20' 'vmin20' 'vsl20'
+      'vsls20' 'vsra20' 'vsrl20'
+    )
+    (V40BIT01_E
+      'vadd40' 'vsub40' 'vmax40' 'vmin40' 'vsl40' 'vsls40'
+      'vsra40' 'vsrl40'
+    )
+    (V11_E
+      'vand' 'vor' 'vxor'
+    )
+    (VFMUL_E
+      ('vfmul40' 1) 'vfmul20' 'vfmul10'
+    )
+    (VMAC_E
+      ('vmac40' 1) 'vmac20' 'vmac10'
+    )
   )
   (address
     (addr21Rel
@@ -51,7 +86,10 @@
   (instruction
     (top instrs)
     (instrs
-      (= i NOP RET RTT JC JNC JMP CALL VSEL20)
+      (= i NOP RET RTT JC JNC JMP CALL VSEL20 JMPR CALLR
+        MOVC2G MOVG2C SCALER V10BIT V20BIT V40BIT VMOVCV2V
+	V10BIT11 V20BIT10 V40BIT01 V11 VFMUL VMAC
+      )
       (do)
       (code i)
       (binary i)
@@ -104,17 +142,127 @@
       (code 'call' ' ' a)
       (binary '000' '000' a '0' '11' '01')
     )
-    /*(JMPR
+    (JMPR
       (do)
-      (rs GR_E)
-      (code 'jmpr' rs)
-      (binary '000' '000' '000000' '000000' '000000' '11')
+      (= rs VR_E)
+      (code 'jmpr' ' '  rs)
+      (binary '000' '000' '000000' rs '000000' '000000' '11')
     )
-    (callr
+    (CALLR
       (do)
-      (rs GR_E)
-      (code 'callr' rs)
+      (= rs VR_E)
+      (code 'callr' ' ' rs)
       (binary '000' '000' '000000' rs '000000' '000001' '11')
-    )*/
+    )
+    (MOVG2C
+      (do)
+      (= rs VR_E)
+      (code 'movg2c' ' ' rs)
+      (binary '000' '000' '000000' rs '000000' '000010' '11')
+    )
+    (MOVC2G
+      (do)
+      (= rd VR_E)
+      (code 'movc2g' ' ' rd)
+      (binary '000' '000' rd '000000' '000000' '000011' '11')
+    )
+    (SCALER
+      (do)
+      (= i SCALER_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '0000' i)
+    )
+    (V10BIT
+      (do)
+      (= i V10BIT_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '001' i '11')
+    )
+    (V20BIT
+      (do)
+      (= i V20BIT_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '001' i '10')
+    )
+    (V40BIT
+      (do)
+      (= i V40BIT_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '001' i '01')
+    )
+    (VMOVCV2V
+      (do)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code 'vmovcv2v' ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '011' '00000')
+    )
+    (V10BIT11
+      (do)
+      (= i V10BIT11_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '010' i '11')
+    )
+    (V20BIT10
+      (do)
+      (= i V20BIT10_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '010' i '10')
+    )
+    (V40BIT01
+      (do)
+      (= i V40BIT01_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '010' i '01')
+    )
+    (V11
+      (do)
+      (= i V11_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '0100' i '00')
+    )
+    (VFMUL
+      (do)
+      (= i VFMUL_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '10' '0000' i)
+    )
+    (VMAC
+      (do)
+      (= i VMAC_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '10' '0100' i)
+    )
   )
 )

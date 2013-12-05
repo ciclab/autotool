@@ -69,26 +69,26 @@ static void dfs_gen(ofstream & out,vector<pps> &binary_func,vector<int> &in,int 
 	  cerr<<binary_func[*j].second<<endl;
 	assert(0);
       }
-  vector<int> tmp;
+  vector<int> tmp0,tmp1;
   FR(i,in)
     {
       char z=(binary_func[*i].first)[depth];
       if(z=='0' || z=='-')
-	tmp.push_back(*i);
-    }
-  out<<"if(c["<<depth<<"]=='0')\n{";
-  dfs_gen(out,binary_func,tmp,depth+1);
-  out<<"}\n";
-  tmp.resize(0);
-  FR(i,in)
-    {
-      char z=(binary_func[*i].first)[depth];
+	tmp0.push_back(*i);
       if(z=='1' || z=='-')
-	tmp.push_back(*i);
+	tmp1.push_back(*i);
     }
-  out<<"else\n{";
-  dfs_gen(out,binary_func,tmp,depth+1);
-  out<<"}\n";
+  if(tmp0.size()==in.size() || tmp1.size()==in.size())
+    dfs_gen(out,binary_func,in,depth+1);
+  else
+    {
+      out<<"if(c["<<depth<<"]=='0')\n{";
+      dfs_gen(out,binary_func,tmp0,depth+1);
+      out<<"}\n";
+      out<<"else\n{";
+      dfs_gen(out,binary_func,tmp1,depth+1);
+      out<<"}\n";
+    }
 }
 static string int2string(int v)
 {
