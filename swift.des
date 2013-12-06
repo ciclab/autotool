@@ -57,6 +57,99 @@
     (VMAC_E
       ('vmac40' 1) 'vmac20' 'vmac10'
     )
+    (VCMUL_E
+      ('vcmulr40' 1) 'vcmul20'
+    )
+    (VCMAC_E
+      ('vcmac20' 2) 'vcmac10'
+    )
+    (VLOADO_E
+      ('vloado32' 1) 'vloado16' 'vloado8'
+    )
+    (SLOADO_E
+      ('loado32' 1) 'loado16'
+    )
+    (VSTOREO_E
+      ('vstoreo20' 1) 'vstoreo40' 'vstoreo10'
+    )
+    (SSTOREO_E
+      ('storeo32' 1) 'storeo16'
+    )
+    (LOAD_E
+      'load8' 'load16' 'load32'
+    )
+    (LOADU_E
+      'loadu8' 'loadu16' 'loadu32'
+    )
+    (VLOAD_E
+      'loadvh' 'vload32' 'vload16' 'vload8'
+    )
+    (VLOADR_E
+       'loadvl' 'vloadr32' 'vloadr16' 'vloadr8'
+    )
+    (VLOADU_E
+      'loaduvh' 'vloadu32' 'vloadu16' 'vloadu8'
+    )
+    (VLOADUR_E
+      'loaduvl' 'vloadur32' 'vloadur16' 'vloadur8'
+    )
+    (STORE_E
+      'store8' 'store16' 'store32'
+    )
+    (STOREU_E
+      'storeu8' 'storeu16' 'storeu32'
+    )
+    (STOREI_E
+      'storevh' 'store40' 'store20' 'store10'
+    )
+    (VSTORE_E
+      'storevl' 'vstore40' 'vstore20' 'vstore10'
+    )
+    (STOREUU_E
+      'storeuvh' 'storeu40' 'storeu20' 'storeu10'
+    )
+    (VSTOREEU_E
+      'storeuvl' 'vstoreu40' 'vstoreu20' 'vstoreu10'
+    )
+    (CMP_E
+      'eq' 'neq' 'gt' 'lt' 'ge' 'le' 'test'
+    )
+    (CMPU_E
+      ('gtu' 2) 'ltu' 'geu' 'leu'
+    )
+    (CH_E
+      'not' 'abs' 'cbw' 'chw'
+    )
+    (VMOVR_E
+      ('vmovrg2v40' 1) 'vmovrg2v20' 'vmovrg2v10'
+    )
+    (VABS_E
+      ('vabs40' 1) 'vabs20' 'vabs10'
+    )
+    (VSUM_E
+      ('vsum40' 1) 'vsum20' 'vsum10'
+    )
+    (MOVI_E
+      'movigh' 'movigl'
+    )
+    (TEST_E
+      'eqi' 'neqi' 'gti' 'lti' 'gei' 'lei' 'testi'
+    )
+    (BST_E
+      'bst' 'bclr'
+    )
+    (ADDI_E
+      'addi' 'addic'
+    )
+    (BFEXT_E
+      'bfext' 'bfextu'
+    )
+    (MOVV2G_E
+       'movv2g40' 'movv2g20' 'movv2g10'
+    )
+    (MOVG2V_E
+      'movg2v40' 'movg2v20' 'movg2v10'
+    )
   )
   (address
     (addr21Rel
@@ -82,13 +175,41 @@
       (width 21)
       (flag unsigned)
     )
+    (imm9
+      (width 9)
+      (flag signed)
+    )
+    (imm16
+      (width 16)
+      (flag signed)
+    )
+    (imm4
+      (width 4)
+      (flag signed)
+    )
+    (imm10
+      (width 10)
+      (flag signed)
+    )
+    (imm11
+      (width 11)
+      (flag signed)
+    )
+    (imm5
+      (width 5)
+      (flag signed)
+    )
   )
   (instruction
     (top instrs)
     (instrs
       (= i NOP RET RTT JC JNC JMP CALL VSEL20 JMPR CALLR
         MOVC2G MOVG2C SCALER V10BIT V20BIT V40BIT VMOVCV2V
-	V10BIT11 V20BIT10 V40BIT01 V11 VFMUL VMAC
+	V10BIT11 V20BIT10 V40BIT01 V11 VFMUL VMAC VCMUL VCMULI40
+	VCMAC VLOADO SLOADO VSTOREO SSTOREO LOAD LOADU VLOAD
+	VLOADUR VLOADU VLOADR STORE STOREU STOREI VSTORE STOREUU
+	VSTOREEU CMP CMPU CH MOVG2G MOVV2V  VMOVR VNOT VABS VSUM
+	LOOP BFST TEST BST ADDI BFEXT MOVV2G MOVG2V
       )
       (do)
       (code i)
@@ -263,6 +384,320 @@
       (= rt VR_E)
       (code i ' ' rd ' ' rs ' ' rt)
       (binary '000' '001' rd rs rt '10' '0100' i)
+    )
+    (VCMUL
+      (do)
+      (= i VCMUL_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '10' '1000' i)
+    )
+    (VCMULI40
+      (do)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code 'vcmuli40' ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '10' '1001' '01') /*should be generalized to VCMUL*/
+    )
+    (VCMAC
+      (do)
+      (= i VCMAC_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '10' '1100' i)
+    )
+    (VLOADO
+      (do)
+      (= i VLOADO_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '11' '1000' i)
+    )
+    (SLOADO
+      (do)
+      (= i SLOADO_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '11' '0000' i)
+    )
+    (VSTOREO
+      (do)
+      (= i VSTOREO_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '11' '1100' i)
+    )
+    (SSTOREO
+      (do)
+      (= i SSTOREO_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rd ' ' rs ' ' rt)
+      (binary '000' '001' rd rs rt '11' '0100' i)
+    )
+    (LOAD
+      (do)
+      (= i LOAD_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '010' rd rs imm '000' i)
+    )
+    (LOADU
+      (do)
+      (= i LOADU_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '010' rd rs imm '010' i)
+    )
+    (VLOAD
+      (do)
+      (= i VLOAD_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '010' rd rs imm '100' i)
+    )
+    (VLOADR
+      (do)
+      (= i VLOADR_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '010' rd rs imm '101' i)
+    )
+    (VLOADU
+      (do)
+      (= i VLOADU_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '010' rd rs imm '110' i)
+    )
+    (VLOADUR
+      (do)
+      (= i VLOADUR_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '010' rd rs imm '111' i)
+    )
+    (STORE
+      (do)
+      (= i STORE_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '011' rd rs imm '000' i)
+    )
+    (STOREU
+      (do)
+      (= i STOREU_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '011' rd rs imm '010' i)
+    )
+    (STOREI
+      (do)
+      (= i STOREI_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '011' rd rs imm '100' i)
+    )
+    (VSTORE
+      (do)
+      (= i VSTORE_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '011' rd rs imm '101' i)
+    )
+    (STOREUU
+      (do)
+      (= i STOREUU_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '011' rd rs imm '110' i)
+    )
+    (VSTOREEU
+      (do)
+      (= i VSTOREEU_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (code i ' ' rd ' ' rs ' ' imm)
+      (binary '010' '011' rd rs imm '111' i)
+    )
+    (CMP
+      (do)
+      (= i CMP_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rs ' ' rt)
+      (binary '000' '100' '000000' rs rt '00000' i)
+    )
+    (CMPU
+      (do)
+      (= i CMPU_E)
+      (= rs VR_E)
+      (= rt VR_E)
+      (code i ' ' rs ' ' rt)
+      (binary '000' '100' '000000' rs rt '00001' i)
+    )
+    (CH
+      (do)
+      (= i CH_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (code i ' ' rd ' ' rs)
+      (binary '000' '100' rd rs '000000'  '010001' i)
+    )
+    (MOVG2G
+      (do)
+      (= rd VR_E)
+      (= rs VR_E)
+      (code 'movg2g' ' ' rd ' ' rs)
+      (binary '000' '100' rd rs '000000'  '100000' '00')
+    )
+    (MOVV2V
+      (do)
+      (= rd VR_E)
+      (= rs VR_E)
+      (code 'movv2v' ' ' rd ' ' rs)
+      (binary '000' '100' rd rs '000000'  '101110' '00')
+    )
+    (VMOVR
+      (do)
+      (= i VMOVR_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (code i ' ' rd ' ' rs)
+      (binary '000' '100' rd rs '000000'  '101001' i)
+    )
+    (VNOT
+      (do)
+      (= rd VR_E)
+      (= rs VR_E)
+      (code 'vnot' ' ' rd ' ' rs)
+      (binary '000' '100' rd rs '000000'  '111101' '00')
+    )
+    (VABS
+      (do)
+      (= i VABS_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (code i ' ' rd ' ' rs)
+      (binary '000' '100' rd rs '000000'  '111110' i)
+    )
+    (VSUM
+      (do)
+      (= i VSUM_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (code i ' ' rd ' ' rs)
+      (binary '000' '100' rd rs '000000'  '111111' i)
+    )
+    (LOOP
+      (do)
+      (= imm imm16)
+      (= rd VR_E)
+      (code 'loop' ' ' rd ' ' imm)
+      (binary '000' '101' rd imm '0000' )
+    )
+    (MOVI
+      (= i MOVI_E)
+      (= rd VR_E)
+      (= imm imm16)
+      (do)
+      (code i ' ' rd ' ' imm )
+      (binary '000' '101' rd imm i '00' )
+    )
+    (TEST
+      (= i TEST_E)
+      (= rs VR_E)
+      (= imm imm9)
+      (do)
+      (code i ' ' rs ' ' imm )
+      (binary '000' '101' '000000' rs imm i '10' )
+    )
+    (BST
+      (= i BST_E)
+      (= rd VR_E)
+      (= imm imm5)
+      (do)
+      (code i ' ' rd ' ' imm )
+      (binary '000' '101' rd '000000' imm '0000' '00' i '11' )
+    )
+    (ADDI
+      (= i ADDI_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm11)
+      (do)
+      (code i ' ' rd ' ' rs ' ' imm )
+      (binary '000' '110' rd rs imm i '00' )
+    )
+    (BFEXT
+      (= i BFEXT_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm10)
+      (do)
+      (code i ' ' rd ' ' rs ' ' imm )
+      (binary '000' '110' rd rs imm '0' i '01' )
+    )
+    (BFST
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm10)
+      (do)
+      (code 'bfst' ' ' rd ' ' rs ' ' imm )
+      (binary '000' '110' rd rs imm '00' '10' )
+    )
+    (MOVV2G
+      (= i MOVV2G_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm4)
+      (do)
+      (code i ' ' rd ' ' rs ' ' imm )
+      (binary '000' '110' rd rs imm '0000' '01' i '11' )
+    )
+    (MOVG2V
+      (= i MOVG2V_E)
+      (= rd VR_E)
+      (= rs VR_E)
+      (= imm imm4)
+      (do)
+      (code i ' ' rd ' ' rs ' ' imm )
+      (binary '000' '110' rd rs imm '0000' '10' i '11' )
     )
   )
 )

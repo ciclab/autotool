@@ -66,7 +66,7 @@ static void dfs_gen(ofstream & out,vector<pps> &binary_func,vector<int> &in,int 
       {
 	cerr<<"binary ambitious definition\n";
 	FR(j,in)
-	  cerr<<binary_func[*j].second<<endl;
+	  cerr<<binary_func[*j].first<<' '<<binary_func[*j].second<<endl;
 	assert(0);
       }
   vector<int> tmp0,tmp1;
@@ -673,7 +673,8 @@ indent ./tc-dummy.c");
       bout<<(i->instr_len>=32?2:1)<<",			/* TODO!! size (0 = byte, 1 = short, 2 = long) */\n";
       bout<<i->instr_len<<",			/* bitsize */\n";
       bout<<i->pcrel<<",			/* pc_relative */\n";
-      bout<<i->off<<",			/* bitpos */\n";
+      /*TODO output hex default? so i add "ox"*/
+      bout<<"0x"<<(i->off)<<",			/* bitpos */\n";
       bout<<"complain_overflow_signed, /*TODO complain_on_overflow */\n";
       bout<<"mips_generic_reloc,			/* special_function */\n";
       bout<<"\""<<i->name<<"\",		/* name */\n";
