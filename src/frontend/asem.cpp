@@ -124,7 +124,6 @@ void Asem::gen(FILE * & input){
 int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
 {
   string & name=ivec[0].name;
-
   // 如果已经展开过
   // if done
   if(hc_unfold.find(name)!=0)
@@ -162,15 +161,17 @@ void Asem::dfs_unfold_instr(const string &rule_name,
 			    vector<vector<string> > &var_choose_name, // 变量可选的值的名字
 			    vector<vector<int> > &var_val,		// 变量可选值对应unfolded_list的索引
 			    vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
-		      Asem &code,				// 待展开的code对应asem
+			    Asem &code,				// 待展开的code对应asem
 			    Asem &binary,				// 待展开的binary对应asem
-			    Asem * doo,				// 待展开do对应的asem
+			    Asem *doo,				// 待展开do对应的asem
 			    int lev,					// 当前枚举到第lev个变量
 			    vector<triple> &r)			// 保存展开结果
 {
   if(lev>=(int)var_name.size())
-    eval_unfold(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
-		code,binary,doo,r);
+    {
+	eval_unfold(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
+		    code,binary,doo,r);
+    }
   else
     for(int i=0;i<(int)var_val[lev].size();++i)
       {
@@ -194,8 +195,9 @@ void Asem::eval_unfold(const string &rule_name,
 		       vector<pair<int,int> > &var_choosed_val,
 		       Asem &code,
 		       Asem &binary,
-		       Asem * doo,
-		       vector<triple> &r)
+		       Asem *doo,
+		       vector<triple> &r
+		       )
 {
   // 记录变量在code中出现的位置，目前认为一个变量在code中只出现一次
   vector<int> var_off_in_code;
@@ -210,19 +212,36 @@ void Asem::eval_unfold(const string &rule_name,
   r.resize(k+1);
   r[k].rulename=rule_name+"_"+int2string(k);
   // store name of argments and their values
+  string type;
   for(int i=0;i<(int)var_name.size();++i)
-    r[k].arg_list.push_back(make_pair(var_name[i],var_choose_name[i][var_choosed_val[i].first]+"_"+int2string(var_choosed_val[i].second)));
+    {
+      r[k].arg_list.push_back(make_pair(var_name[i],var_choose_name[i][var_choosed_val[i].first]+"_"+int2string(var_choosed_val[i].second)));
+      string t=unfolded_list[var_val[i][var_choosed_val[i].first]][var_choosed_val[i].second].type;
+      if(type.size())
+	{
+	  assert(type==t || t!="e_notpack");
+	}
+      else type=t;
+    }
+  r[k].type = type;
 
+  if(type == "e_pack")
+    {
+      assert(var_name.size()==1);
+      triple & t = unfolded_list[var_val[0][var_choosed_val[0].first]][var_choosed_val[0].second];
+      r[k].code = t.code;
+      r[k].arg_list = t.arg_list;
+    }
+  
   // 对code和binary的求值应该可以写成函数
   // 求出code
-  code.display(0);
   assert(code.ivec[0].name==(string)"code");
   for(int i=1;i<(int)code.ivec.size();++i)
     {
       if(code.ivec[i].type==type_is_string2)
 	{// 是带引号的string
 	  if(code.ivec[i].name.length() && code.ivec[i].name[0]!=c_sep)
-	      r[k].code=r[k].code+c_sep+code.ivec[i].name;
+	    r[k].code=r[k].code+c_sep+code.ivec[i].name;
 	  else
 	    r[k].code+=code.ivec[i].name;
 	}
@@ -345,8 +364,8 @@ void Asem::eval_unfold(const string &rule_name,
       // 	    }
       // 	  else assert(0);
 
-	  //r[k].doo.push_back(analyze_do_expr((*doo).ivec[i]));
-	// }
+      //r[k].doo.push_back(analyze_do_expr((*doo).ivec[i]));
+      // }
     }
 
   //   for(int i=0;i<var_val.size();++i)
@@ -395,7 +414,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
   for(long long i=1;i<=m;i<<=1)
     binary+="-";
   //cout<<(ivec.size()-1)<<' '<<binary<<endl;
-  unfolded_list[k].push_back(triple(ivec[0].name,s_enum_beg+ivec[0].name,binary));
+  unfolded_list[k].push_back(triple(ivec[0].name,s_enum_beg+ivec[0].name,binary,"e_enum"));
   unfolded_list[k][0].reloc_info.push_back(0);
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
@@ -458,7 +477,7 @@ int Asem::unfold_type(ofstream &yout,ofstream & dot_c_out)
 				    s_type_beg+"type_"+ivec[0].name+
 				    "_"+tmpw.ivec[1].name+
 				    "_"+tmpf.ivec[1].name,
-				    binary));
+				    binary,"e_type"));
   unfolded_list[k][0].reloc_info.push_back(0);
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
@@ -496,7 +515,7 @@ int Asem::unfold_addr(ofstream &yout,ofstream & dot_c_out)
 				    "_"+(pcrel?"true":"false")+
 				    "_"+tmp_w.ivec[1].name+/*TODO sequence of name corresponds to code of info extract in asGen.cpp*/
 				    "_"+tmp_rs.ivec[1].name,
-				    binary));
+				    binary,"e_addr"));
   unfolded_list[k][0].reloc_info.push_back((right_shift<<1)|(pcrel?1:0));
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
@@ -551,6 +570,7 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
 	      }
 	    else
 	      {// 不然报错
+		cout<<name<<endl;
 		assert(0);
 	      }
 	  }
@@ -578,32 +598,90 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
   dot_c_out<<"}"<<endl;
   yout<<"};"<<endl;
 #endif  
+
+  // 在unfolded_list和unfolded_list_type新增加一项
+  int k=this->unfolded_list.size();
+  unfolded_list.resize(k+1);
+  unfolded_list_type.resize(k+1);
+
   // 保存待展开instruction项的binary,code,do的asem地址
   Asem & code=*(this->find("code"));
   Asem & binary=*(this->find("binary"));
   Asem * doo=this->find("do");
-  if(!(&code!=0) && (&binary!=0) && (doo!=NULL))
+  Asem & pack=*(this->find("pack"));
+  if(&code==NULL)
     {
-      cerr<<"rule "<<rule_name<<" code/binary/do empty"<<endl;
-      assert(0);
+      // may be a instruction description with pack attribute
+      if(&pack==NULL)
+	{
+	  cerr<<"invalid instruction description"<<endl;
+	  assert(0);
+	}
+      unfolded_list_type[k]=e_pack;
     }
-
-  // 在unfolded_list新增加一项
-  int k=this->unfolded_list.size();
-  unfolded_list.resize(k+1);
+  else
+    {
+      if(!((&binary!=0) && (doo!=NULL)))
+	{
+	  cerr<<"rule "<<rule_name<<" code/binary/do empty"<<endl;
+	  assert(0);
+	}
+      unfolded_list_type[k]=e_notpack;
+    }
 
   // 保存当前变量取的值，二元组表示：
   // (= a b c)
   // 第一项表示a取b还是c
   // 第二项表示取b或是c中的第几条（b和c已被展开，可能有多条可选项）
-  vector<pair<int,int> > var_choosed_val;
-  var_choosed_val.resize(var_name.size());
-  // 针对变量取不同值的时候得到展开的code，binary和do
-  dfs_unfold_instr(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
-		   code,binary,doo,0,unfolded_list[k]);
+  if(unfolded_list_type[k]==e_notpack)
+    {
+      vector<pair<int,int> > var_choosed_val;
+      var_choosed_val.resize(var_name.size());
+      // 针对变量取不同值的时候得到展开的code，binary和do
+      dfs_unfold_instr(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
+		       code,binary,doo,0,unfolded_list[k]);
+    }
+  else
+    {
+      unfolded_list[k].resize(1);
+      for(int i=0;i<(int)var_val.size();++i)
+	{
+	  string candidate_name;
+	  for(int j=0;j<(int)var_val[i].size();++j)
+	    {
+	      vector<triple> & t=unfolded_list[var_val[i][j]];
+	      for(int k=0;k<(int)t.size();++k)
+		{
+		  if(candidate_name.size())
+		    candidate_name = candidate_name + s_sep + t[k].rulename;
+		  else candidate_name = t[k].rulename;
+		}
+	    }
+	  unfolded_list[k][0].arg_list.
+	    push_back(make_pair(ivec[0].name + "_" + var_name[i],candidate_name));
+	}
+      string code;
+      for(int i=1;i<(int)pack.ivec.size();++i)
+	{
+	  // entries must be variable
+	  assert(pack.ivec[i].is_string());
+	  if(i==1)
+	    code = ivec[0].name + "_" + pack.ivec[i].name;
+	  else code = code + s_sep + ivec[0].name + "_" + pack.ivec[i].name;
+	}
+      unfolded_list[k][0].rulename = ivec[0].name;
+      unfolded_list[k][0].code = code;
+      unfolded_list[k][0].type = "e_pack";
+    }
   return k;
 }
 
+bool Asem::is_assign()
+{
+  // is an assignment statement. such as (= a ...)
+  return is_vec() && ivec.size()>2 && ivec[0].is_string() &&
+    ivec[0].name=="=";
+}
 // TODO 代换switch中的变量，目前什么都没做
 void Asem::switch_chg(vector<string> &var_name,
 		vector<vector<string> >&var_choose_name,

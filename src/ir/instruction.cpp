@@ -1,5 +1,6 @@
 #include "instruction.h"
 #include "def.h"
+
 // class doo
 // {
 // private:
@@ -17,6 +18,10 @@
 // {
 //   ent=et;
 // }
+void Instruction::set_type(string t)
+{
+  type=t;
+}
 void Instruction::set_reloc_info(vector<int> & ri)
 {
   reloc_info=ri;
@@ -143,6 +148,7 @@ string read_quoted_str(ifstream &fin)
 void Instruction::read(ifstream &fin)
 {
   fin>>name;
+  fin>>type;
 #if INSTR_COUT==1
   cout<<name<<endl;
 #endif
@@ -164,6 +170,7 @@ void Instruction::read(ifstream &fin)
 void Instruction::output(ofstream &fout)
 {
   fout<<name<<endl;
+  fout<<type<<endl;
   fout<<"\""<<code<<"\""<<endl;
   fout<<"\""<<binary<<"\""<<endl;
   fout<<off.size()<<endl;

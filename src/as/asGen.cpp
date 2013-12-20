@@ -179,7 +179,7 @@ int main(int argc,char *argv[])
 
 
 
-  //disassembler file
+  // disassembler file
   // ofstream dlout;
   ofstream dcout,dhout;
   // string dl_file_name=argv[2];
@@ -452,9 +452,11 @@ int main(int argc,char *argv[])
 	  // swap binary for little end
 	  string rbinary=binary;
 	  assert((rbinary.length()%8)==0);
+#ifdef LITTLE_END
 	  for(int i=0,j=rbinary.length()-8;i<j;i+=8,j-=8)
 	    for(int k=0;k<8;++k)
 	      swap(rbinary[i+k],rbinary[j+k]);
+#endif
 	  // FR(i,rbinary)
 	  //   if(*i=='0')
 	  //     dyout<<"TOK_0 ";
@@ -604,7 +606,11 @@ int main(int argc,char *argv[])
   tout<<"for(j=0;j<len;++j)\n";
   tout<<"{f[j]=0;\n";
   tout<<"for(k=0;k<8;++k)\n";
+#ifdef LITTLE_END
   tout<<"f[j]=(f[j]<<1)|('1'==yyret[(len-1-j)*8+k]?1:0);\n";
+#else
+  tout<<"f[j]=(f[j]<<1)|('1'==yyret[j*8+k]?1:0);\n";
+#endif
   tout<<"}\n";
   tout<<"clear(&strsta);\n";
   tout<<"}\n";
@@ -635,7 +641,11 @@ int main(int argc,char *argv[])
       tout<<"v=0;\n";
       int bytes=binary_len/8;
       tout<<"for(i=0;i<"<<bytes<<";++i)\n";
+#ifdef LITTLE_END
       tout<<"v=(v<<8)|buf["<<bytes-1<<"-i];\n";
+#else
+      tout<<"v=(v<<8)|buf[i];\n";
+#endif
       tout<<"k=value&((1LL<<"<<l<<")-1);\n";
       tout<<"k>>="<<rs<<';'<<endl;
       // k may be negative, so after left shift, complete leading 1s
@@ -648,7 +658,11 @@ int main(int argc,char *argv[])
       tout<<"c=((1LL<<"<<l<<")-1)<<"<<o<<";\n";
       tout<<"v=(v&(~c))|(k<<"<<o<<");\n";
       tout<<"for(i=0;i<"<<bytes<<";++i,v>>=8)\n";
+#ifdef LITTLE_END
       tout<<"buf[i]=v&((1<<8)-1);\n";
+#else
+      tout<<"buf["<<bytes-1<<"-i]=v&((1<<8)-1);\n";
+#endif
       tout<<"}\n";
       tout<<"break;\n";
     }
@@ -739,7 +753,7 @@ indent ./reloc.c");
 	}
       rtout<<"@end deffn"<<endl;
       rtout<<"DUMMY\n";
-      }
+    }
   rtout.close();
   system("cat ../src/as/reloct1 ./reloct2 ../src/as/reloct3 > reloc.texi");
 

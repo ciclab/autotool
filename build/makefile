@@ -3,8 +3,8 @@ CXXFLAGS=-g -Wall \
 	-DREAD_COUT=0 \
 	-DASEM_COUT=0 \
 	-DINSTR_COUT=0 \
-	-DASGEN_COUT=0
-SRC=src
+	-DASGEN_COUT=0 
+SRC=../src
 VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor
 INCLUDE=-I../src/include
 LEX = flex -v
@@ -42,7 +42,7 @@ asgen: asGen.cpp libir.a
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 rd: hash.o ir.o libir.a asem.o read.o
-	$(CXX) $(CXXFLAGS) $(INCLUDE)  $^ -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 out: rd $(input_file) pp
 	cpp $(input_file) | ./pp  > in.tmp && ./rd in.tmp $@

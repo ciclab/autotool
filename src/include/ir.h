@@ -60,7 +60,7 @@ public:
   void read_wire(ifstream &fin);
   void add_instruction(const string &name,string &c,string &b,do_content &d,
 		       vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al,
-		       vector<int> &ri);
+		       vector<int> &ri,string type);
   void output_instruction_set(ofstream &fout);
   void read_instr(ifstream &fin);
   void output_type(ofstream &fout);

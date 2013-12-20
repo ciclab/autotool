@@ -16,7 +16,7 @@ using namespace std;
 //表示有引号的string
 #define type_is_string2 2
 
-
+enum instr_type {e_pack,e_notpack} ;// record type of unfolded instr
 class Asem{
  private:
   void eval_unfold(const string &,
@@ -34,8 +34,8 @@ class Asem{
 			vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
 			Asem &code,				// 待展开的code对应asem
 			Asem &binary,				// 待展开的binary对应asem
-			Asem * doo,				// 待展开do对应的asem
-			int lev,					// 当前枚举到第lev个变量
+			Asem *doo,				// 待展开do对应的asem
+			int lev,			        // 当前枚举到第lev个变量
 			vector<triple> &r);			// 保存展开结果
   int unfold_enum(ofstream & yout,ofstream & dot_c_out);
   int unfold_type(ofstream & yout,ofstream & dot_c_out);
@@ -67,6 +67,7 @@ class Asem{
   /*TODO chang following member to private*/
   static hash_control & hc_unfold;
   static vector<vector<triple > > & unfolded_list;
+  static vector<instr_type> & unfolded_list_type; // record type of entries in unfolded_list
   static vector<string> & unfolded_list_name;// name of rule of corresponding unfolded_list
   static class hash_control & hc;
   vector<Asem> ivec;
@@ -77,6 +78,7 @@ class Asem{
   // 哈希表 hash controller
   bool is_string();
   bool is_vec();
+  bool is_assign();
   bool is_instr(string name);
   bool is_type(string name);
   bool is_enum(string name);
