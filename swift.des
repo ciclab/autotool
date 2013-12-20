@@ -203,7 +203,7 @@
   (instruction
     (top instrs)
     (instrs
-      (= i slots_1 slots_2)
+      (= i slot0 )
       (do)
       (code i)
       (binary i)

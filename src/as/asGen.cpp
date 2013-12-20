@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <string>
 using namespace std;
+#define LITTLE_END
 class bfd_info
 {
 public:

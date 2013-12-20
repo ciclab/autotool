@@ -223,6 +223,8 @@ void Asem::eval_unfold(const string &rule_name,
 	}
       else type=t;
     }
+  if(type=="")
+    type="e_notpack";
   r[k].type = type;
 
   if(type == "e_pack")
