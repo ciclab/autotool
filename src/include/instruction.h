@@ -41,7 +41,9 @@ public:
   string get_binary();
   int get_off_size();
   void get_reloc_info(vector<int> &);
+  string get_type();
   string get_name();
+  void get_arglist(vector<pair<string,string> > &);
   // int get_do_size();
   // int get_do(int id);
   int get_enum_var_size();

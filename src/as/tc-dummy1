@@ -7,8 +7,8 @@
 #include "dw2gencfi.h"
 #include "l.h"
 #include "strstack.h"
+#include "stdlib.h"
 struct strstack strsta;
-char *yyret;
 extern int dummy_parse (void);
 #define WST(a) ((a)=(a))
 #define DEBUG

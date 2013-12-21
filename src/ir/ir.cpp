@@ -12,6 +12,10 @@ Enum Ir::find_enum(string name)
   assert(0);
   return tmp;
 }
+void Ir::get_instr_arglist(int i,vector<pair<string,string> > &r)
+{
+  instruction_set[i].get_arglist(r);
+}
 Type Ir::get_type(int i)
 {
   return type[i];
@@ -31,6 +35,11 @@ int Ir::get_num_enum()
 void Ir::get_instr_off(int i,vector<ppi> &roff)
 {
   instruction_set[i].get_off(roff);
+}
+
+string Ir::get_instr_type(int i)
+{
+  return instruction_set[i].get_type();
 }
 void Ir::get_instr_reloc_info(int i,vector<int> &ri)
 {

@@ -145,6 +145,14 @@ string read_quoted_str(ifstream &fin)
     }
   return r;
 }
+string Instruction::get_type()
+{
+  return type;
+}
+void Instruction::get_arglist(vector<pair<string,string> > &r)
+{
+  r=arglist;
+}
 void Instruction::read(ifstream &fin)
 {
   fin>>name;

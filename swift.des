@@ -203,21 +203,23 @@
   (instruction
     (top instrs)
     (instrs
-      (= i slot0 )
+      (= i slot_1 slots)
       (do)
       (code i)
       (binary i)
     )
-    (slots_1
+    (slot_1
       (= i slot0)
       (do)
       (binary i)
       (code i)
     )
-    (slots_2
+    (slots
       (= i slot0)
       (= j slot1)
-      (pack i j)
+      (= k slot2)
+      (= l slot3)
+      (pack i j k l)
     ) 
     (slot0
       (= i NOP RET RTT JC JNC JMP CALL VSEL20 JMPR CALLR

@@ -37,6 +37,8 @@ public:
   void get_enum(int,Enum &);
   int get_num_enum();
   void get_instr_off(int,vector<ppi> &);
+  string get_instr_type(int );
+  void get_instr_arglist(int,vector<pair<string,string> > &);
   string get_instr_binary(int);
   int get_instr_size();
   string get_top_rule_name();

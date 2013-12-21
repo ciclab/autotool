@@ -219,13 +219,13 @@ void Asem::eval_unfold(const string &rule_name,
       string t=unfolded_list[var_val[i][var_choosed_val[i].first]][var_choosed_val[i].second].type;
       if(type.size())
 	{
-	  assert(type==t || t!="e_notpack");
+	  assert(type==t || t!="e_pack");
 	}
       else type=t;
     }
-  if(type=="")
-    type="e_notpack";
-  r[k].type = type;
+  if(type != "e_pack")
+    r[k].type = "e_notpack";
+  else r[k].type = "e_pack";
 
   if(type == "e_pack")
     {

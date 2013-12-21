@@ -154,7 +154,9 @@ int main(int argc,char *argv[])
   tokout<<"#include \"strstack.h\"\n";
   tokout<<"#include <stdio.h>\n";
   tokout<<"#include <string.h>\n";
-  tokout<<"extern char * yyret;"<<endl;
+  tokout<<"extern char * yyret[];\n";
+  tokout<<"extern int instr_cnt;\n";
+  tokout<<"extern int offset_cnt[];\n"; 
   tokout<<"extern int dummy_lineno;\n";
   tokout<<"extern void dummy_error(const char *s);\n";
   tokout<<"extern struct strstack strsta;\n";
@@ -269,7 +271,7 @@ int main(int argc,char *argv[])
     }
   tokout<<"%start "<<top_rule_name<<endl;
   // dtokout<<"%start "<<top_rule_name<<endl;
-  tokout<<"%type<chp> "<<top_rule_name<<endl;
+  // tokout<<"%type<chp> "<<top_rule_name<<endl;
   // dtokout<<"%type<chp> "<<top_rule_name<<endl;
   yout<<top_rule_name<<": "<<endl;
   // dyout<<top_rule_name<<": "<<endl;
@@ -283,7 +285,7 @@ int main(int argc,char *argv[])
 	      yout<<"|"<<endl;
 	      // dyout<<"|"<<endl;
 	    }
-	  yout<<n<<"{yyret=$1;}"<<endl;
+	  yout<<n<<endl;//"{yyret[0]=$1;}"<<endl; no use now
 	  // dyout<<n<<"{}"<<endl;
 	  ++j;
 	}
@@ -302,14 +304,16 @@ int main(int argc,char *argv[])
   FOR(i,0,instr_size)
     {
       string n=ir.get_instr_name(i);
-      if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
+      string type=ir.get_instr_type(i);
+      // if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
+      if(type=="e_notpack")
 	{
 #if ASGEN_COUT==1
 	  FR(j,off)
 	    cout<<j->first<<' '<<j->second<<endl;
 	  cout<<endl<<endl;
 #endif
-	  tokout<<"%type<chp> "<<n<<endl;
+	  // tokout<<"%type<chp> "<<n<<endl;
 	  // dtokout<<"%type<chp> "<<n<<endl;
 	  vector<ppi> off;
 	  vector<int> reloc_info;
@@ -328,9 +332,14 @@ int main(int argc,char *argv[])
 
 	  sort(off.begin(),off.end());
 	  yout<<n<<": ";
-	  dhout<<"int "<<n<<"(struct disassemble_info *,char *,int insnLen,bfd_vma pc);\n";
-	  dcout<<"int "<<n<<"(struct disassemble_info *info,char *c,int insnLen,bfd_vma pc){\n";
-	  dcout<<"WST(insnLen);\nWST(pc);\n";
+	  // for those instruction in vliw, we don't generate decode entry.
+	  // we assume it already appeared in solo slot instructions
+	  if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
+	    {
+	      dhout<<"int "<<n<<"(struct disassemble_info *,char *,int insnLen,bfd_vma pc);\n";
+	      dcout<<"int "<<n<<"(struct disassemble_info *info,char *c,int insnLen,bfd_vma pc){\n";
+	      dcout<<"WST(insnLen);\nWST(pc);\nWST(c);\n";
+	    }
 	  int seg(0);
 	  vector<int> len;
 	  vector<bool> need_bfd;
@@ -451,68 +460,62 @@ int main(int argc,char *argv[])
 
 	  //output disassembler rules
 	  // swap binary for little end
-	  string rbinary=binary;
-	  assert((rbinary.length()%8)==0);
-#ifdef LITTLE_END
-	  for(int i=0,j=rbinary.length()-8;i<j;i+=8,j-=8)
-	    for(int k=0;k<8;++k)
-	      swap(rbinary[i+k],rbinary[j+k]);
-#endif
-	  // FR(i,rbinary)
-	  //   if(*i=='0')
-	  //     dyout<<"TOK_0 ";
-	  //   else if(*i=='1')
-	  //     dyout<<"TOK_1 ";
-	  //   else dyout<<"TOK_01 ";
-	  // dyout<<"\n{\n";
-	  binary_func.push_back(pps(rbinary,n));
-	  dcout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
-
-	  dcout<<"assert(tmp!=0);\n";// suppress compiler warning:  unused variable ‘tmp’ [-Werror=unused-variable]
-	  dcout<<"assert(c!=NULL);\n";// suppress compiler warning:  unused variable ‘c’ [-Werror=unused-variable]
-
-	  max_binary_len=max(max_binary_len,(int)binary.length());
-	  for(int i=0;i<(int)rbinary.length();++i)
-	    if(rbinary[i]=='-')
-	      {
-	  	dcout<<"tmp[";
-	  	int z=(rbinary.length()/8-1-i/8)*8+(i%8);
-	  	dcout<<z;
-	  	dcout<<"]=c["<<i<<"];\n";
-	      }
-	  for(int i=0;i<(int)toks.size();++i)
+	  // for those instruction in vliw, we don't generate decode entry.
+	  // we assume it already appeared in solo slot instructions
+	  if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
 	    {
-	      if(toks_in_binary[i]<0)
-	  	{
-	  	  dcout<<"output(info,\"%s\",\""<<toks[i]<<"\");\n";
-	  	}
-	      else
-	  	{
-		  //if(toks[i].compare(0,5,"type_")!=0 && toks[i].compare(0,5,"addr_")!=0)
-		  if(!isTypeAddr(toks[i]))
-		    dcout<<"output(info,\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
-		  else // is an addr
+	      string rbinary=binary;
+	      assert((rbinary.length()%8)==0);
+#ifdef LITTLE_END
+	      for(int i=0,j=rbinary.length()-8;i<j;i+=8,j-=8)
+		for(int k=0;k<8;++k)
+		  swap(rbinary[i+k],rbinary[j+k]);
+#endif
+
+	      binary_func.push_back(pps(rbinary,n));
+	      
+	      dcout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
+	      
+	      dcout<<"assert(tmp!=0);\n";// suppress compiler warning:  unused variable ‘tmp’ [-Werror=unused-variable]
+	      dcout<<"assert(c!=NULL);\n";// suppress compiler warning:  unused variable ‘c’ [-Werror=unused-variable]
+	      
+	      max_binary_len=max(max_binary_len,(int)binary.length());
+	      for(int i=0;i<(int)rbinary.length();++i)
+		if(rbinary[i]=='-')
+		  {
+		    dcout<<"tmp[";
+		    int z=(rbinary.length()/8-1-i/8)*8+(i%8);
+		    dcout<<z;
+		    dcout<<"]=c["<<i<<"];\n";
+		  }
+	      for(int i=0;i<(int)toks.size();++i)
+		{
+		  if(toks_in_binary[i]<0)
 		    {
-	  // (*info->print_address_func) (info->target, info);
-	  // info->target = (GET_OP_S (l, DELTA) << 2) + pc + INSNLEN;
-		      if(AddrIsPcrel(toks[i]))
-			dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
-			     <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+pc+insnLen/8);\n";
-		      else
-			dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
-			     <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<"));\n";
+		      dcout<<"output(info,\"%s\",\""<<toks[i]<<"\");\n";
 		    }
-	  	}
+		  else
+		    {
+		      //if(toks[i].compare(0,5,"type_")!=0 && toks[i].compare(0,5,"addr_")!=0)
+		      if(!isTypeAddr(toks[i]))
+			dcout<<"output(info,\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
+		      else // is an addr
+			{
+			  // (*info->print_address_func) (info->target, info);
+			  // info->target = (GET_OP_S (l, DELTA) << 2) + pc + INSNLEN;
+			  if(AddrIsPcrel(toks[i]))
+			    dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
+				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+pc+insnLen/8);\n";
+			  else
+			    dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
+				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<"));\n";
+			}
+		    }
+		}
+	      dcout<<"return "<<rbinary.length()/8<<";\n";
+	      dcout<<"}\n";
 	    }
-	  dcout<<"return "<<rbinary.length()/8<<";\n";
-	  dcout<<"}\n";
-	  // if(n=="tctcore_0")
-	  //   {
-	  //     cout<<code<<endl;
-	  //     yout<<offi<<' '<<off.size()<<' '<<seg<<endl;
-	  //     FR(i,off)
-	  // 	yout<<i->first<<' '<<i->second<<endl;
-	  //   }
+
 	  yout<<"int i;\ni^=i;\n";
 	  vector<bfd_info> instr_bfd_info;
 	  FR(i,off)
@@ -548,27 +551,59 @@ int main(int argc,char *argv[])
 						    ri&1));
 		}
 	    }
-	  yout<<"$$=tmp;";
+	  // for those instruction in vliw, we don't gather bfd info.
+	  // we assume it already appeared in solo slot instructions
+	  if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
+	    {
+	      //gether bfd_info for bfd
+	      FR(i,instr_bfd_info)
+		{
+		  //bfd_info(string n,int o,int ol,int il,int rs,bool p):
+		  // int o=binary.length()-(i->first+i->second);//off set
+		  // int l=i->second;// off len
+		  // bool pcrel=reloc_info[(int)(i-off.begin())]&1;
+		  // int rs=reloc_info[(int)(i-off.begin())]>>1;
+		  // string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+int2string(l)+"_"+int2string((int)binary.length())+"_"+
+		  // 	(pcrel?"true":"false")+"_"+
+		  // 	int2string(rs);
+		  if(hc_bfd.find(i->name)==NULL)
+		    {
+		      hc_bfd.insert(i->name,(void*)(bfd_list.size()+1));
+		      bfd_list.push_back(*i);
+		    }
+		}
+	      max_reloc_num=max(max_reloc_num,(int)instr_bfd_info.size());
+	    }
+	  // yout<<"$$=tmp;\n";	  //  no need to return tmp now;
+	  yout<<"yyret[instr_cnt]=tmp;\n";
+	  yout<<"offset_cnt[++instr_cnt]=0;\n";
 	  yout<<"}"<<endl;
 	  yout<<";"<<endl;
-	  //gether bfd_info for bfd
-	  FR(i,instr_bfd_info)
+	}
+      else if(type == "e_pack" && n.compare(0,top_rule_name.length(),top_rule_name)==0)
+	{
+	  vector<pair<string,string> > args;
+	  ir.get_instr_arglist(i,args);
+	  yout<<n<<" : ";
+	  FR(i,args)
 	    {
-	      //bfd_info(string n,int o,int ol,int il,int rs,bool p):
-	      // int o=binary.length()-(i->first+i->second);//off set
-	      // int l=i->second;// off len
-	      // bool pcrel=reloc_info[(int)(i-off.begin())]&1;
-	      // int rs=reloc_info[(int)(i-off.begin())]>>1;
-	      // string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+int2string(l)+"_"+int2string((int)binary.length())+"_"+
-	      // 	(pcrel?"true":"false")+"_"+
-	      // 	int2string(rs);
-	      if(hc_bfd.find(i->name)==NULL)
-		{
-		  hc_bfd.insert(i->name,(void*)(bfd_list.size()+1));
-		  bfd_list.push_back(*i);
-		}
+	      if(i!=args.begin())
+		yout<<" TOK_BLANK ";
+	      yout<<i->first;
 	    }
-	  max_reloc_num=max(max_reloc_num,(int)instr_bfd_info.size());
+	  yout<<";"<<endl;
+	  FR(i,args)
+	    {
+	      yout<<i->first<<" : ";
+	      for(int j=0;j<(int)i->second.size();++j)
+		{
+		  if(j)
+		    yout<<" | \n";
+		  for(;j<(int)i->second.size() && i->second[j]!=c_sep;++j)
+		    yout<<i->second[j];
+		}
+	      yout<<" ; "<<endl;
+	    }
 	}
     }
   dhout<<"#define MAX_BINARY_LEN "<<max_binary_len<<endl;
@@ -583,23 +618,30 @@ int main(int argc,char *argv[])
   dcout<<"return 0;\n";
   dcout<<"}\n";
   ofstream tout("tc-dummy2");
-  tout<<"static bfd_reloc_code_real_type offset_reloc["<<max_reloc_num<<"];\n";
-  tout<<"static expressionS expr_list["<<max_reloc_num<<"];\n";
-  tout<<"int offset_cnt;"<<endl;
-  tout<<"char * yyret;"<<endl;
+  // TODO 100 should be replaced by an exact number
+  tout<<"static bfd_reloc_code_real_type offset_reloc[100]["<<max_reloc_num<<"];\n";
+  tout<<"static expressionS expr_list[100]["<<max_reloc_num<<"];\n";
+  tout<<"int instr_cnt;"<<endl;// how many expr_list and offset_reloc used
+  tout<<"int offset_cnt[100];"<<endl;// how many entries in expr_list and offset_reloc used
+  // TODO 1000 should be replaced by an exact number
+  tout<<"char * yyret[1000];"<<endl;
   tout<<"void md_assemble (char *str)\n";
   tout<<"{\n";
   tout<<"YY_BUFFER_STATE bs=dummy__scan_string(str);\n";
-  tout<<"offset_cnt=0;\n";
+  tout<<"memset(yyret,0,sizeof(yyret));\n";
+  tout<<"instr_cnt=0;\n";
+  tout<<"offset_cnt[instr_cnt]=0;\n";
   tout<<"dummy_parse();\n";
   tout<<"dummy__delete_buffer(bs);\n";
+  tout<<"int cnt;\n";
+  tout<<"for(cnt=0;cnt<instr_cnt;++cnt)\n{\n";
   tout<<"int len;\n";
-  tout<<"for(len=0;yyret[len];++len);\nlen/=8;\n";
+  tout<<"for(len=0;yyret[cnt][len];++len);\nlen/=8;\n";
   tout<<"int i;\n";
   tout<<"char * f=frag_more(len);\n";      //TODO should be a variable
-  tout<<"for(i=0;i<offset_cnt;++i)\n";
+  tout<<"for(i=0;i<offset_cnt[cnt];++i)\n";
   tout<<"{\n";
-  tout<<"fixS * tmp=fix_new_exp(/*frag_now*/NULL,/*f-frag_now->fr_literal*/0,len,expr_list+i,TRUE,offset_reloc[i]);\n";
+  tout<<"fixS * tmp=fix_new_exp(/*frag_now*/NULL,/*f-frag_now->fr_literal*/0,len,expr_list[cnt]+i,TRUE,offset_reloc[cnt][i]);\n";
   tout<<"tmp->fx_frag=frag_now;\n";
   tout<<"tmp->fx_where=f-frag_now->fr_literal;\n";
   tout<<"}\n";
@@ -608,10 +650,11 @@ int main(int argc,char *argv[])
   tout<<"{f[j]=0;\n";
   tout<<"for(k=0;k<8;++k)\n";
 #ifdef LITTLE_END
-  tout<<"f[j]=(f[j]<<1)|('1'==yyret[(len-1-j)*8+k]?1:0);\n";
+  tout<<"f[j]=(f[j]<<1)|('1'==yyret[cnt][(len-1-j)*8+k]?1:0);\n";
 #else
-  tout<<"f[j]=(f[j]<<1)|('1'==yyret[j*8+k]?1:0);\n";
+  tout<<"f[j]=(f[j]<<1)|('1'==yyret[cnt][j*8+k]?1:0);\n";
 #endif
+  tout<<"}\n";
   tout<<"}\n";
   tout<<"clear(&strsta);\n";
   tout<<"}\n";
