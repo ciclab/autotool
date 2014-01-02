@@ -118,6 +118,61 @@ static bool check_is_int(string c)
       return false;
   return (int)c.length()>0;
 }
+static hash_control binaryHash;
+struct binary_info
+{
+  vector<string> toks;
+  vector<int> toks_in_binary;
+  vector<ppi> off;
+};
+
+// check if binary and its corresponding info has been used.
+// check if there is different instructino using same binary,
+// if so, printf err info
+static bool checkBinary(const string rbinary,
+			const vector<string> &toks,
+			const vector<int> &toks_in_binary,
+			const vector<ppi> &off)
+{
+  // allow empty binary 
+  if(rbinary=="")
+    {
+      return false;
+    }
+  binary_info *a=(binary_info*)binaryHash.find(rbinary);
+  if(a==NULL)
+    {
+      a=new(binary_info);
+      a->toks=toks,a->toks_in_binary=toks_in_binary;
+      a->off=off;
+      binaryHash.insert(rbinary,a);
+      return true;
+    }
+  bool err=false;
+  if(a->toks.size()!=toks.size() || a->toks_in_binary.size()!=toks_in_binary.size() ||
+     a->off.size()!=off.size())
+    {
+      err=true;
+    }
+  for(int i=0;!err && i<(int)toks.size();++i)
+    {
+      if(a->toks[i]!=toks[i])
+	err=true;
+      if(toks_in_binary[i]<0)
+	{
+
+	}
+      else
+	{
+	  //if(toks[i].compare(0,5,"type_")!=0 && toks[i].compare(0,5,"addr_")!=0)
+	  if(a->off[a->toks_in_binary[i]].second!=off[toks_in_binary[i]].second)
+	    err=true;
+	}
+    }
+  if(err)
+    cerr<<"ERR: same bianry with deferent instruction"<<endl;
+  return false;
+}
 int main(int argc,char *argv[])
 {
   assert(argc==4);
@@ -174,6 +229,12 @@ int main(int argc,char *argv[])
   hash_control hc_bfd;
   // hash_control hc_len;
   char * cnt(NULL);
+  ++cnt;
+  // '|' <- used for seperator in vliw instruction
+  hc.insert("|",cnt);
+  lout<<"\"|\" return TOK_"<<(ll)cnt<<";\n";
+  tokout<<"%token TOK_"<<(ll)cnt<<endl;
+
   tokout<<"%type<integer> rule_int"<<endl;
   tokout<<"%token<integer> TOK_INT"<<endl;
   tokout<<"%token<chp> TOK_LABEL"<<endl;
@@ -291,6 +352,44 @@ int main(int argc,char *argv[])
 	}
     }
   yout<<";\n";
+  
+  // record which rule is used
+  vector<bool> useful;
+  useful.resize(instr_size);
+  fill(useful.begin(),useful.end(),false);
+  hash_control packSubRuleName;
+  for(int i=0;i<instr_size;++i)
+    {
+      string n=ir.get_instr_name(i);
+      if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
+	{
+	  useful[i]=true;
+	  if(ir.get_instr_type(i)=="e_pack")
+	    {
+	      vector<pair<string,string> > args;
+	      ir.get_instr_arglist(i,args);
+	      FR(i,args)
+		packSubRuleName.insert(i->first,(void*)1);
+	      FR(i,args)
+		{
+		  for(int j=0;j<(int)i->second.size();++j)
+		    {
+		      string name;
+		      for(;j<(int)i->second.size() && i->second[j]!=c_sep;++j)
+			name=name+i->second[j];
+		      packSubRuleName.insert(name,(void*)1);
+		    }
+		}
+	    }
+	}
+    }
+  for(int i=0;i<instr_size;++i)
+    if(!useful[i])
+      {
+	string n=ir.get_instr_name(i);
+	if(packSubRuleName.find(n))
+	  useful[i]=true;
+      }
   // dyout<<";\n";
 
   // dtokout<<"%type<ch> TOK_01"<<endl;
@@ -303,6 +402,8 @@ int main(int argc,char *argv[])
   vector<pps> binary_func;
   FOR(i,0,instr_size)
     {
+      if(!useful[i])
+	continue;
       string n=ir.get_instr_name(i);
       string type=ir.get_instr_type(i);
       // if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
@@ -332,14 +433,6 @@ int main(int argc,char *argv[])
 
 	  sort(off.begin(),off.end());
 	  yout<<n<<": ";
-	  // for those instruction in vliw, we don't generate decode entry.
-	  // we assume it already appeared in solo slot instructions
-	  if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
-	    {
-	      dhout<<"int "<<n<<"(struct disassemble_info *,char *,int insnLen,bfd_vma pc);\n";
-	      dcout<<"int "<<n<<"(struct disassemble_info *info,char *c,int insnLen,bfd_vma pc){\n";
-	      dcout<<"WST(insnLen);\nWST(pc);\nWST(c);\n";
-	    }
 	  int seg(0);
 	  vector<int> len;
 	  vector<bool> need_bfd;
@@ -462,15 +555,23 @@ int main(int argc,char *argv[])
 	  // swap binary for little end
 	  // for those instruction in vliw, we don't generate decode entry.
 	  // we assume it already appeared in solo slot instructions
-	  if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
-	    {
-	      string rbinary=binary;
-	      assert((rbinary.length()%8)==0);
+	  // if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
+	  string rbinary=binary;
+	  assert((rbinary.length()%8)==0);
 #ifdef LITTLE_END
 	      for(int i=0,j=rbinary.length()-8;i<j;i+=8,j-=8)
 		for(int k=0;k<8;++k)
 		  swap(rbinary[i+k],rbinary[j+k]);
 #endif
+
+	  bool genDecInfo=checkBinary(rbinary,toks,toks_in_binary,
+				      off);
+	  if(genDecInfo)
+	    {
+
+	      dhout<<"int "<<n<<"(struct disassemble_info *,char *,int insnLen,bfd_vma pc);\n";
+	      dcout<<"int "<<n<<"(struct disassemble_info *info,char *c,int insnLen,bfd_vma pc){\n";
+	      dcout<<"WST(insnLen);\nWST(pc);\nWST(c);\n";
 
 	      binary_func.push_back(pps(rbinary,n));
 	      
@@ -553,7 +654,7 @@ int main(int argc,char *argv[])
 	    }
 	  // for those instruction in vliw, we don't gather bfd info.
 	  // we assume it already appeared in solo slot instructions
-	  if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
+	  if(genDecInfo)
 	    {
 	      //gether bfd_info for bfd
 	      FR(i,instr_bfd_info)
@@ -588,7 +689,7 @@ int main(int argc,char *argv[])
 	  FR(i,args)
 	    {
 	      if(i!=args.begin())
-		yout<<" TOK_BLANK ";
+		yout<<" TOK_1 "; // TOK_1 is '|', used as seperator
 	      yout<<i->first;
 	    }
 	  yout<<";"<<endl;
@@ -627,6 +728,9 @@ int main(int argc,char *argv[])
   tout<<"char * yyret[1000];"<<endl;
   tout<<"void md_assemble (char *str)\n";
   tout<<"{\n";
+  // for debug
+  tout<<"printf(\"!%s\\n\",str);\n";
+
   tout<<"YY_BUFFER_STATE bs=dummy__scan_string(str);\n";
   tout<<"memset(yyret,0,sizeof(yyret));\n";
   tout<<"instr_cnt=0;\n";
@@ -654,8 +758,14 @@ int main(int argc,char *argv[])
 #else
   tout<<"f[j]=(f[j]<<1)|('1'==yyret[cnt][j*8+k]?1:0);\n";
 #endif
+  // for debug
+  tout<<"printf(\"%02x\",(unsigned int)(unsigned char)f[j]);\n";
   tout<<"}\n";
+  // for debug
+  tout<<"printf(\"  \");\n";
   tout<<"}\n";
+  // for debug
+  tout<<"printf(\"\\n\");\n";
   tout<<"clear(&strsta);\n";
   tout<<"}\n";
   tout<<"void md_apply_fix(fixS * fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)\n";
