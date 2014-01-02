@@ -738,9 +738,17 @@ int main(int argc,char *argv[])
   tout<<"dummy_parse();\n";
   tout<<"dummy__delete_buffer(bs);\n";
   tout<<"int cnt;\n";
+  tout<<"int len_left=0;\n";
+  // calculate total length (including vliw)
+  tout<<"for(cnt=0;cnt<instr_cnt;++cnt)\n\n";
+  tout<<"{int i=0;\n";
+  tout<<"for(;yyret[cnt][i];++len_left,++i)\n;\n";
+  tout<<"}\n";
+  tout<<"len_left/=8;\n";
   tout<<"for(cnt=0;cnt<instr_cnt;++cnt)\n{\n";
   tout<<"int len;\n";
   tout<<"for(len=0;yyret[cnt][len];++len);\nlen/=8;\n";
+  tout<<"len_left-=len;\n";
   tout<<"int i;\n";
   tout<<"char * f=frag_more(len);\n";      //TODO should be a variable
   tout<<"for(i=0;i<offset_cnt[cnt];++i)\n";
@@ -748,6 +756,7 @@ int main(int argc,char *argv[])
   tout<<"fixS * tmp=fix_new_exp(/*frag_now*/NULL,/*f-frag_now->fr_literal*/0,len,expr_list[cnt]+i,TRUE,offset_reloc[cnt][i]);\n";
   tout<<"tmp->fx_frag=frag_now;\n";
   tout<<"tmp->fx_where=f-frag_now->fr_literal;\n";
+  tout<<"tmp->fx_addnumber = -len_left;\n";
   tout<<"}\n";
   tout<<"int j,k;\n";
   tout<<"for(j=0;j<len;++j)\n";
@@ -770,6 +779,7 @@ int main(int argc,char *argv[])
   tout<<"}\n";
   tout<<"void md_apply_fix(fixS * fixP, valueT * valP, segT seg ATTRIBUTE_UNUSED)\n";
   tout<<"{\n";
+  tout<<"*valP += fixP->fx_addnumber;\n";
   /*TODO may be not only long long*/
   tout<<"long long value=(int)(*valP);/*TODO*/\n";
   tout<<"long long v,k,c;\n";
