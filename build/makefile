@@ -35,7 +35,13 @@ l.h: as.lex
 y.c y.h: _as.y
 	$(YACC) --name-prefix=dummy_ -o y.c $^
 
-as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c dummy-dis.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4 tc-dummy1 tc-dummy1 tc-dummy3 dummy-dis1.c dummy-dis2.c
+dis_l.c: dis_as.y.lex
+	$(LEX) --prefix=dis_ -o $@ $^
+
+dis_as.c dis_as.h: dis_as.y.y
+	$(YACC) --name-prefix=dis_ -o $@ $^
+
+dis_as.y.lex dis_as.y.y as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c dummy-dis.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4 tc-dummy1 tc-dummy1 tc-dummy3 dummy-dis1.c dummy-dis2.c
 	./asgen out as.lex as.y
 
 asgen: asGen.cpp libir.a

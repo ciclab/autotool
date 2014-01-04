@@ -124,6 +124,7 @@ struct binary_info
   vector<string> toks;
   vector<int> toks_in_binary;
   vector<ppi> off;
+  string func_name;
 };
 
 // check if binary and its corresponding info has been used.
@@ -132,7 +133,8 @@ struct binary_info
 static bool checkBinary(const string rbinary,
 			const vector<string> &toks,
 			const vector<int> &toks_in_binary,
-			const vector<ppi> &off)
+			const vector<ppi> &off,
+			const string name)
 {
   // allow empty binary 
   if(rbinary=="")
@@ -145,6 +147,7 @@ static bool checkBinary(const string rbinary,
       a=new(binary_info);
       a->toks=toks,a->toks_in_binary=toks_in_binary;
       a->off=off;
+      a->func_name=name;
       binaryHash.insert(rbinary,a);
       return true;
     }
@@ -245,17 +248,35 @@ int main(int argc,char *argv[])
 
   // disassembler file
   // ofstream dlout;
-  ofstream dcout,dhout;
+  ofstream dcout,dhout,dlout,dyout,dytokout;
   // string dl_file_name=argv[2];
   // dl_file_name="dis_"+dl_file_name;
   string dy_file_name=argv[3];
-  dy_file_name="dis_"+dy_file_name;
+  dy_file_name="dis_"+dy_file_name+".y";
   string dc_file_name=argv[3];
   dc_file_name="dis_"+dc_file_name+".c";
   string dh_file_name=argv[3];
   dh_file_name="dis_"+dh_file_name+".h";
+  string dl_file_name=argv[3];
+  dl_file_name="dis_"+dl_file_name+".lex";
+  string dytok_file_name=argv[3];
+  dytok_file_name="dis_"+dytok_file_name+".tok";
+  
   dhout.open(dh_file_name.c_str(),ofstream::out);
   dcout.open(dc_file_name.c_str(),ofstream::out);
+  dlout.open(dl_file_name.c_str(),ofstream::out);
+  dyout.open(dy_file_name.c_str(),ofstream::out);
+  dytokout.open(dytok_file_name.c_str(),ofstream::out);
+
+  dlout<<"%{\n";
+  dlout<<"#include \"dis_as.h\"\n";// TODO file name should be configurable
+  dlout<<"%}\n%%\n";
+  dytokout<<"%{\n";
+  // TODO function name should be configurable
+  dytokout<<"extern void dis_error(const char *s);\n";
+  dytokout<<"extern int dis_lex(void);\n";
+  dytokout<<"%}\n";
+
   dhout<<"#ifndef DH_H"<<endl;
   dhout<<"#define DH_H"<<endl;
   // dtokout<<"%{\n";
@@ -335,6 +356,7 @@ int main(int argc,char *argv[])
   // tokout<<"%type<chp> "<<top_rule_name<<endl;
   // dtokout<<"%type<chp> "<<top_rule_name<<endl;
   yout<<top_rule_name<<": "<<endl;
+  dyout<<top_rule_name<<": "<<endl;
   // dyout<<top_rule_name<<": "<<endl;
   for(int i=0,j=0;i<instr_size;++i)
     {
@@ -344,14 +366,15 @@ int main(int argc,char *argv[])
 	  if(j)
 	    {
 	      yout<<"|"<<endl;
-	      // dyout<<"|"<<endl;
+	      dyout<<"|"<<endl;
 	    }
 	  yout<<n<<endl;//"{yyret[0]=$1;}"<<endl; no use now
-	  // dyout<<n<<"{}"<<endl;
+	  dyout<<n<<endl;
 	  ++j;
 	}
     }
   yout<<";\n";
+  dyout<<";\n";
   
   // record which rule is used
   vector<bool> useful;
@@ -390,12 +413,7 @@ int main(int argc,char *argv[])
 	if(packSubRuleName.find(n))
 	  useful[i]=true;
       }
-  // dyout<<";\n";
 
-  // dtokout<<"%type<ch> TOK_01"<<endl;
-  // dtokout<<"%token TOK_0"<<endl;
-  // dtokout<<"%token TOK_1"<<endl;
-  // dyout<<"TOK_01: TOK_0 {return '1';}|TOK_1 {return '0';};\n";
   //output rules for instructions
   int max_reloc_num(0);//record max relocation number
   int max_binary_len(0);
@@ -433,6 +451,7 @@ int main(int argc,char *argv[])
 
 	  sort(off.begin(),off.end());
 	  yout<<n<<": ";
+	  // dytokout<<"%token "<<n<<endl;
 	  int seg(0);
 	  vector<int> len;
 	  vector<bool> need_bfd;
@@ -521,6 +540,7 @@ int main(int argc,char *argv[])
 		  else
 		    {
 		      yout<<token<<' ';
+		      
 		      // if(token.compare(0,5,"type_")==0 || token.compare(0,5,"addr_")==0)
 		      if(isTypeAddr(token))
 			{// is type or addr 
@@ -565,7 +585,7 @@ int main(int argc,char *argv[])
 #endif
 
 	  bool genDecInfo=checkBinary(rbinary,toks,toks_in_binary,
-				      off);
+				      off,n);
 	  if(genDecInfo)
 	    {
 
@@ -574,7 +594,12 @@ int main(int argc,char *argv[])
 	      dcout<<"WST(insnLen);\nWST(pc);\nWST(c);\n";
 
 	      binary_func.push_back(pps(rbinary,n));
-	      
+
+	      FR(i,rbinary)
+		if(*i=='-')
+		  dlout<<"[0|1]";
+		else dlout<<'\"'<<*i<<'\"';
+	      dlout<<" {return "<<n<<";}\n";
 	      dcout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
 	      
 	      dcout<<"assert(tmp!=0);\n";// suppress compiler warning:  unused variable ‘tmp’ [-Werror=unused-variable]
@@ -616,6 +641,16 @@ int main(int argc,char *argv[])
 	      dcout<<"return "<<rbinary.length()/8<<";\n";
 	      dcout<<"}\n";
 	    }
+
+	  binary_info *bi=(binary_info*)binaryHash.find(rbinary);
+	  // allow empty binary 
+	  if(bi!=NULL)
+	    {
+	      if(bi->func_name!=n)
+		dyout<<n<<" : "<<bi->func_name<<";\n";
+	      else dytokout<<"%token "<<n<<endl;
+	    }
+	  else dyout<<n<<":;\n";
 
 	  yout<<"int i;\ni^=i;\n";
 	  vector<bfd_info> instr_bfd_info;
@@ -686,24 +721,35 @@ int main(int argc,char *argv[])
 	  vector<pair<string,string> > args;
 	  ir.get_instr_arglist(i,args);
 	  yout<<n<<" : ";
+	  dyout<<n<<" : ";
 	  FR(i,args)
 	    {
 	      if(i!=args.begin())
 		yout<<" TOK_1 "; // TOK_1 is '|', used as seperator
 	      yout<<i->first;
+	      dyout<<i->first<<' ';
 	    }
 	  yout<<";"<<endl;
+	  dyout<<";"<<endl;
 	  FR(i,args)
 	    {
 	      yout<<i->first<<" : ";
+	      dyout<<i->first<<" : ";
 	      for(int j=0;j<(int)i->second.size();++j)
 		{
 		  if(j)
-		    yout<<" | \n";
+		    {
+		      yout<<" | \n";
+		      dyout<<" | \n";
+		    }
 		  for(;j<(int)i->second.size() && i->second[j]!=c_sep;++j)
-		    yout<<i->second[j];
+		    {
+		      yout<<i->second[j];
+		      dyout<<i->second[j];
+		    }
 		}
 	      yout<<" ; "<<endl;
+	      dyout<<" ; "<<endl;
 	    }
 	}
     }
@@ -715,6 +761,21 @@ int main(int argc,char *argv[])
   FR(i,binary_func)
     tmp.push_back(i-binary_func.begin());
   dfs_gen(dcout,binary_func,tmp,0);
+
+  dlout<<"%%\n";
+  dytokout<<"%%\n";
+
+  // TODO function name should be configurable
+  dyout<<"%%\nvoid dis_error(const char *s)\n{\n}\n";
+
+  dyout.close();
+  dytokout.close();
+  string disy_file_name=argv[3];
+  string tmpcmd="cat "+  dy_file_name  + " >> " + dytok_file_name;
+  system(tmpcmd.c_str());
+  tmpcmd="mv " + dytok_file_name + " " + dy_file_name;
+  system(tmpcmd.c_str());
+
   dcout<<"assert(0);\n";// there may be some problem with assembler
   dcout<<"return 0;\n";
   dcout<<"}\n";
@@ -1021,7 +1082,7 @@ int yywrap()\n\
 {\n\
         return 1;\n\
 }\n";
-  yout<<"%%\nvoid yyerror(const char *s)\n{";
+  yout<<"%%\nvoid dummy_error(const char *s)\n{";
   yout<<"fprintf (stderr, \"L%d: %s \\n\",dummy_lineno,s);\n}\n";
 
   yout.close();
