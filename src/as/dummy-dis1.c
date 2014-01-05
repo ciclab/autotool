@@ -29,7 +29,7 @@
 #include "assert.h"
 //下面是我们加的include！
 #include "../gas/hash.h"
-
+#include "opcode/dis_l.h"
 /* FIXME: These are needed to figure out if the code is mips16 or
    not. The low bit of the address is often a good indicator.  No
    symbol table is available when this code runs out in an embedded
@@ -43,6 +43,15 @@
 #endif
 
 #define WST(a) ((a)=(a))
+
+// TODO file name should be configurable
+extern int dis_parse(void);
+
+static bfd_vma dis_pc;
+static struct disassemble_info * dis_info;
+int (*dis_list[100])(char *);
+int dis_list_len[100],dis_list_cnt;
+
 static int s2int(char *buf,int len)
 {
   int r=0,i=0;
@@ -80,13 +89,13 @@ static const char * get_entry(const char * a[],const char * b,int num)
   return NULL;
 }
 
-static void output(struct disassemble_info *info,const char *format,const char * arg);
-static void output(struct disassemble_info *info,const char *format,const char * arg)
+static void output(const char *format,const char * arg);
+static void output(const char *format,const char * arg)
 {
-  (*info->fprintf_func) (info->stream, format, arg);
+  (*dis_info->fprintf_func) (dis_info->stream, format, arg);
 }
 
-static void outputAddr(struct disassemble_info *info,int addr)
+static void outputAddr(int addr)
 {
-  (*info->print_address_func) (info->target=addr, info);
+  (*dis_info->print_address_func) (dis_info->target=addr, dis_info);
 }

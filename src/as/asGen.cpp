@@ -118,7 +118,7 @@ static bool check_is_int(string c)
       return false;
   return (int)c.length()>0;
 }
-static hash_control binaryHash;
+static hash_control binaryHash,rule2func;
 struct binary_info
 {
   vector<string> toks;
@@ -130,16 +130,19 @@ struct binary_info
 // check if binary and its corresponding info has been used.
 // check if there is different instructino using same binary,
 // if so, printf err info
-static bool checkBinary(const string rbinary,
+bool emp_tag;
+static const binary_info*  checkBinary(const string rbinary,
 			const vector<string> &toks,
 			const vector<int> &toks_in_binary,
 			const vector<ppi> &off,
 			const string name)
 {
+  static binary_info emp; // no use, just idenify empty binary rule
   // allow empty binary 
   if(rbinary=="")
     {
-      return false;
+      emp_tag=true;
+      return &emp;
     }
   binary_info *a=(binary_info*)binaryHash.find(rbinary);
   if(a==NULL)
@@ -149,7 +152,8 @@ static bool checkBinary(const string rbinary,
       a->off=off;
       a->func_name=name;
       binaryHash.insert(rbinary,a);
-      return true;
+      rule2func.insert(name,a);
+      return NULL;
     }
   bool err=false;
   if(a->toks.size()!=toks.size() || a->toks_in_binary.size()!=toks_in_binary.size() ||
@@ -174,7 +178,8 @@ static bool checkBinary(const string rbinary,
     }
   if(err)
     cerr<<"ERR: same bianry with deferent instruction"<<endl;
-  return false;
+  else rule2func.insert(name,a);
+  return a;
 }
 int main(int argc,char *argv[])
 {
@@ -275,10 +280,13 @@ int main(int argc,char *argv[])
   // TODO function name should be configurable
   dytokout<<"extern void dis_error(const char *s);\n";
   dytokout<<"extern int dis_lex(void);\n";
+  dytokout<<"#include \"opcode/dis_as.y.h\"\n";
   dytokout<<"%}\n";
 
   dhout<<"#ifndef DH_H"<<endl;
   dhout<<"#define DH_H"<<endl;
+  dhout<<"extern int (*dis_list[100])(char *);\nint dis_list_len[100],dis_list_cnt;\n";
+
   // dtokout<<"%{\n";
   // dtokout<<"#include <stdio.h>\n";
   // dtokout<<"#include <string.h>\n";
@@ -313,8 +321,8 @@ int main(int argc,char *argv[])
       yout<<enum_name<<": ";
       // hc_len.insert(enum_name,(void*)width);
 
-      dcout<<"const char *"<<enum_name<<"(char *c)\n";
-      dhout<<"const char *"<<enum_name<<"(char *c);\n";
+      dcout<<"const char * FUNC_"<<enum_name<<"(char *c)\n";
+      dhout<<"const char * FUNC_"<<enum_name<<"(char *c);\n";
       dcout<<"{\n";
       dcout<<"static const char * tmp[]={";
 
@@ -579,26 +587,28 @@ int main(int argc,char *argv[])
 	  string rbinary=binary;
 	  assert((rbinary.length()%8)==0);
 #ifdef LITTLE_END
-	      for(int i=0,j=rbinary.length()-8;i<j;i+=8,j-=8)
-		for(int k=0;k<8;++k)
-		  swap(rbinary[i+k],rbinary[j+k]);
+	  for(int i=0,j=rbinary.length()-8;i<j;i+=8,j-=8)
+	    for(int k=0;k<8;++k)
+	      swap(rbinary[i+k],rbinary[j+k]);
 #endif
-
-	  bool genDecInfo=checkBinary(rbinary,toks,toks_in_binary,
-				      off,n);
-	  if(genDecInfo)
+	      
+	  const binary_info *genDecInfo=checkBinary(rbinary,toks,toks_in_binary,
+						    off,n);
+	  if(genDecInfo==NULL)
 	    {
 
-	      dhout<<"int "<<n<<"(struct disassemble_info *,char *,int insnLen,bfd_vma pc);\n";
-	      dcout<<"int "<<n<<"(struct disassemble_info *info,char *c,int insnLen,bfd_vma pc){\n";
-	      dcout<<"WST(insnLen);\nWST(pc);\nWST(c);\n";
+	      // dhout<<"int "<<n<<"(struct disassemble_info *,char *,int insnLen,bfd_vma pc);\n";
+	      dhout<<"int FUNC_"<<n<<"(char *);\n";
+	      // dcout<<"int "<<n<<"(struct disassemble_info *info,char *c,int insnLen,bfd_vma pc){\n";
+	      dcout<<"int FUNC_"<<n<<"(char *c){\n";
+	      dcout<<"WST(c);\n";
 
 	      binary_func.push_back(pps(rbinary,n));
-
-	      FR(i,rbinary)
-		if(*i=='-')
-		  dlout<<"[0|1]";
-		else dlout<<'\"'<<*i<<'\"';
+	      if(rbinary.length())
+		FR(i,rbinary)
+		  if(*i=='-')
+		    dlout<<"[0|1]";
+		  else dlout<<'\"'<<*i<<'\"';
 	      dlout<<" {return "<<n<<";}\n";
 	      dcout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
 	      
@@ -618,22 +628,22 @@ int main(int argc,char *argv[])
 		{
 		  if(toks_in_binary[i]<0)
 		    {
-		      dcout<<"output(info,\"%s\",\""<<toks[i]<<"\");\n";
+		      dcout<<"output(\"%s\",\""<<toks[i]<<"\");\n";
 		    }
 		  else
 		    {
 		      //if(toks[i].compare(0,5,"type_")!=0 && toks[i].compare(0,5,"addr_")!=0)
 		      if(!isTypeAddr(toks[i]))
-			dcout<<"output(info,\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
+			dcout<<"output(\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
 		      else // is an addr
 			{
 			  // (*info->print_address_func) (info->target, info);
 			  // info->target = (GET_OP_S (l, DELTA) << 2) + pc + INSNLEN;
 			  if(AddrIsPcrel(toks[i]))
-			    dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
-				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+pc+insnLen/8);\n";
+			    dcout<<"outputAddr(("<<toks[i]<<"(tmp+"
+				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+dis_pc+"<<rbinary.length()/8<<");\n";
 			  else
-			    dcout<<"outputAddr(info,("<<toks[i]<<"(tmp+"
+			    dcout<<"outputAddr(("<<toks[i]<<"(tmp+"
 				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<"));\n";
 			}
 		    }
@@ -641,16 +651,24 @@ int main(int argc,char *argv[])
 	      dcout<<"return "<<rbinary.length()/8<<";\n";
 	      dcout<<"}\n";
 	    }
+	  else
+	    {
+	      // TODO
+	      // if(rbinary.length())
+	      // 	dcout<<"int(*"<<n<<")(char *)="<<genDecInfo->func_name<<";\n";
+	    }
+	  dhout<<"#define "<<n<<"_LEN "<<rbinary.length()<<endl;
 
 	  binary_info *bi=(binary_info*)binaryHash.find(rbinary);
 	  // allow empty binary 
 	  if(bi!=NULL)
 	    {
 	      if(bi->func_name!=n)
-		dyout<<n<<" : "<<bi->func_name<<";\n";
+		dyout<<n<<" : "<<bi->func_name<<"{dis_list_len[dis_list_cnt]="<<rbinary.length()
+		     <<";dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<";++dis_list_cnt;};\n";
 	      else dytokout<<"%token "<<n<<endl;
 	    }
-	  else dyout<<n<<":;\n";
+	  else dyout<<n<<":{};\n";// TODO defalut to vliw seperator
 
 	  yout<<"int i;\ni^=i;\n";
 	  vector<bfd_info> instr_bfd_info;
@@ -742,31 +760,35 @@ int main(int argc,char *argv[])
 		      yout<<" | \n";
 		      dyout<<" | \n";
 		    }
+		  string name;
 		  for(;j<(int)i->second.size() && i->second[j]!=c_sep;++j)
 		    {
 		      yout<<i->second[j];
-		      dyout<<i->second[j];
+		      name.push_back(i->second[j]);
 		    }
+		  dyout<<name<<" {dis_list_len[dis_list_cnt]="<<name<<"_LEN "<<" ;dis_list[dis_list_cnt]=FUNC_"<<name<<"; ++dis_list_cnt;}\n";
 		}
 	      yout<<" ; "<<endl;
 	      dyout<<" ; "<<endl;
 	    }
 	}
     }
-  dhout<<"#define MAX_BINARY_LEN "<<max_binary_len<<endl;
-  dhout<<"int dis(struct disassemble_info *,char *c,bfd_vma pc);\n";
-  dcout<<"int dis(struct disassemble_info *info,char * c,bfd_vma pc)\n{";
-  dcout<<"void * unusd=(void*)s2hex;WST(unusd);unusd=(void*)s2int;WST(unusd);\n";
+  dhout<<"#define MAX_BINARY_LEN "<<max_binary_len*8<<endl;// !!TODO max_binary_len should recalculated with vliw info
+  // dhout<<"int dis(struct disassemble_info *,char *c,bfd_vma pc);\n";
+  // dcout<<"int dis(struct disassemble_info *info,char * c,bfd_vma pc)\n{";
+  // dcout<<"void * unusd=(void*)s2hex;WST(unusd);unusd=(void*)s2int;WST(unusd);\n";
   vector<int> tmp;
-  FR(i,binary_func)
-    tmp.push_back(i-binary_func.begin());
-  dfs_gen(dcout,binary_func,tmp,0);
+  // FR(i,binary_func)
+  //   tmp.push_back(i-binary_func.begin());
+  // dfs_gen(dcout,binary_func,tmp,0);
 
   dlout<<"%%\n";
+  dlout<<"int yywrap()\n{\nreturn 1;\n}"<<endl;
+
   dytokout<<"%%\n";
 
   // TODO function name should be configurable
-  dyout<<"%%\nvoid dis_error(const char *s)\n{\n}\n";
+  // dyout<<"%%\nvoid dis_error(const char *s)\n{\n}\n";
 
   dyout.close();
   dytokout.close();
@@ -776,9 +798,9 @@ int main(int argc,char *argv[])
   tmpcmd="mv " + dytok_file_name + " " + dy_file_name;
   system(tmpcmd.c_str());
 
-  dcout<<"assert(0);\n";// there may be some problem with assembler
-  dcout<<"return 0;\n";
-  dcout<<"}\n";
+  // dcout<<"assert(0);\n";// there may be some problem with assembler
+  // dcout<<"return 0;\n";
+  // dcout<<"}\n";
   ofstream tout("tc-dummy2");
   // TODO 100 should be replaced by an exact number
   tout<<"static bfd_reloc_code_real_type offset_reloc[100]["<<max_reloc_num<<"];\n";
@@ -1009,13 +1031,13 @@ indent ./reloc.c");
       
       if(isTypeAddr(name))
 	{
-	  dcout<<"int "<<name<<"(char * c)\n{return s2int(c,"<<len<<");}\n";
-	  dhout<<"int "<<name<<"(char * c);\n";
+	  dcout<<"int FUNC_"<<name<<"(char * c)\n{return s2int(c,"<<len<<");}\n";
+	  dhout<<"int FUNC_"<<name<<"(char * c);\n";
 	}
       else
 	{
-	  dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
-	  dhout<<"const char *"<<name<<"(char * c);\n";
+	  dcout<<"const char * FUNC_"<<name<<"(char * c)\n{return s2hex(c,"<<len<<");}\n";
+	  dhout<<"const char * FUNC_"<<name<<"(char * c);\n";
 	}
     }
   //output rules for addr
@@ -1046,13 +1068,13 @@ indent ./reloc.c");
 
       if(isTypeAddr(name))
 	{
-	  dcout<<"int "<<name<<"(char * c)\n{return s2int(c,"<<width<<");}\n";
-	  dhout<<"int "<<name<<"(char * c);\n";
+	  dcout<<"int FUNC_"<<name<<"(char * c)\n{return s2int(c,"<<width<<");}\n";
+	  dhout<<"int FUNC_"<<name<<"(char * c);\n";
 	}
       else
 	{
-	  dcout<<"const char *"<<name<<"(char * c)\n{return s2hex(c,"<<width<<");}\n";
-	  dhout<<"const char *"<<name<<"(char * c);\n";
+	  dcout<<"const char * FUNC_"<<name<<"(char * c)\n{return s2hex(c,"<<width<<");}\n";
+	  dhout<<"const char * FUNC_"<<name<<"(char * c);\n";
 	}
     //   dcout<<"const char *"<<name<<"(char * c,int insnLen,bfd_vma pc)\n{WST(insnLen);WST(pc);return s2hex(c,"<<width<<");}\n";
     //   dhout<<"const char *"<<name<<"(char * c,int insnLen,bfd_vma pc);\n";

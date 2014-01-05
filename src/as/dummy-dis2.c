@@ -9,7 +9,8 @@ _print_insn_mips(bfd_vma memaddr,
   //parse_mips_dis_options(info->disassembler_options);
 
   WST(endianness);/*TODO*/
-    
+  void *unused=(void*)s2hex;
+  WST(unused);
   status = (*info->read_memory_func) (memaddr, buffer, MAX_BINARY_LEN/8, info);
 	
   if (status == 0) {
@@ -19,17 +20,23 @@ _print_insn_mips(bfd_vma memaddr,
     /*   insn = (unsigned long int)bfd_getb32(buffer); */
     /* else */
     /*   insn = (unsigned long int)bfd_getl32(buffer); */
-    static char buf[MAX_BINARY_LEN];
+    static char buf[MAX_BINARY_LEN+7];
     int i;
     for(i=0;i<MAX_BINARY_LEN;++i)
       buf[i]=(buffer[i/8]&(1<<(7-(i%8))))?'1':'0';
-    return dis(info,buf,memaddr);
+    buf[MAX_BINARY_LEN]='\0';
+    YY_BUFFER_STATE bs = dis__scan_string (buf);
+    dis_list_cnt=0;
+    dis_pc=memaddr;
+    dis_info=info;
+    dis_parse ();
+    dis__delete_buffer (bs);
+    return 0;
+    /* return dis(info,buf,memaddr); */
   } 
 	
-  else {
     (*info->memory_error_func) (status, memaddr, info);
     return -1;
-  }
 }
 
 int print_insn_big_dummy(bfd_vma memaddr, struct disassemble_info *info)
