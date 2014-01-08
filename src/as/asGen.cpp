@@ -429,6 +429,7 @@ int main(int argc,char *argv[])
   //output rules for instructions
   int max_reloc_num(0);//record max relocation number
   int max_binary_len(0);
+  int max_slot_len(1);
   vector<pps> binary_func;
   FOR(i,0,instr_size)
     {
@@ -645,7 +646,7 @@ int main(int argc,char *argv[])
 			  // info->target = (GET_OP_S (l, DELTA) << 2) + pc + INSNLEN;
 			  if(AddrIsPcrel(toks[i]))
 			    dcout<<"outputAddr((FUNC_"<<toks[i]<<"(tmp+"
-				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+dis_pc+"<<rbinary.length()/8<<");\n";
+				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+dis_pc"<<");\n";
 			  else
 			    dcout<<"outputAddr((FUNC_"<<toks[i]<<"(tmp+"
 				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<"));\n";
@@ -753,6 +754,7 @@ int main(int argc,char *argv[])
 	    }
 	  yout<<";"<<endl;
 	  dyout<<";"<<endl;
+	  max_slot_len=max(max_slot_len,(int)args.size());
 	  FR(i,args)
 	    {
 	      yout<<i->first<<" : ";
@@ -781,7 +783,8 @@ int main(int argc,char *argv[])
 	    }
 	}
     }
-  dhout<<"#define MAX_BINARY_LEN "<<max_binary_len*8<<endl;// !!TODO max_binary_len should recalculated with vliw info
+  dhout<<"#define MAX_BINARY_LEN "<<max_binary_len<<endl;// !!TODO max_binary_len should recalculated with vliw info
+  dhout<<"#define MAX_SLOT_LEN "<<max_slot_len<<endl;
   // dhout<<"int dis(struct disassemble_info *,char *c,bfd_vma pc);\n";
   // dcout<<"int dis(struct disassemble_info *info,char * c,bfd_vma pc)\n{";
   // dcout<<"void * unusd=(void*)s2hex;WST(unusd);unusd=(void*)s2int;WST(unusd);\n";
