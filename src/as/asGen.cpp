@@ -131,17 +131,18 @@ struct binary_info
 // check if there is different instructino using same binary,
 // if so, printf err info
 bool emp_tag;
+static binary_info emp; // no use, just idenify empty binary rule
 static const binary_info*  checkBinary(const string rbinary,
 			const vector<string> &toks,
 			const vector<int> &toks_in_binary,
 			const vector<ppi> &off,
 			const string name)
 {
-  static binary_info emp; // no use, just idenify empty binary rule
   // allow empty binary 
   if(rbinary=="")
     {
       emp_tag=true;
+      rule2func.insert(name,&emp);
       return &emp;
     }
   binary_info *a=(binary_info*)binaryHash.find(rbinary);
@@ -274,8 +275,11 @@ int main(int argc,char *argv[])
   dytokout.open(dytok_file_name.c_str(),ofstream::out);
 
   dlout<<"%{\n";
-  dlout<<"#include \"dis_as.h\"\n";// TODO file name should be configurable
-  dlout<<"%}\n%%\n";
+  dlout<<"#include \"opcode/dis_as.h\"\n";// TODO file name should be configurable
+  dlout<<"#define YY_NO_INPUT\n";// suppress warning: input defined but not used
+  dlout<<"%}\n";
+  dlout<<"%option nounput\n";// suppress warning: yyunput defined but not used
+  dlout<<"%%\n";
   dytokout<<"%{\n";
   // TODO function name should be configurable
   dytokout<<"extern void dis_error(const char *s);\n";
@@ -634,16 +638,16 @@ int main(int argc,char *argv[])
 		    {
 		      //if(toks[i].compare(0,5,"type_")!=0 && toks[i].compare(0,5,"addr_")!=0)
 		      if(!isTypeAddr(toks[i]))
-			dcout<<"output(\"%s\","<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
+			dcout<<"output(\"%s\",FUNC_"<<toks[i]<<"(tmp+"<<off[toks_in_binary[i]].second<<"));\n";
 		      else // is an addr
 			{
 			  // (*info->print_address_func) (info->target, info);
 			  // info->target = (GET_OP_S (l, DELTA) << 2) + pc + INSNLEN;
 			  if(AddrIsPcrel(toks[i]))
-			    dcout<<"outputAddr(("<<toks[i]<<"(tmp+"
+			    dcout<<"outputAddr((FUNC_"<<toks[i]<<"(tmp+"
 				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<")+dis_pc+"<<rbinary.length()/8<<");\n";
 			  else
-			    dcout<<"outputAddr(("<<toks[i]<<"(tmp+"
+			    dcout<<"outputAddr((FUNC_"<<toks[i]<<"(tmp+"
 				 <<off[toks_in_binary[i]].second<<")<<"<<getRightShiftByName(toks[i])<<"));\n";
 			}
 		    }
@@ -766,7 +770,11 @@ int main(int argc,char *argv[])
 		      yout<<i->second[j];
 		      name.push_back(i->second[j]);
 		    }
-		  dyout<<name<<" {dis_list_len[dis_list_cnt]="<<name<<"_LEN "<<" ;dis_list[dis_list_cnt]=FUNC_"<<name<<"; ++dis_list_cnt;}\n";
+		  
+		  binary_info *bi=(binary_info*)rule2func.find(name);
+		  if(bi!=&emp)
+		    dyout<<name<<" {dis_list_len[dis_list_cnt]="<<name<<"_LEN "<<" ;dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<"; ++dis_list_cnt;}\n";
+		  else dyout<<"{}"<<endl;
 		}
 	      yout<<" ; "<<endl;
 	      dyout<<" ; "<<endl;
@@ -781,11 +789,12 @@ int main(int argc,char *argv[])
   // FR(i,binary_func)
   //   tmp.push_back(i-binary_func.begin());
   // dfs_gen(dcout,binary_func,tmp,0);
-
   dlout<<"%%\n";
   dlout<<"int yywrap()\n{\nreturn 1;\n}"<<endl;
-
   dytokout<<"%%\n";
+  dyout<<"%%\n";
+  dyout<<"void dis_error(const char *s){s=s;}"<<endl;
+
 
   // TODO function name should be configurable
   // dyout<<"%%\nvoid dis_error(const char *s)\n{\n}\n";
