@@ -71,7 +71,7 @@ md_assemble (char *str)
 	/* 	append_insn(&insn, &imm_expr, &imm_reloc); */
 	/* else */
 	/* 	gas_assert(0); */
-  printf("!%s\n",str);
+  printf("!%s!\n",str);
   YY_BUFFER_STATE bs=dummy__scan_string(str);
   dummy_parse();
   dummy__delete_buffer(bs);

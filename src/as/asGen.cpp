@@ -599,6 +599,7 @@ int main(int argc,char *argv[])
 	      
 	  const binary_info *genDecInfo=checkBinary(rbinary,toks,toks_in_binary,
 						    off,n);
+	  cout<<n<<' '<<rbinary.length()<<' '<<genDecInfo<<endl;
 	  if(genDecInfo==NULL)
 	    {
 
@@ -712,7 +713,7 @@ int main(int argc,char *argv[])
 	    }
 	  // for those instruction in vliw, we don't gather bfd info.
 	  // we assume it already appeared in solo slot instructions
-	  if(genDecInfo)
+	  if(genDecInfo==NULL )
 	    {
 	      //gether bfd_info for bfd
 	      FR(i,instr_bfd_info)
@@ -824,7 +825,7 @@ int main(int argc,char *argv[])
   tout<<"void md_assemble (char *str)\n";
   tout<<"{\n";
   // for debug
-  tout<<"printf(\"!%s\\n\",str);\n";
+  tout<<"printf(\"!%s!\\n\",str);\n";
 
   tout<<"YY_BUFFER_STATE bs=dummy__scan_string(str);\n";
   tout<<"memset(yyret,0,sizeof(yyret));\n";
