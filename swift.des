@@ -217,11 +217,11 @@
   (instruction
     (top instrs)
     (instrs
-      (= i  slots_4 slots_3 slots_2 slots_1)
+      (= i  slots_4 )
       (do)
       (code i)
       (binary i)
-      (vliw mode 1 set 31)
+      (vliw 1 0)
     )
     (slot_1
       (= i slot0)
@@ -235,69 +235,11 @@
       (code '')
     )
     (slots_4
-      (= i slot0_b)
-      (= j slot1_nb empty)
-      (= k slot2_nb empty)
-      (= l slot3_nb empty)
+      (= i slot0 empty)
+      (= j slot1 empty)
+      (= k slot2 empty)
+      (= l slot3 empty)
       (pack i j k l)
-    )
-    (slots_3
-      (= i empty)
-      (= j slot1_b)
-      (= k slot2_nb empty)
-      (= l slot3_nb empty)
-      (pack i j k l)
-    )
-    (slots_2
-      (= k slot2_b )
-      (= l slot3_nb )
-      (pack k l)
-    )
-    (slots_1
-      (= l slot3_b )
-      (pack  l)
-    )
-    (slot0_b
-      (= i slot0)
-      (do)
-      (code i)
-      (binary '0' i)
-    )
-    (slot1_nb
-      (= i slot1)
-      (do)
-      (code i)
-      (binary '1' i)
-    )
-    (slot1_b
-      (= i slot1)
-      (do)
-      (code i)
-      (binary '0' i)
-    )
-    (slot2_nb
-      (= i slot2)
-      (do)
-      (code i)
-      (binary '1' i)
-    )
-    (slot2_b
-      (= i slot2)
-      (do)
-      (code i)
-      (binary '0' i)
-    )
-    (slot3_nb
-      (= i slot3)
-      (do)
-      (code i)
-      (binary '1' i)
-    )
-    (slot3_b
-      (= i slot3)
-      (do)
-      (code i)
-      (binary '0' i)
     )
     (slot0
       (= i NOP RET RTT JC JNC JMP CALL VSEL20 JMPR CALLR
@@ -309,7 +251,7 @@
       )
       (do)
       (code i)
-      (binary '00' i)
+      (binary '000' i)
     )
     (slot1
       (= i NOP RET RTT JC JNC JMP CALL VSEL20 JMPR CALLR
@@ -321,10 +263,10 @@
       )
       (do)
       (code i)
-      (binary '01' i)
+      (binary '001' i)
     )
     (slot2
-      (= i NOP JMP
+      (= i NOP 
              VMOVCV2V
 	 VLOADO SLOADO VSTOREO SSTOREO LOAD LOADU VLOAD 
 	VLOADUR VLOADU VLOADR STORE STOREU STOREI VSTORE STOREUU
@@ -332,10 +274,10 @@
       )
       (do)
       (code i)
-      (binary '10' i)
+      (binary '010' i)
     )
     (slot3
-      (= i NOP JMP
+      (= i NOP 
              VMOVCV2V
 	 VLOADO SLOADO VSTOREO SSTOREO LOAD LOADU VLOAD
 	VLOADUR VLOADU VLOADR STORE STOREU STOREI VSTORE STOREUU
@@ -343,7 +285,7 @@
       )
       (do)
       (code i)
-      (binary '11' i)
+      (binary '011' i)
     )
     (NOP
       (do)

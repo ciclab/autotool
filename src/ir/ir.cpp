@@ -2,6 +2,26 @@
 #include <iostream>
 #include "def.h"
 using namespace std;
+void Ir::add_vliw_mode(int s,int o)
+{
+  vliw_mode_sig=s;
+  vliw_mode_off=o;
+  vliw_mode_set=true;
+}
+void Ir::output_vliw_mode(ofstream &fout)
+{
+  fout<<vliw_mode_set<<' '<<vliw_mode_sig<<' '<<vliw_mode_off<<endl;
+}
+void Ir::read_vliw_mode(ifstream &fin)
+{
+  fin>>vliw_mode_set>>vliw_mode_sig>>vliw_mode_off;
+}
+bool Ir::get_vliw_mode(int &sig,int & off)
+{
+  sig=vliw_mode_sig;
+  off=vliw_mode_off;
+  return vliw_mode_set;
+}
 Enum Ir::find_enum(string name)
 {
   FR(i,enumm)
@@ -75,6 +95,7 @@ void Ir::read_all(ifstream &fin)
   read_memory(fin);
   read_register(fin);
   read_pipeline(fin);
+  read_vliw_mode(fin);
   read_instr(fin);
   read_addr(fin);
 }
@@ -92,6 +113,7 @@ void Ir::output_all(ofstream &fout)
   output_memory(fout);
   output_register(fout);
   output_pipeline(fout);
+  output_vliw_mode(fout);
   output_instruction_set(fout);
   output_addr(fout);
 }

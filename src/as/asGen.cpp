@@ -431,6 +431,8 @@ int main(int argc,char *argv[])
   int max_binary_len(0);
   int max_slot_len(1);
   vector<pps> binary_func;
+  int vliw_mode_off,vliw_mode_sig;
+  bool vliw_mode_set=ir.get_vliw_mode(vliw_mode_sig,vliw_mode_off);
   FOR(i,0,instr_size)
     {
       if(!useful[i])
@@ -590,11 +592,26 @@ int main(int argc,char *argv[])
 	  // we assume it already appeared in solo slot instructions
 	  // if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
 	  string rbinary=binary;
+	  string rbinary_beg=binary;
+	  if(vliw_mode_set)
+	    {
+	      assert(vliw_mode_sig==1);
+	      if(binary.length())
+		{
+		  assert(binary.length()>vliw_mode_off);
+		  assert(vliw_mode_sig==1);
+		  assert(binary[vliw_mode_off]='0');
+		  rbinary_beg[vliw_mode_off]='1';
+		}
+	    }
 	  assert((rbinary.length()%8)==0);
 #ifdef LITTLE_END
 	  for(int i=0,j=rbinary.length()-8;i<j;i+=8,j-=8)
 	    for(int k=0;k<8;++k)
-	      swap(rbinary[i+k],rbinary[j+k]);
+	      {
+		swap(rbinary[i+k],rbinary[j+k]);
+		swap(rbinary_beg[i+k],rbinary_beg[j+k]);
+	      }
 #endif
 	      
 	  const binary_info *genDecInfo=checkBinary(rbinary,toks,toks_in_binary,
@@ -602,7 +619,7 @@ int main(int argc,char *argv[])
 	  cout<<n<<' '<<rbinary.length()<<' '<<genDecInfo<<endl;
 	  if(genDecInfo==NULL)
 	    {
-
+	      
 	      // dhout<<"int "<<n<<"(struct disassemble_info *,char *,int insnLen,bfd_vma pc);\n";
 	      dhout<<"int FUNC_"<<n<<"(char *);\n";
 	      // dcout<<"int "<<n<<"(struct disassemble_info *info,char *c,int insnLen,bfd_vma pc){\n";
@@ -610,12 +627,25 @@ int main(int argc,char *argv[])
 	      dcout<<"WST(c);\n";
 
 	      binary_func.push_back(pps(rbinary,n));
+
 	      if(rbinary.length())
 		FR(i,rbinary)
 		  if(*i=='-')
 		    dlout<<"[0|1]";
 		  else dlout<<'\"'<<*i<<'\"';
 	      dlout<<" {return "<<n<<";}\n";
+	      if(vliw_mode_set)
+		{
+		  assert(vliw_mode_sig);
+		  if(rbinary_beg.length())
+		    {
+		      FR(i,rbinary_beg)
+			if(*i=='-')
+			  dlout<<"[0|1]";
+			else dlout<<'\"'<<*i<<'\"';
+		    }
+		  dlout<<" {return "<<n<<"_beg"<<";}\n";
+		}
 	      dcout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
 	      
 	      dcout<<"assert(tmp!=0);\n";// suppress compiler warning:  unused variable ‘tmp’ [-Werror=unused-variable]
@@ -670,9 +700,15 @@ int main(int argc,char *argv[])
 	  if(bi!=NULL)
 	    {
 	      if(bi->func_name!=n)
-		dyout<<n<<" : "<<bi->func_name<<"{dis_list_len[dis_list_cnt]="<<rbinary.length()
-		     <<";dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<";++dis_list_cnt;};\n";
-	      else dytokout<<"%token "<<n<<endl;
+		{
+		  dyout<<n<<" : "<<bi->func_name<<"{dis_list_len[dis_list_cnt]="<<rbinary.length()
+		       <<";dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<";++dis_list_cnt;};\n";
+		}
+	      else
+		{
+		  dytokout<<"%token "<<n<<endl;
+		  dytokout<<"%token "<<n<<"_beg"<<endl;
+		}
 	    }
 	  else dyout<<n<<":{};\n";// TODO defalut to vliw seperator
 
@@ -749,9 +785,9 @@ int main(int argc,char *argv[])
 	  FR(i,args)
 	    {
 	      if(i!=args.begin())
-		yout<<" TOK_1 "; // TOK_1 is '|', used as seperator
+		yout<<" TOK_1 "; // TOK_1 is '|', used as seperator between slots
 	      yout<<i->first;
-	      dyout<<i->first<<' ';
+		dyout<<i->first<<' ';
 	    }
 	  yout<<";"<<endl;
 	  dyout<<";"<<endl;
@@ -776,7 +812,12 @@ int main(int argc,char *argv[])
 		  
 		  binary_info *bi=(binary_info*)rule2func.find(name);
 		  if(bi!=&emp)
-		    dyout<<name<<" {dis_list_len[dis_list_cnt]="<<name<<"_LEN "<<" ;dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<"; ++dis_list_cnt;}\n";
+		    {
+		      dyout<<name;
+		      if(i==args.begin())
+			dyout<<"_beg";
+		      dyout<<" {dis_list_len[dis_list_cnt]="<<name<<"_LEN "<<" ;dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<"; ++dis_list_cnt;}\n";
+		    }
 		  else dyout<<"{}"<<endl;
 		}
 	      yout<<" ; "<<endl;
@@ -838,6 +879,11 @@ int main(int argc,char *argv[])
   // calculate total length (including vliw)
   tout<<"for(cnt=0;cnt<instr_cnt;++cnt)\n\n";
   tout<<"{int i=0;\n";
+  if(vliw_mode_set)
+    {
+      assert(vliw_mode_sig==1);
+      tout<<"if(cnt==0) yyret[cnt]["<<vliw_mode_off<<"]='1';\n";
+    }
   tout<<"for(;yyret[cnt][i];++len_left,++i)\n;\n";
   tout<<"}\n";
   tout<<"len_left/=8;\n";

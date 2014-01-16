@@ -29,7 +29,11 @@ private:
   vector<Pipeline> pipeline;
   vector<Addr> addr;
   string top_rule_name;
+  bool vliw_mode_set;
+  int vliw_mode_sig;
+  int vliw_mode_off;
 public:
+  Ir(){vliw_mode_set=false;};
   //asgen interface
   Enum find_enum(string name);
   Type get_type(int);
@@ -46,6 +50,10 @@ public:
   string get_instr_code(int);
   void get_instr_reloc_info(int , vector<int> &);
   //reader writer interface
+  bool get_vliw_mode(int &,int &);
+  void add_vliw_mode(int,int);
+  void output_vliw_mode(ofstream &fout);
+  void read_vliw_mode(ifstream &fin);
   int addr_size();
   void get_addr(int,Addr &);
   void add_addr(Addr);
