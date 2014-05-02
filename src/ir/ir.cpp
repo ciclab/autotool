@@ -349,3 +349,19 @@ void Ir::output_addr(ofstream &fout)
     i->output(fout);
   fout<<endl;
 }
+int Ir::get_mem_size(int i)
+{
+  return memory[i].get_size();
+}
+int Ir::get_mem_width(int i)
+{
+  return memory[i].get_width();
+}
+string Ir::get_mem_name(int i)
+{
+  return memory[i].get_name();
+}
+int Ir::get_num_mem()
+{
+  return memory.size();
+}

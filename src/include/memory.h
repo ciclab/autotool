@@ -8,12 +8,14 @@ class Memory
  private:
   string name;
   int size;
-  string type;
-  string idx;
+  int width;
  public:
   Memory(){};
- Memory(string n,int s,string t,string i):name(n),size(s),type(t),idx(i){};
+ Memory(string n,int s, int w):name(n),size(s),width(w){};
   void read(ifstream &fin);
   void output(ofstream &fout);
+  int get_size();
+  int get_width();
+  string get_name();
 };
 #endif

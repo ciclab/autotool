@@ -183,13 +183,22 @@
     ( fetch_s )
     ( decode_s )
     ( execute_s )
+    ( memacc_s )
     ( writeback_s )
   )
   (memory
-    ( size 4096 )
+    ( mem1
+      // define a memory with 4096 * 4 bytes
+      ( size 4096 )
+      ( width 4 )
+    )
   )
   (function_unit)
   (register
+    ( pc
+      ( size 1 )
+      ( width int32 )
+    )
     ( gr_r
       ( size 32 )
       ( width int32 )
@@ -253,17 +262,17 @@
     (fetch_p)
     (decode_p)
     (execute_p)
+    (memacc_p)
     (writeback_p)
-    ( state imm11 )
-    ( binary imm128 )
-    ( valA0 int32 )
-    ( valB0 int32 )
-    ( valA1 int32 )
-    ( valB1 int32 )
-    ( valA2 int32 )
-    ( valB2 int32 )
-    ( valA3 int32 )
-    ( valB3 int32 )
+    ( state_p imm11 )
+    ( binary_p imm128 )
+    ( valA_p int32 )
+    ( valB_p int32 )
+    ( valC_p int32 )
+    ( pc_p int32 )
+    ( rd_p imm5 )
+    ( rs_p imm5 )
+    ( rt_p imm5 )
   )
   (instruction
     (top instrs)
@@ -364,13 +373,25 @@
     )
     (JMP
       (= a addr21Rel)
-      (do)
+      (do
+      // 表示在执行阶段修改pc的值
+        (execute_s
+	// 用一个cycle
+	  (cycle 1)
+	  (= pc a)
+	)
+      )
       (code 'jmp' ' ' a)
       (binary '000' a '0' '00' '01')
     )
     (JC
       (= a addr21Rel)
-      (do)
+      (do
+        (execute_s
+	  (cycle 1)
+	  (= pc a)
+	)
+      )
       (code 'jc' ' ' a)
       (binary '000' a '0' '01' '01')
     )
@@ -382,7 +403,8 @@
     )
     (CALL
       (= a addr21Abs)
-      (do)
+      (do
+      )
       (code 'call' ' ' a)
       (binary '000' a '0' '11' '01')
     )
@@ -758,7 +780,22 @@
       (= i MOVI_E)
       (= rd GR_OFF_BAR_MR_E )
       (= imm imm16)
-      (do)
+      (do
+        (decode_s
+	  (= valA imm )
+	  (= valB ([] gr_r rd) )
+	)
+	(execute_s
+          (if (== i 0 )
+	    (= valA ( | ( & valA 65535 ) (<< valB 16 ) ) )
+	    (= valA ( | ( & valA 4294901760 ) valB ) )
+	  )
+	)
+	(writeback_s
+	  // 认为只支持gr,由于目前的寄存器定义过于奇特
+	  (= ([] gr_r rd ) valA0 )
+	)
+      )
       (code i ' ' rd ' ' imm )
       (binary '101' rd imm '0' i '01' )
     )
@@ -783,7 +820,39 @@
       (= rd GR_E)
       (= rs GR_E)
       (= imm imm11)
-      (do)
+      (do
+        (decode_s
+	  ( clock 1 )
+	  (if (slot0)
+	    (= valB0 ([] gr rs) )
+	  )
+	  (if (slot1)
+	    (= valB1 ([] gr rs) )
+	  )
+	)
+        (execute_s
+	  ( clock 1 )
+	  (if ( slot0 )
+  	    ( = valA0
+	      ( + valB0 i )
+	    )	
+	  )
+	  (if ( slot1 )
+	    (= valA1
+	      (+ valB0 i)
+	    )
+	  )
+	)
+	(writeback_s
+	  (clock 1)
+	  (if ( slot0 )
+	    ( = ([] gr rs) valA0 )
+	  )
+	  (if ( slot1 )
+	    ( = ([] gr rs) valA1 )
+	  )
+	)
+      )
       (code i ' ' rd ' ' rs ' ' imm )
       (binary '110' '0' rd '0' rs imm i '00' )
     )
