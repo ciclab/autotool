@@ -179,11 +179,38 @@
   )
   (wire
   )
-  (stage)
-  (memory)
+  (stage
+    ( fetch_s )
+    ( decode_s )
+    ( execute_s )
+    ( writeback_s )
+  )
+  (memory
+    ( size 4096 )
+  )
   (function_unit)
-  (register)
-  (pipe_line)
+  (register
+    ( gr_r
+      ( size 32 )
+      ( width int32 )
+    )
+    ( vr_r
+      ( size 16 )
+      ( width 160 )
+    )
+    ( off_r
+      ( size 4 )
+      ( width 32 )
+    )
+    ( bar_r
+      ( size 4 )
+      ( width 32 )
+    )
+    ( mr_r
+      ( size 4 )
+      ( width  32 )
+    )
+  )
   (type
     (_addr21
       (width 21)
@@ -213,6 +240,30 @@
       (width 5)
       (flag signed)
     )
+    ( int128
+      ( width 128 )
+      ( flag signed)
+    )
+    ( int32
+      ( width 32 )
+      ( flag signed )
+    )
+  )
+  (pipe_line
+    (fetch_p)
+    (decode_p)
+    (execute_p)
+    (writeback_p)
+    ( state imm11 )
+    ( binary imm128 )
+    ( valA0 int32 )
+    ( valB0 int32 )
+    ( valA1 int32 )
+    ( valB1 int32 )
+    ( valA2 int32 )
+    ( valB2 int32 )
+    ( valA3 int32 )
+    ( valB3 int32 )
   )
   (instruction
     (top instrs)
