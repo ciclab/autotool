@@ -94,5 +94,12 @@ public:
   int get_mem_width(int i);
   string get_mem_name(int i);
   int get_num_mem();
+  int get_num_reg();
+  string get_reg_name(int i);
+  int get_reg_size(int i);
+  int get_reg_width(int i);
+  int find_type(string);
+  string get_type_name(int i);
+  int get_type_width(int i);
 };
 #endif

@@ -110,7 +110,7 @@ void Instruction::output_arglist(ofstream &fout)
 {
   fout<<arglist.size()<<endl;
   FR(i,arglist)
-    fout<<i->first<<' '<<i->second<<endl;
+    fout << i.first << ' ' << i.second <<endl;
   // for(int i=0;i<arglist.size();++i)
   //   fout<<arglist[i].first<<' '<<arglist[i].second<<endl;
 }
@@ -183,13 +183,13 @@ void Instruction::output(ofstream &fout)
   fout<<"\""<<binary<<"\""<<endl;
   fout<<off.size()<<endl;
   FR(i,off)
-    fout<<i->first<<' '<<i->second<<' ';
+    fout<<i.first<<' '<<i.second<<' ';
   // for(int i=0;i<off.size();++i)
   //   fout<<off[i].first<<' '<<off[i].second<<' ';
   fout<<endl;
   fout<<enum_var.size()<<endl;
   FR(i,enum_var)
-    fout<<'"'<<*i<<'"'<<' ';
+    fout << '"' << i << '"' << ' ';
   // for(int i=0;i<enum_var.size();++i)
   //   fout<<'"'<<enum_var[i]<<'"'<<' ';
   fout<<endl;
@@ -211,6 +211,6 @@ void Instruction::output_reloc_info(ofstream &fout)
 {
   fout<<reloc_info.size()<<endl;
   FR(i,reloc_info)
-    fout<<*i<<' ';
+    fout << i << ' ';
   fout<<endl;
 }

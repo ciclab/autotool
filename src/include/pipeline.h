@@ -7,10 +7,10 @@ class Pipeline
 {
  private:
   string name;
-  string width;
+  int width;
  public:
   Pipeline(){};
- Pipeline(string n,string w):name(n),width(w){};
+ Pipeline(string n,int w):name(n),width(w){};
   void read(ifstream &);
   void output(ofstream &);
 };

@@ -62,16 +62,16 @@ static void dfs_gen(ofstream & out,vector<pps> &binary_func,vector<int> &in,int 
       return;
     }
   //test if all depth bit in existing binary is '-'
-  FR(i,in)
+  FRA(i,in)
     if((int)binary_func[*i].first.length()<=depth)
       {
 	cerr<<"binary ambitious definition\n";
-	FR(j,in)
+	FRA(j,in)
 	  cerr<<binary_func[*j].first<<' '<<binary_func[*j].second<<endl;
 	assert(0);
       }
   vector<int> tmp0,tmp1;
-  FR(i,in)
+  FRA(i,in)
     {
       char z=(binary_func[*i].first)[depth];
       if(z=='0' || z=='-')
@@ -113,7 +113,7 @@ static string int2binary(int w,int v)
 }
 static bool check_is_int(string c)
 {
-  FR(i,c)
+  FRA(i,c)
     if(*i<'0' || *i>'9')
       return false;
   return (int)c.length()>0;
@@ -403,9 +403,9 @@ int main(int argc,char *argv[])
 	    {
 	      vector<pair<string,string> > args;
 	      ir.get_instr_arglist(i,args);
-	      FR(i,args)
+	      FRA(i,args)
 		packSubRuleName.insert(i->first,(void*)1);
-	      FR(i,args)
+	      FRA(i,args)
 		{
 		  for(int j=0;j<(int)i->second.size();++j)
 		    {
@@ -443,7 +443,7 @@ int main(int argc,char *argv[])
       if(type=="e_notpack")
 	{
 #if ASGEN_COUT==1
-	  FR(j,off)
+	  FRA(j,off)
 	    cout<<j->first<<' '<<j->second<<endl;
 	  cout<<endl<<endl;
 #endif
@@ -476,7 +476,7 @@ int main(int argc,char *argv[])
 	  // right_shift.resize(off.size());
  	  vector<string> toks;//record string tokens in code
 	  vector<int> toks_in_binary;
-	  for(typeof(code.begin()) j=code.begin();j!=code.end();)
+	  for(auto j=code.begin();j!=code.end();)
 	    {
 	      ++seg;
 	      switch(*j)
@@ -511,7 +511,7 @@ int main(int argc,char *argv[])
 		      // 	{
 		      // 	  cout<<code<<endl;
 		      // 	  yout<<offi<<' '<<off.size()<<' '<<seg<<endl;
-		      // 	  FR(i,off)
+		      // 	  FRA(i,off)
 		      // 	    yout<<i->first<<' '<<i->second<<endl;
 		      // 	}
 		      assert(*j==c_type_beg || *j==c_enum_beg || *j==c_addr_beg);
@@ -525,7 +525,7 @@ int main(int argc,char *argv[])
 		      // 	{
 		      // 	  cout<<code<<endl;
 		      // 	  cout<<offi<<' '<<off.size()<<' '<<seg<<endl;
-		      // 	  FR(i,off)
+		      // 	  FRA(i,off)
 		      // 	    cout<<i->first<<' '<<i->second<<endl;
 		      // 	  cout<<binary<<endl;
 		      // 	}
@@ -559,7 +559,7 @@ int main(int argc,char *argv[])
 		      // if(token.compare(0,5,"type_")==0 || token.compare(0,5,"addr_")==0)
 		      if(isTypeAddr(token))
 			{// is type or addr 
-			  for(typeof(token.rbegin()) i=token.rbegin();;++i)
+			  for(auto i = token.rbegin();;++i)
 			    if(*i=='_')
 			      {
 				++i;
@@ -629,7 +629,7 @@ int main(int argc,char *argv[])
 	      binary_func.push_back(pps(rbinary,n));
 
 	      if(rbinary.length())
-		FR(i,rbinary)
+		FRA(i,rbinary)
 		  if(*i=='-')
 		    dlout<<"[0|1]";
 		  else dlout<<'\"'<<*i<<'\"';
@@ -639,7 +639,7 @@ int main(int argc,char *argv[])
 		  assert(vliw_mode_sig);
 		  if(rbinary_beg.length())
 		    {
-		      FR(i,rbinary_beg)
+		      FRA(i,rbinary_beg)
 			if(*i=='-')
 			  dlout<<"[0|1]";
 			else dlout<<'\"'<<*i<<'\"';
@@ -714,7 +714,7 @@ int main(int argc,char *argv[])
 
 	  yout<<"int i;\ni^=i;\n";
 	  vector<bfd_info> instr_bfd_info;
-	  FR(i,off)
+	  FRA(i,off)
 	    {
 	      //yout<<"for(i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
 	      if(need_bfd[(int)(i-off.begin())])
@@ -752,7 +752,7 @@ int main(int argc,char *argv[])
 	  if(genDecInfo==NULL )
 	    {
 	      //gether bfd_info for bfd
-	      FR(i,instr_bfd_info)
+	      FRA(i,instr_bfd_info)
 		{
 		  //bfd_info(string n,int o,int ol,int il,int rs,bool p):
 		  // int o=binary.length()-(i->first+i->second);//off set
@@ -782,7 +782,7 @@ int main(int argc,char *argv[])
 	  ir.get_instr_arglist(i,args);
 	  yout<<n<<" : ";
 	  dyout<<n<<" : ";
-	  FR(i,args)
+	  FRA(i,args)
 	    {
 	      if(i!=args.begin())
 		yout<<" TOK_1 "; // TOK_1 is '|', used as seperator between slots
@@ -792,7 +792,7 @@ int main(int argc,char *argv[])
 	  yout<<";"<<endl;
 	  dyout<<";"<<endl;
 	  max_slot_len=max(max_slot_len,(int)args.size());
-	  FR(i,args)
+	  FRA(i,args)
 	    {
 	      yout<<i->first<<" : ";
 	      dyout<<i->first<<" : ";
@@ -831,7 +831,7 @@ int main(int argc,char *argv[])
   // dcout<<"int dis(struct disassemble_info *info,char * c,bfd_vma pc)\n{";
   // dcout<<"void * unusd=(void*)s2hex;WST(unusd);unusd=(void*)s2int;WST(unusd);\n";
   vector<int> tmp;
-  // FR(i,binary_func)
+  // FRA(i,binary_func)
   //   tmp.push_back(i-binary_func.begin());
   // dfs_gen(dcout,binary_func,tmp,0);
   dlout<<"%%\n";
@@ -935,7 +935,7 @@ int main(int argc,char *argv[])
   tout<<"if (fixP->fx_addsy == NULL && !fixP->fx_pcrel && fixP->fx_tcbit == 0)\n";
   tout<<"fixP->fx_done = 1;\n";
   tout<<"switch (fixP->fx_r_type) {\n";
-  FR(i,bfd_list)
+  FRA(i,bfd_list)
     {
       tout<<"case "<<i->name<<":"<<endl;
       tout<<"if(fixP->fx_done)\n{\n";
@@ -984,7 +984,7 @@ indent ./tc-dummy.c");
   // output reloc info 
   ofstream bout("coff-dummy2");
   bout<<"static reloc_howto_type mips_howto_table[] =\n{\n";
-  FR(i,bfd_list)
+  FRA(i,bfd_list)
     {
       if(i!=bfd_list.begin())
 	bout<<",\n";
@@ -1019,7 +1019,7 @@ bfd_reloc_code_real_type code)\n{";
   bout<<"\
   switch (code)\n\
     {\n";
-  FR(i,bfd_list)
+  FRA(i,bfd_list)
     {
       bout<<"case "<<i->name<<":"<<endl;
       bout<<"return "<<"mips_howto_table+"<<(int)(i-bfd_list.begin())<<";\nbreak;"<<endl;
@@ -1033,7 +1033,7 @@ bfd_reloc_code_real_type code)\n{";
   if(bfd_list.size()>0)
     {
       // for content in bfd/doc/reloc.c
-      FR(i,bfd_list)
+      FRA(i,bfd_list)
 	{
 	  if(i==bfd_list.begin())
 	    rout<<"ENUM\n  "<<i->name<<endl;
@@ -1049,7 +1049,7 @@ indent ./reloc.c");
   if(bfd_list.size()>0)
     {
       // for content in bfd/doc/reloc.texi
-      FR(i,bfd_list)
+      FRA(i,bfd_list)
 	{
 	  if(i==bfd_list.begin())
 	    rtout<<"@deffn {} "<<i->name<<endl;
@@ -1147,7 +1147,7 @@ indent ./reloc.c");
 
 
   yout<<"rule_int: TOK_INT {$$=$1;}";
-  FR(i,int_list)
+  FRA(i,int_list)
     yout<<"| TOK_"<<i->first<<" {$$="<<i->second<<";};"<<endl;
   yout<<";\n";
 

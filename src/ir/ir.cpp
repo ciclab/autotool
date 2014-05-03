@@ -25,8 +25,8 @@ bool Ir::get_vliw_mode(int &sig,int & off)
 Enum Ir::find_enum(string name)
 {
   FR(i,enumm)
-    if((*i).enum_name()==name)
-      return *i;
+    if( i.enum_name() == name)
+      return i;
   //should always find
   Enum tmp;
   assert(0);
@@ -130,7 +130,7 @@ void Ir::output_pipeline(ofstream &fout)
   //fout<<"pipeline"<<endl;
   fout<<pipeline.size()<<endl;
   FR(i,pipeline)
-    i->output(fout);
+    i.output(fout);
   // for(size_t i=0;i<pipeline.size();++i)
   //   pipeline[i].output(fout);
 }
@@ -151,7 +151,7 @@ void Ir::output_register(ofstream & fout)
   //fout<<"register"<<endl;
   fout<<registers.size()<<endl;
   FR(i,registers)
-    i->output(fout);
+    i.output(fout);
   // for(int i=0;i<registers.size();++i)
   //   registers[i].output(fout);
   fout<<endl;
@@ -173,7 +173,7 @@ void Ir::output_memory(ofstream &fout)
   //fout<<"memory"<<endl;
   fout<<memory.size()<<endl;
   FR(i,memory)
-    i->output(fout);
+    i.output(fout);
   // for(int i=0;i<memory.size();++i)
   //   memory[i].output(fout);
   fout<<endl;
@@ -243,7 +243,7 @@ void Ir::output_wire(ofstream &fout)
   //fout<<"wire"<<endl;
   fout<<wire.size()<<endl;
   FR(i,wire)
-    i->output(fout);
+    i.output(fout);
   // for(int i=0;i<wire.size();++i)
   //   wire[i].output(fout);
   fout<<endl;
@@ -263,7 +263,7 @@ void Ir::output_type(ofstream &fout)
   //fout<<"type"<<endl;
   fout<<type.size()<<endl;
   FR(i,type)
-    i->output(fout);
+    i.output(fout);
   // for(int i=0;i<type.size();++i)
   //   type[i].output(fout);
   fout<<endl;
@@ -293,7 +293,7 @@ void Ir::output_stage(ofstream &fout)
   //fout<<"stage"<<endl;
   fout<<stage.size()<<endl;
   FR(i,stage)
-    i->output(fout);
+    i.output(fout);
   // for(int i=0;i<stage.size();++i)
   //   stage[i].output(fout);
   fout<<endl;
@@ -314,7 +314,7 @@ void Ir::output_enum(ofstream & fout)
   //fout<<"enum"<<endl;
   fout<<enumm.size()<<endl;
   FR(i,enumm)
-    i->output(fout);
+    i.output(fout);
   // for(int i=0;i<enumm.size();++i)
   //   enumm[i].output(fout);
   fout<<endl;
@@ -346,7 +346,7 @@ void Ir::output_addr(ofstream &fout)
 {
   fout<<addr.size()<<endl;
   FR(i,addr)
-    i->output(fout);
+    i.output(fout);
   fout<<endl;
 }
 int Ir::get_mem_size(int i)
@@ -364,4 +364,39 @@ string Ir::get_mem_name(int i)
 int Ir::get_num_mem()
 {
   return memory.size();
+}
+int Ir::get_num_reg()
+{
+  return registers.size();
+}
+string Ir::get_reg_name(int i)
+{
+  return registers[i].get_name();
+}
+int Ir::get_reg_size(int i)
+{
+  return registers[i].get_size();
+}
+int Ir::get_reg_width(int i)
+{
+  return registers[i].get_width();
+}
+int Ir::find_type(string name)
+{
+  // iterator all possible
+  // can sort and then binary search, or use hash table to
+  // accelerate
+  int num = type_size();
+  for( int i = 0; i < num; ++i )
+    if( type[i].get_name() == name )
+      return i;
+  return -1;
+}
+string Ir::get_type_name(int i)
+{
+  return type[i].get_name();
+}
+int Ir::get_type_width(int i)
+{
+  return type[i].get_len();
 }

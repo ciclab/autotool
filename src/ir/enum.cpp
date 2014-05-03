@@ -19,9 +19,9 @@ string Enum::enum_name()
 int Enum::width()
 {
   int m=0;
-  FR(i,value_list)
-    if(m<*i)
-      m=*i;
+  for( auto i : value_list )
+    if( m < i )
+      m = i;
   int w=0;
   for(int i=1;i<=m;i<<=1,++w)
     ;
@@ -39,11 +39,11 @@ void Enum::add(string name,string code,int value)
 void Enum::output(ofstream & fout)
 {
   fout<<name<<' '<<list.size()<<endl;
-  FR(i,list)
-    fout<<i->first<<' '<<i->second<<' ';
+  for( auto i : list )
+    fout << i.first << ' ' << i.second << ' ';
   fout<<endl;
-  FR(i,value_list)
-    fout<<*i<<' ';
+  for( auto i : value_list )
+    fout << i << ' ';
   // for(int i=0;i<list.size();++i)
   //   fout<<list[i].first<<' '<<list[i].second<<' ';
   fout<<endl;

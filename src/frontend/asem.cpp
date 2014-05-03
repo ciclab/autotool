@@ -18,7 +18,7 @@
 // v should be positive
 bool isNumber(const string s)
 {
-  FR(i,s)
+  FRA(i,s)
     if(*i<'0' || *i>'9')
       return false;
   return true;
@@ -704,8 +704,8 @@ void Asem::switch_chg(vector<string> &var_name,
 		{
 		  // 分成这个变量是var.value 和 var两种
 		  // 前一种对应变量是一个枚举类型
-		  int pos=ivec[1].name.find(".value");
-		  if(pos!=(typeof(pos))string::npos)
+		  auto pos=ivec[1].name.find(".value");
+		  if(pos!=string::npos)
 		    {
 		      // 第一种情况
 		      // 由于现在对enum类型的是不展开，所以在执行时再处理
@@ -739,6 +739,7 @@ void Asem::switch_chg(vector<string> &var_name,
 void Asem::dfs_insert_hash(string pwd)
 {
   // 如果是定义的变量或者是保留词
+  cout << pwd << endl;
   pwd+=".";
   if(ivec[0].type==type_is_string1)
     {
