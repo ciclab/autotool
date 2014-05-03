@@ -1,6 +1,8 @@
 #include "asem.h"
 #include <cstdlib>
 #include "def.h"
+#include <unordered_map>
+using namespace std;
 //#define DOT_Y
 // 返回v的二进制，宽度能表示w项（从0开始）
 // static string num2string(int v,int w)
@@ -537,6 +539,32 @@ int Asem::unfold_addr(ofstream &yout,ofstream & dot_c_out)
   unfolded_list[k][0].enum_name.push_back((string)"");
   return k;
 }
+void dfs_replace( Asem *a, unordered_map<string,string> &tab)
+{
+  if( a )
+    {
+      for( int i = 0; i < (int)a->ivec.size(); ++i )
+	{
+	  if( a->ivec[i].is_vec() )
+	    {
+	      dfs_replace( &(a->ivec[i]), tab);
+	    }
+	  else if( a->ivec[i].type == type_is_string1 )
+	    {
+	      if( tab.find( a->name ) != tab.end() )
+		a->name = tab[ a->name ];
+	    }
+	}
+    }
+}
+void replace_name( Asem * a, vector<string> &from, vector<string> &to)
+{
+  unordered_map<string,string> tab;
+  assert( from.size() == to.size() );
+  for( int i = 0; i < (int)from.size(); ++i )
+    tab[ from[i] ] = to[i];
+  dfs_replace(a, tab);
+}
 // 对instruction展开
 int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out)
 {
@@ -631,6 +659,7 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
   Asem & code=*(this->find("code"));
   Asem & binary=*(this->find("binary"));
   Asem * doo=this->find("do");
+  replace_name( doo, var_name, var_uni_name);
   Asem & pack=*(this->find("pack"));
   if(&code==NULL)
     {
