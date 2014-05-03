@@ -207,7 +207,8 @@ void Ir::read_instr(ifstream &fin)
 }
 void Ir::add_instruction(const string &name,string &c,string &b,do_content &d,
 			 vector<pp> &off,vector<string> &enum_var,vector<pair<string,string> > & al,
-			 vector<int> & ri,string type)
+			 vector<int> & ri,string type,
+			 vector<string> &vn)
 {
   int t=instruction_set.size();
   instruction_set.resize(t+1);
@@ -220,6 +221,7 @@ void Ir::add_instruction(const string &name,string &c,string &b,do_content &d,
   instruction_set[t].set_name(name);
   instruction_set[t].set_reloc_info(ri);
   instruction_set[t].set_type(type);
+  instruction_set[t].set_varname(vn);
 }
 int Ir::addr_size()
 {
@@ -399,4 +401,16 @@ string Ir::get_type_name(int i)
 int Ir::get_type_width(int i)
 {
   return type[i].get_len();
+}
+int Ir::get_num_pipeline()
+{
+  return pipeline.size();
+}
+string Ir::get_pipeline_name(int i)
+{
+  return pipeline[i].get_name();
+}
+int Ir::get_pipeline_width( int i )
+{
+  return pipeline[i].get_width();
 }

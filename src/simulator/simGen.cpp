@@ -87,5 +87,14 @@ void regGen(Ir &ir, ofstream &out)
 
 void pipelineGen(Ir &ir, ofstream &out)
 {
-  
+  int num = ir.get_num_pipeline();
+  out << " struct pl \n{";
+  for( int i = 0; i < num; ++i )
+    {
+      string name = ir.get_pipeline_name(i);
+      int width = ir.get_pipeline_width(i);
+      string typeName = autoType( width, true);
+      out << typeName << ' ' << name << ';' << endl; 
+    }
+  out << "};" << endl;
 }

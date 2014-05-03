@@ -70,7 +70,7 @@ public:
   void read_wire(ifstream &fin);
   void add_instruction(const string &name,string &c,string &b,do_content &d,
 		       vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al,
-		       vector<int> &ri,string type);
+		       vector<int> &ri,string type, vector<string> &vn);
   void output_instruction_set(ofstream &fout);
   void read_instr(ifstream &fin);
   void output_type(ofstream &fout);
@@ -101,5 +101,8 @@ public:
   int find_type(string);
   string get_type_name(int i);
   int get_type_width(int i);
+  int get_num_pipeline();
+  int get_pipeline_width(int i);
+  string get_pipeline_name(int i);
 };
 #endif

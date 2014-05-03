@@ -13,5 +13,7 @@ class Pipeline
  Pipeline(string n,int w):name(n),width(w){};
   void read(ifstream &);
   void output(ofstream &);
+  string get_name();
+  int get_width();
 };
 #endif

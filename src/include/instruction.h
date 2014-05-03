@@ -21,12 +21,15 @@ private:
   string binary;
   vector<pp> off;
   vector<string> enum_var;
+  vector<string> var_name;
   do_content doo;
   vector<pair<string,string>  > arglist;
   vector<int> reloc_info;
 public:
   void output_arglist(ofstream &fout);
+  void output_varname(ofstream &fout);
   void read_arglist(ifstream &fin);
+  void read_varname(ifstream &fin);
   void read_reloc_info(ifstream &fin);
   void set_arglist(vector<pair<string,string>  > & al);
   void set_code(string &code);
@@ -34,6 +37,7 @@ public:
   void set_off(vector<pp> &o);
   void set_do(do_content &d);
   void set_name(const string & n);
+  void set_varname(vector<string>&);
   void set_enum_var(vector<string> &ev);
   void set_reloc_info(vector<int> &);
   void set_type(string type);

@@ -158,6 +158,7 @@ int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
 
 void Asem::dfs_unfold_instr(const string &rule_name,
 			    vector<string> &var_name, // 变量名字
+			    vector<string> &var_uni_name, // 为变量取的唯一的名字，用来替换do里的变量
 			    vector<vector<string> > &var_choose_name, // 变量可选的值的名字
 			    vector<vector<int> > &var_val,		// 变量可选值对应unfolded_list的索引
 			    vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
@@ -169,8 +170,8 @@ void Asem::dfs_unfold_instr(const string &rule_name,
 {
   if(lev>=(int)var_name.size())
     {
-	eval_unfold(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
-		    code,binary,doo,r);
+      eval_unfold(rule_name,var_name,var_uni_name, var_choose_name,var_val,var_choosed_val,
+		  code,binary,doo,r);
     }
   else
     for(int i=0;i<(int)var_val[lev].size();++i)
@@ -181,7 +182,7 @@ void Asem::dfs_unfold_instr(const string &rule_name,
 	  {
 	    // 第i个值中第j个展开项
 	    var_choosed_val[lev].second=j;
-	    dfs_unfold_instr(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
+	    dfs_unfold_instr(rule_name,var_name, var_uni_name,var_choose_name,var_val,var_choosed_val,
 			     code,binary,doo,lev+1,r);
 	  }
       }
@@ -190,6 +191,7 @@ void Asem::dfs_unfold_instr(const string &rule_name,
 // 每个变量已经定好取值后计算code，binary，do并保存到r中
 void Asem::eval_unfold(const string &rule_name,
 		       vector<string> &var_name,
+		       vector<string> &var_uni_name, 
 		       vector<vector<string> >&var_choose_name,
 		       vector<vector<int> >&var_val,
 		       vector<pair<int,int> > &var_choosed_val,
@@ -291,7 +293,8 @@ void Asem::eval_unfold(const string &rule_name,
 	{
 	  // 目前只可能是switch语句
 	  assert(binary.ivec[i].ivec[0].name==(string)"switch");
-	  
+	  // 暂时不支持
+	  assert(0);
 	  // 找到switch中指定的变量在var_name中的序号
 	  int j=0;
 	  for(;j<(int)var_name.size() && var_name[j]!=binary.ivec[i].ivec[1].name;++j)
@@ -321,6 +324,16 @@ void Asem::eval_unfold(const string &rule_name,
 	{
 	  r[k].off_in_code.push_back(unfolded_list[a][b].off_in_code[j]+oc);
 	  r[k].off_in_binary.push_back(unfolded_list[a][b].off_in_binary[j]+ob);
+	  if( unfolded_list[a][b].var_name.size() != unfolded_list[a][b].off_in_code.size() )
+	    {
+	      // we can judge var[i] is a enum or type, but not a rule
+	      // in this case, size of var_name should be zero
+	      assert( unfolded_list[a][b].var_name.size() == 0 &&
+		       unfolded_list[a][b].off_in_code.size() == 1 );
+	      r[k].var_name.push_back( var_uni_name[i] );
+	    }
+	  else
+	    r[k].var_name.push_back( unfolded_list[a][b].var_name[j] );
 	  r[k].reloc_info.push_back(unfolded_list[a][b].reloc_info[j]);
 	  if(unfolded_list[a][b].enum_name[j].length()>0)
 	    r[k].enum_name.push_back(var_name[i]+(string)"#"+unfolded_list[a][b].enum_name[j]);
@@ -572,11 +585,11 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
 	      }
 	    else
 	      {// 不然报错
-		cout<<name<<endl;
+		cerr << name << endl;
 		assert(0);
 	      }
 	  }
-	
+
 #ifdef DOT_Y
 	yout<<rule_name<<'_'<<ivec[i].ivec[1].name<<':'<<' ';
 	// every varibale in rule correspond to a global variable in .y 
@@ -600,6 +613,14 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
   dot_c_out<<"}"<<endl;
   yout<<"};"<<endl;
 #endif  
+
+	// 为所有变量取唯一的名字
+  vector<string> var_uni_name;
+  for( auto i : var_name)
+    {
+      string name = rule_name + "_" + i;
+      var_uni_name.push_back( name );
+    }
 
   // 在unfolded_list和unfolded_list_type新增加一项
   int k=this->unfolded_list.size();
@@ -640,7 +661,7 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
       vector<pair<int,int> > var_choosed_val;
       var_choosed_val.resize(var_name.size());
       // 针对变量取不同值的时候得到展开的code，binary和do
-      dfs_unfold_instr(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
+      dfs_unfold_instr(rule_name,var_name,var_uni_name, var_choose_name,var_val,var_choosed_val,
 		       code,binary,doo,0,unfolded_list[k]);
     }
   else
@@ -739,7 +760,6 @@ void Asem::switch_chg(vector<string> &var_name,
 void Asem::dfs_insert_hash(string pwd)
 {
   // 如果是定义的变量或者是保留词
-  cout << pwd << endl;
   pwd+=".";
   if(ivec[0].type==type_is_string1)
     {

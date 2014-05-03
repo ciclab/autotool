@@ -260,7 +260,7 @@
   )
   (pipe_line
     ( state_p imm11 )
-    ( binary_p imm128 )
+    ( binary_p int128 )
     ( valA_p int32 )
     ( valB_p int32 )
     ( valC_p int32 )

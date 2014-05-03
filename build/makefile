@@ -22,6 +22,9 @@ binutils: y.c y.h l.c l.h coff-dummy.c tc-dummy.c dis_as.c dis_as.h dis_l.h dis_
 simulator: simGen.o ir.o libir.a
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
+sim: simulator out
+	./simulator out out2
+
 strstack.o: strstack.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 

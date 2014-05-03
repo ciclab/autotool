@@ -22,6 +22,10 @@ void Instruction::set_type(string t)
 {
   type=t;
 }
+void Instruction::set_varname( vector<string> &vn)
+{
+  var_name = vn;
+}
 void Instruction::set_reloc_info(vector<int> & ri)
 {
   reloc_info=ri;
@@ -122,6 +126,17 @@ void Instruction::read_arglist(ifstream &fin)
   for(int i=0;i<num;++i)
     fin>>arglist[i].first>>arglist[i].second;
 }
+void Instruction::read_varname(ifstream &fin)
+{
+  int num;
+  fin >> num;
+  for( int i = 0; i < num; ++i )
+    {
+      string name;
+      fin >> name;
+      var_name.push_back( name );
+    }
+}
 string read_quoted_str(ifstream &fin)
 {
   string r;
@@ -174,6 +189,7 @@ void Instruction::read(ifstream &fin)
   read_arglist(fin);
   read_do(fin);
   read_reloc_info(fin);
+  read_varname(fin);
 }
 void Instruction::output(ofstream &fout)
 {
@@ -198,6 +214,15 @@ void Instruction::output(ofstream &fout)
   output_do(fout);
   //fout<<"!!do_end"<<endl;
   output_reloc_info(fout);
+  
+  output_varname(fout);
+}
+void Instruction::output_varname(ofstream &fout)
+{
+  fout << var_name.size() << endl;;
+  for( auto i : var_name )
+    fout << i << ' ';
+  fout << endl;
 }
 void Instruction::read_reloc_info(ifstream &fin)
 {
