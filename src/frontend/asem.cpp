@@ -166,14 +166,16 @@ void Asem::dfs_unfold_instr(const string &rule_name,
 			    vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
 			    Asem &code,				// 待展开的code对应asem
 			    Asem &binary,				// 待展开的binary对应asem
-			    Asem *doo,				// 待展开do对应的asem
+			    // Asem *doo,				// 待展开do对应的asem
 			    int lev,					// 当前枚举到第lev个变量
-			    vector<triple> &r)			// 保存展开结果
+			    vector<triple> &r,			// 保存展开结果
+			    int do_seq)
 {
   if(lev>=(int)var_name.size())
     {
       eval_unfold(rule_name,var_name,var_uni_name, var_choose_name,var_val,var_choosed_val,
-		  code,binary,doo,r);
+		  code,binary,// doo,
+		  r, do_seq);
     }
   else
     for(int i=0;i<(int)var_val[lev].size();++i)
@@ -185,7 +187,8 @@ void Asem::dfs_unfold_instr(const string &rule_name,
 	    // 第i个值中第j个展开项
 	    var_choosed_val[lev].second=j;
 	    dfs_unfold_instr(rule_name,var_name, var_uni_name,var_choose_name,var_val,var_choosed_val,
-			     code,binary,doo,lev+1,r);
+			     code,binary,// doo,
+			     lev+1,r, do_seq);
 	  }
       }
 }
@@ -199,8 +202,9 @@ void Asem::eval_unfold(const string &rule_name,
 		       vector<pair<int,int> > &var_choosed_val,
 		       Asem &code,
 		       Asem &binary,
-		       Asem *doo,
-		       vector<triple> &r
+		       // Asem *doo,
+		       vector<triple> &r,
+		       int do_seq
 		       )
 {
   // 记录变量在code中出现的位置，目前认为一个变量在code中只出现一次
@@ -237,6 +241,7 @@ void Asem::eval_unfold(const string &rule_name,
       triple & t = unfolded_list[var_val[0][var_choosed_val[0].first]][var_choosed_val[0].second];
       r[k].code = t.code;
       r[k].arg_list = t.arg_list;
+      r[k].do_list.push_back( do_seq );
     }
   
   // 对code和binary的求值应该可以写成函数
@@ -316,12 +321,15 @@ void Asem::eval_unfold(const string &rule_name,
 	}
     }
   // 计算新生成的code offset和binary offset 信息
+  // 还有do的信息
+  r[k].do_list.push_back( do_seq );
   for(int i=0;i<(int)var_val.size();++i)
     {
       int a=var_val[i][var_choosed_val[i].first];
       int b=var_choosed_val[i].second;
       int oc=var_off_in_code[i];
       int ob=var_off_in_bin[i];
+      r[k].do_list.insert( r[k].do_list.end(), unfolded_list[a][b].do_list.begin(), unfolded_list[a][b].do_list.end() );
       for(int j=0;j<(int)unfolded_list[a][b].off_in_code.size();++j)
 	{
 	  r[k].off_in_code.push_back(unfolded_list[a][b].off_in_code[j]+oc);
@@ -345,10 +353,10 @@ void Asem::eval_unfold(const string &rule_name,
   // 处理do描述
   // 要做的包括
   // 代换do表述中变量的do
-  if(doo)
-    {
+  // if(doo)
+  //   {
       // copy content in do  description
-      (*doo).dfs_copy_content(r[k].doo);
+      // (*doo).dfs_copy_content(r[k].doo);
       // if((*doo).ivec.size()>2)
       // 	cout<<k<<' '<<(*doo).ivec[1].ivec.size()<<' '<<r[k].doo.ivec[1].ivec.size()<<endl;
       // 对可能出现的switch中的变量进行代换
@@ -383,7 +391,7 @@ void Asem::eval_unfold(const string &rule_name,
 
       //r[k].doo.push_back(analyze_do_expr((*doo).ivec[i]));
       // }
-    }
+    // }
 
   //   for(int i=0;i<var_val.size();++i)
   //     {
@@ -654,6 +662,7 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
   int k=this->unfolded_list.size();
   unfolded_list.resize(k+1);
   unfolded_list_type.resize(k+1);
+  do_content.resize( k + 1 );
 
   // 保存待展开instruction项的binary,code,do的asem地址
   Asem & code=*(this->find("code"));
@@ -691,7 +700,9 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
       var_choosed_val.resize(var_name.size());
       // 针对变量取不同值的时候得到展开的code，binary和do
       dfs_unfold_instr(rule_name,var_name,var_uni_name, var_choose_name,var_val,var_choosed_val,
-		       code,binary,doo,0,unfolded_list[k]);
+		       code,binary,// doo,
+		       0,unfolded_list[k], k);
+      do_content[k] = *doo;
     }
   else
     {
@@ -878,21 +889,21 @@ Asem * Asem::get_asem(string name)
   return (Asem*)tmp;
 }
 
-void Asem::dfs_copy_content(do_content &dl)
-{
-  dl.type=type;
-  if(type==type_is_vector)
-    {
-      dl.ivec.resize(ivec.size());
-      for(int i=0;i<(int)ivec.size();++i)
-	ivec[i].dfs_copy_content(dl.ivec[i]);
-    }
-  else if(type==type_is_string1 || type==type_is_string2)
-    {
-      dl.str=name;
-    }
-  else assert(0);
-}
+// void Asem::dfs_copy_content(do_content &dl)
+// {
+//   dl.type=type;
+//   if(type==type_is_vector)
+//     {
+//       dl.ivec.resize(ivec.size());
+//       for(int i=0;i<(int)ivec.size();++i)
+// 	ivec[i].dfs_copy_content(dl.ivec[i]);
+//     }
+//   else if(type==type_is_string1 || type==type_is_string2)
+//     {
+//       dl.str=name;
+//     }
+//   else assert(0);
+// }
 
 void Asem::translate_doo(ofstream &dot_h_out,ofstream &dot_c_out,vector<string> &var_list,const string & rule_name)
 {

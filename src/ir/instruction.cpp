@@ -190,6 +190,7 @@ void Instruction::read(ifstream &fin)
   read_do(fin);
   read_reloc_info(fin);
   read_varname(fin);
+  read_do_list(fin);
 }
 void Instruction::output(ofstream &fout)
 {
@@ -216,6 +217,8 @@ void Instruction::output(ofstream &fout)
   output_reloc_info(fout);
   
   output_varname(fout);
+  
+  output_do_list(fout);
 }
 void Instruction::output_varname(ofstream &fout)
 {
@@ -223,6 +226,10 @@ void Instruction::output_varname(ofstream &fout)
   for( auto i : var_name )
     fout << i << ' ';
   fout << endl;
+}
+void Instruction::set_do_list( vector<int> &dl)
+{
+  do_list = dl;
 }
 void Instruction::read_reloc_info(ifstream &fin)
 {
@@ -238,4 +245,22 @@ void Instruction::output_reloc_info(ofstream &fout)
   FR(i,reloc_info)
     fout << i << ' ';
   fout<<endl;
+}
+void Instruction::output_do_list( ofstream &fout)
+{
+  fout << do_list.size() << endl;
+  for( auto i : do_list )
+    fout << i << ' ';
+  fout << endl;
+}
+void Instruction::read_do_list( ifstream &fin )
+{
+  int num;
+  fin >> num;
+  for( int i = 0; i < num; ++i )
+    {
+      int do_seq;
+      fin >> do_seq;
+      do_list.push_back( do_seq );
+    }
 }

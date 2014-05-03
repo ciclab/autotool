@@ -27,8 +27,9 @@ class Asem{
 		   vector<pair<int,int> > &var_choosed_val,
 		   Asem &code,
 		   Asem &binary,
-		   Asem * doo,
-		   vector<triple> &r);
+		   /* Asem * doo, */
+		   vector<triple> &r,
+		   int do_seq);
   void dfs_unfold_instr(const string &,vector<string> &var_name, // 变量名字
 			vector<string> &var_uni_name, // 替换原变量名的唯一名字
 			vector<vector<string> > &var_choose_name, // 变量可选的值的名字
@@ -36,9 +37,10 @@ class Asem{
 			vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
 			Asem &code,				// 待展开的code对应asem
 			Asem &binary,				// 待展开的binary对应asem
-			Asem *doo,				// 待展开do对应的asem
+			/* Asem *doo,				// 待展开do对应的asem */
 			int lev,			        // 当前枚举到第lev个变量
-			vector<triple> &r);			// 保存展开结果
+			vector<triple> &r,			// 保存展开结果
+			int do_seq);
   int unfold_enum(ofstream & yout,ofstream & dot_c_out);
   int unfold_type(ofstream & yout,ofstream & dot_c_out);
   int unfold_addr(ofstream & yout,ofstream & dot_c_out);
@@ -48,7 +50,7 @@ class Asem{
 		  vector<vector<int> >&var_val,
 		  vector<pair<int,int> > &var_choosed_val
 		  );
-  void dfs_copy_content(do_content &dl);
+  /* void dfs_copy_content(do_content &dl); */
   void translate_doo(ofstream &dot_h_out,ofstream & dot_c_out,vector<string> &var_list,const string & rule_name);
   string doo_translate_statement(ofstream & dot_h_out,ofstream & dot_c_out,const string & rule_name);
   bool doo_is_assignment();
@@ -69,6 +71,7 @@ class Asem{
   /*TODO chang following member to private*/
   static hash_control & hc_unfold;
   static vector<vector<triple > > & unfolded_list;
+  static vector<Asem> & do_content;
   static vector<instr_type> & unfolded_list_type; // record type of entries in unfolded_list
   static vector<string> & unfolded_list_name;// name of rule of corresponding unfolded_list
   static class hash_control & hc;

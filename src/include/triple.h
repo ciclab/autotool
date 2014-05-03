@@ -21,6 +21,7 @@ class triple
   vector<string> var_name;
   vector<int> reloc_info;
   vector<string> enum_name;
+  vector<int> do_list;
  triple(string n,string c,string b,string t):
   rulename(n),code(c),binary(b),type(t){};
   triple(){};

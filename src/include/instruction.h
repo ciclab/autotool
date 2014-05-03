@@ -25,6 +25,7 @@ private:
   do_content doo;
   vector<pair<string,string>  > arglist;
   vector<int> reloc_info;
+  vector<int> do_list;
 public:
   void output_arglist(ofstream &fout);
   void output_varname(ofstream &fout);
@@ -40,7 +41,10 @@ public:
   void set_varname(vector<string>&);
   void set_enum_var(vector<string> &ev);
   void set_reloc_info(vector<int> &);
+  void set_do_list(vector<int> &);
   void set_type(string type);
+  void read_do_list( ifstream &fin );
+  void output_do_list( ofstream &fout);
   string get_code();
   string get_binary();
   int get_off_size();
