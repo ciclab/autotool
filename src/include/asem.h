@@ -50,7 +50,6 @@ class Asem{
 		  vector<vector<int> >&var_val,
 		  vector<pair<int,int> > &var_choosed_val
 		  );
-  /* void dfs_copy_content(do_content &dl); */
   void translate_doo(ofstream &dot_h_out,ofstream & dot_c_out,vector<string> &var_list,const string & rule_name);
   string doo_translate_statement(ofstream & dot_h_out,ofstream & dot_c_out,const string & rule_name);
   bool doo_is_assignment();
@@ -69,6 +68,7 @@ class Asem{
   void doo_output_switch_beg(ofstream &dot_c_out);
  public:
   /*TODO chang following member to private*/
+  /* void dfs_copy_content(do_content &dl); */
   static hash_control & hc_unfold;
   static vector<vector<triple > > & unfolded_list;
   static vector<Asem> & do_content;

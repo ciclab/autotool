@@ -98,6 +98,7 @@ void Ir::read_all(ifstream &fin)
   read_vliw_mode(fin);
   read_instr(fin);
   read_addr(fin);
+  read_do_content(fin);
 }
 void Ir::add_top_name(string n)
 {
@@ -116,6 +117,7 @@ void Ir::output_all(ofstream &fout)
   output_vliw_mode(fout);
   output_instruction_set(fout);
   output_addr(fout);
+  output_do_content(fout);
 }
 void Ir::read_pipeline(ifstream &fin)
 {
@@ -205,7 +207,7 @@ void Ir::read_instr(ifstream &fin)
   for(int i=0;i<num;++i)
     instruction_set[i].read(fin);
 }
-void Ir::add_instruction(const string &name,string &c,string &b,do_content &d,
+void Ir::add_instruction(const string &name,string &c,string &b,
 			 vector<pp> &off,vector<string> &enum_var,vector<pair<string,string> > & al,
 			 vector<int> & ri,string type,
 			 vector<string> &vn, vector<int> &dl)
@@ -214,7 +216,6 @@ void Ir::add_instruction(const string &name,string &c,string &b,do_content &d,
   instruction_set.resize(t+1);
   instruction_set[t].set_code(c);
   instruction_set[t].set_binary(b);
-  instruction_set[t].set_do(d);
   instruction_set[t].set_off(off);
   instruction_set[t].set_enum_var(enum_var);
   instruction_set[t].set_arglist(al);
@@ -414,4 +415,51 @@ string Ir::get_pipeline_name(int i)
 int Ir::get_pipeline_width( int i )
 {
   return pipeline[i].get_width();
+}
+void static dfs_copy_content( Asem & f, do_content & t)
+{
+  if(f.type==type_is_vector)
+    {
+      t.type = do_type_is_vector;
+      t.ivec.resize(f.ivec.size());
+      for(int i=0;i<(int)f.ivec.size();++i)
+	dfs_copy_content(f.ivec[i], t.ivec[i]);
+    }
+  else if(f.type==type_is_string1 )
+    {
+      t.type = do_type_is_string1;
+      t.str = f.name;
+    }
+  else if( f.type==type_is_string2)
+    {
+      t.type = do_type_is_string2;
+      t.str = f.name;
+    }
+  else assert(0);
+}
+void Ir::add_do_content( Asem & dc)
+{
+  int i = docnt.size();
+  docnt.resize( i + 1 );
+  dfs_copy_content( dc, docnt[i] );
+}
+void Ir::read_do_content( ifstream & fin )
+{
+  int num;
+  fin >> num;
+  docnt.resize(num);
+  for( int i = 0; i < num; ++i )
+    {
+      docnt[i].read(fin);
+    }
+}
+void Ir::output_do_content( ofstream & out)
+{
+  int num = docnt.size();
+  out << num << endl;
+  for( int i = 0;  i < num; ++i )
+    {
+      docnt[i].output(out);
+      out << endl;
+    }
 }

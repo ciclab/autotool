@@ -20,6 +20,22 @@ void pipelineGen(Ir &ir, ofstream &out);
 
 string autoType(int width, bool sig);
 
+
+// hash_control hc_unfold_sim;
+// vector<vector<triple > > unfolded_list_sim;
+// vector<instr_type> u_l_t;
+// vector<string> unfolded_list_name_sim;// name of rule of corresponding unfolded_list
+// class hash_control hc_sim;
+// vector<Asem> do_content_sim;
+
+// class hash_control & Asem::hc_unfold=hc_unfold_sim;
+// vector<Asem> & Asem::do_content = do_content_sim;
+// vector<vector<triple > > & Asem::unfolded_list=unfolded_list_sim;
+// vector<instr_type> &Asem::unfolded_list_type=u_l_t;
+// vector<string> & Asem::unfolded_list_name=unfolded_list_name_sim;// name of rule of corresponding unfolded_list
+// class hash_control & Asem::hc=hc_sim;
+
+
 int main(int argc, char *argv[])
 {
   if( argc != 3 )

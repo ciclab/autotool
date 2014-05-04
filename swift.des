@@ -387,7 +387,7 @@
 	  (cycle 1)
 	  (if (& memacc.state 1)
    	    (
-	      (= decode.pc a)
+	      (= fetch.pc a)
 	      (decode.abort)
 	    )
 	  )
@@ -824,34 +824,17 @@
       (do
         (decode_s
 	  ( clock 1 )
-	  (if (slot0)
-	    (= valB0 ([] gr rs) )
-	  )
-	  (if (slot1)
-	    (= valB1 ([] gr rs) )
-	  )
+	  (= valB ([] gr rs) )
+	  (= valC i)
 	)
         (execute_s
 	  ( clock 1 )
-	  (if ( slot0 )
-  	    ( = valA0
-	      ( + valB0 i )
-	    )	
-	  )
-	  (if ( slot1 )
-	    (= valA1
-	      (+ valB0 i)
-	    )
+	  (= valA1 (+ valB valC)
 	  )
 	)
 	(writeback_s
 	  (clock 1)
-	  (if ( slot0 )
-	    ( = ([] gr rs) valA0 )
-	  )
-	  (if ( slot1 )
-	    ( = ([] gr rs) valA1 )
-	  )
+	  ( = ([] gr rs) valC )
 	)
       )
       (code i ' ' rd ' ' rs ' ' imm )

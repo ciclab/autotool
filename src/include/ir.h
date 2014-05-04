@@ -15,6 +15,7 @@
 #include "pipeline.h"
 #include "def.h"
 #include "addr.h"
+#include "asem.h"
 using namespace std;
 class Ir
 {
@@ -28,6 +29,7 @@ private:
   vector<Register> registers;
   vector<Pipeline> pipeline;
   vector<Addr> addr;
+  vector<do_content> docnt;
   string top_rule_name;
   bool vliw_mode_set;
   int vliw_mode_sig;
@@ -68,9 +70,10 @@ public:
   void add_wire(Wire w);
   void output_wire(ofstream &fout);
   void read_wire(ifstream &fin);
-  void add_instruction(const string &name,string &c,string &b,do_content &d,
+  void add_instruction(const string &name,string &c,string &b,
 		       vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al,
 		       vector<int> &ri,string type, vector<string> &vn, vector<int> &dl);
+  void add_do_content( Asem & dc);
   void output_instruction_set(ofstream &fout);
   void read_instr(ifstream &fin);
   void output_type(ofstream &fout);
@@ -104,5 +107,7 @@ public:
   int get_num_pipeline();
   int get_pipeline_width(int i);
   string get_pipeline_name(int i);
+  void output_do_content(ofstream &out);
+  void read_do_content(ifstream &fin);
 };
 #endif

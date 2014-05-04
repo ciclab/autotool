@@ -2,7 +2,24 @@
 #include <cstdlib>
 #include "def.h"
 #include <unordered_map>
+#include "do_content.h"
 using namespace std;
+
+hash_control hc_unfold_read;
+vector<vector<triple > > unfolded_list_read;
+vector<instr_type> u_l_t;
+vector<string> unfolded_list_name_read;// name of rule of corresponding unfolded_list
+class hash_control hc_read;
+vector<Asem> do_content_read;
+
+class hash_control & Asem::hc_unfold=hc_unfold_read;
+vector<Asem> & Asem::do_content = do_content_read;
+vector<vector<triple > > & Asem::unfolded_list=unfolded_list_read;
+vector<instr_type> &Asem::unfolded_list_type=u_l_t;
+vector<string> & Asem::unfolded_list_name=unfolded_list_name_read;// name of rule of corresponding unfolded_list
+class hash_control & Asem::hc=hc_read;
+
+
 //#define DOT_Y
 // 返回v的二进制，宽度能表示w项（从0开始）
 // static string num2string(int v,int w)
