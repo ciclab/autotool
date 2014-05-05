@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <string>
 using namespace std;
-#define LITTLE_END
 class bfd_info
 {
 public:
@@ -235,6 +234,7 @@ int main(int argc,char *argv[])
   tokout<<"%locations;\n";
   //lex rule name should be unique
   hash_control hc;
+  // name for generated for bfd should be unique
   hash_control hc_bfd;
   // hash_control hc_len;
   char * cnt(NULL);
@@ -591,8 +591,9 @@ int main(int argc,char *argv[])
 	  // for those instruction in vliw, we don't generate decode entry.
 	  // we assume it already appeared in solo slot instructions
 	  // if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
-	  string rbinary=binary;
+	  string rbinary = binary;
 	  string rbinary_beg=binary;
+	  // same as simGen.cpp, this control the vliw mode generated
 	  if(vliw_mode_set)
 	    {
 	      assert(vliw_mode_sig==1);
@@ -600,7 +601,7 @@ int main(int argc,char *argv[])
 		{
 		  assert(binary.length()>vliw_mode_off);
 		  assert(vliw_mode_sig==1);
-		  assert(binary[vliw_mode_off]='0');
+		  assert(binary[vliw_mode_off] == '0');
 		  rbinary_beg[vliw_mode_off]='1';
 		}
 	    }
@@ -616,7 +617,7 @@ int main(int argc,char *argv[])
 	      
 	  const binary_info *genDecInfo=checkBinary(rbinary,toks,toks_in_binary,
 						    off,n);
-	  cout<<n<<' '<<rbinary.length()<<' '<<genDecInfo<<endl;
+	  // cout<<n<<' '<<rbinary.length()<<' '<<genDecInfo<<endl;
 	  if(genDecInfo==NULL)
 	    {
 	      

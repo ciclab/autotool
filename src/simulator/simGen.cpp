@@ -5,6 +5,8 @@
 #include <unordered_set>
 #include <utility>
 #include <string>
+#include "hash.h"
+#include "def.h"
 using namespace std;
 // record type used, first -> length of type, second -> signed
 static unordered_set<string> typeSet;
@@ -17,6 +19,12 @@ void regGen(Ir &ir, ofstream &out);
 
 // generate pipeline data struct
 void pipelineGen(Ir &ir, ofstream &out);
+
+// generate class for each instruction
+void classGen(Ir &ir, ofstream &out);
+
+// // generate functions for enum, called by classGen;
+// void enumFuncGen(Ir &ir, ofstream &out);
 
 string autoType(int width, bool sig);
 
@@ -58,6 +66,9 @@ int main(int argc, char *argv[])
       
       ofstream pipelineOut("pipeline");
       pipelineGen(ir, pipelineOut);
+
+      ofstream classOut("class");
+      classGen(ir, classOut);
     }
   return 0;
 }
@@ -114,3 +125,136 @@ void pipelineGen(Ir &ir, ofstream &out)
     }
   out << "};" << endl;
 }
+
+// someting like asGen.cpp/main()
+void classGen(Ir &ir, ofstream &out)
+{
+  int instrSize = ir.get_instr_size();
+  string topRuleName = ir.get_top_rule_name();
+  
+  string topRule = ir.get_top_rule_name();
+  vector<bool> used;
+  used.resize(instrSize);
+  fill( used.begin(), used.end(), false);
+  unordered_set<string> packSubRuleName;
+  for( int i = 0; i < instrSize; ++i )
+    {
+      string name = ir.get_instr_name(i);
+      if( name.compare( 0, topRuleName.length(), topRuleName) == 0 )
+	{
+	  used[i] = true;
+	  if( ir.get_instr_type(i) == "e_pack" )
+	    {
+	      vector< pair< string, string > > args;
+	      ir.get_instr_arglist( i, args);
+	      for( auto i : args )
+		{
+		  for( auto j = i.second.begin(); j != i.second.end(); ++j )
+		    {
+		      string subRuleName;
+		      for( ; j != i.second.end() && *j != c_sep; ++j )
+		      	subRuleName += *j;
+		      packSubRuleName.insert( subRuleName );
+		      if( j == i.second.end() )
+			break;
+		    }
+		}
+	    }
+	}
+    }
+  for( int i = 0; i < instrSize; ++i )
+    if( !used[i] )
+      {
+	string name = ir.get_instr_name(i);
+	if( packSubRuleName.find(name) != packSubRuleName.end() )
+	  used[i] = true;
+      }
+  int vliwModeOff, vliwModeSig;
+  bool vliwModeSet = ir.get_vliw_mode( vliwModeSig, vliwModeOff );
+  // output class for each instruction
+  for( int i = 0 ; i < instrSize; ++i )
+    {
+      if( !used[i] )
+	continue;
+      string ruleName = ir.get_instr_name(i);
+      string ruleType = ir.get_instr_type(i);
+      if( ruleType == "e_notpack" )
+	{
+	  out << "class class_" << ruleName << "{\n init( char *c)\n{\n";
+	  out << "WST(c);\n";
+	  string ruleBinary = ir.get_instr_binary(i);
+	  string ruleRevBinary = ruleBinary;
+	  string ruleRevBinaryBeg = ruleBinary;
+	  // same as asGen.cpp
+	  if( vliwModeSet )
+	    {
+	      assert( vliwModeSig == 1 );
+	      if( ruleBinary.length() )
+		{
+		  assert( (int)ruleBinary.length() > vliwModeOff );
+		  assert( vliwModeSig == 1 );
+		  assert( ruleBinary[ vliwModeOff ] == '0' );
+		  ruleRevBinaryBeg[ vliwModeOff ] = '1';
+		}
+	    }
+#ifdef LITTLE_END
+	  for( int i = 0, j = ruleRevBinary.length() - 8; i < j; 
+	       i +=8, j -= 8 )
+	    {
+	      for( int k = 0 ; k < 8; ++k )
+		{
+		  swap( ruleRevBinary[ i + k ], ruleRevBinary[ j + k ] );
+		  swap( ruleRevBinaryBeg[ i + k ], ruleRevBinaryBeg[ j + k ] );
+		}
+	    }
+#endif
+	  assert( ( ruleRevBinary.length() % 8 ) == 0 );
+	  out << "char tmp[ " << ruleBinary.length() << " ];" << endl;
+	  out << " assert( tmp != NULL );\n " << endl;
+	  out << " assert( c != NULL );\n" << endl;
+
+	  for( int j = 0; j < (int)ruleRevBinary.length(); ++j )
+	    {
+	      if( ruleRevBinary[j] == '-' )
+		{
+		  out << "tmp[";
+		  int pos = ( ruleRevBinary.length() / 8 - 1 - j / 8 ) * 8
+		    + ( j % 8 );
+		  out << pos << "] = c[ " << j << " ];\n";
+		}
+	    }
+	  vector<string> varName;
+	  ir.get_instr_var_name( i, varName);
+	  vector<int> varLen;
+	  ir.get_instr_var_len( i, varLen);
+	  vector<pair<int,int> > varOff;
+	  ir.get_instr_off( i, varOff);
+	  assert( varOff.size() == varLen.size() && 
+		  varOff.size() == varName.size() );
+	  out << "//// " << ruleBinary << endl;
+	  for( int j = 0; j < varOff.size(); ++j )
+	    {
+	      out << "set_val( " << varName[j] << ", tmp + " << varOff[j].second << ", " << varLen[j] << ");\n";
+	    }
+	  out << "};\n}\n";
+	}
+      // here we don't check for binary invalidity
+      // see asGen.cpp/checkBianry(5) for detail
+      
+    }
+}
+
+// void enumFuncGen(Ir &ir, ofstream &out)
+// {
+//   int enumSize = ir.get_num_enum();
+//   for( int i = 0; i < enumSize; ++i)
+//     {
+//       Enum enu;
+//       ir.get_enum(i, enu);
+//       int entrySize = enu.size();
+//       int width = enu.width();
+//       string name = enu.enum.name();
+//       out << " int FUNC_" << name << "(int)\n{";
+//       out << " 
+//     }
+// }

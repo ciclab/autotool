@@ -22,6 +22,7 @@ private:
   vector<pp> off;
   vector<string> enum_var;
   vector<string> var_name;
+  vector<int> var_len;
   do_content doo;
   vector<pair<string,string>  > arglist;
   vector<int> reloc_info;
@@ -29,8 +30,10 @@ private:
 public:
   void output_arglist(ofstream &fout);
   void output_varname(ofstream &fout);
+  void output_varlen(ofstream &fout);
   void read_arglist(ifstream &fin);
   void read_varname(ifstream &fin);
+  void read_varlen(ifstream &fin);
   void read_reloc_info(ifstream &fin);
   void set_arglist(vector<pair<string,string>  > & al);
   void set_code(string &code);
@@ -39,6 +42,7 @@ public:
   void set_do(do_content &d);
   void set_name(const string & n);
   void set_varname(vector<string>&);
+  void set_varlen(vector<int>&);
   void set_enum_var(vector<string> &ev);
   void set_reloc_info(vector<int> &);
   void set_do_list(vector<int> &);
@@ -62,5 +66,7 @@ public:
   void get_off(vector<ppi> &);
   void read(ifstream &);
   void output(ofstream &);
+  void get_var_name(vector<string> &);
+  void get_var_len(vector<int> &);
 };
 #endif

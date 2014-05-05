@@ -26,6 +26,10 @@ void Instruction::set_varname( vector<string> &vn)
 {
   var_name = vn;
 }
+void Instruction::set_varlen( vector<int> &vl)
+{
+  var_len = vl;
+}
 void Instruction::set_reloc_info(vector<int> & ri)
 {
   reloc_info=ri;
@@ -190,7 +194,26 @@ void Instruction::read(ifstream &fin)
   read_do(fin);
   read_reloc_info(fin);
   read_varname(fin);
+  read_varlen(fin);
   read_do_list(fin);
+}
+void Instruction::read_varlen(ifstream &fin)
+{
+  int num;
+  fin >> num;
+  for( int i = 0 ; i < num; ++i )
+    {
+      int v;
+      fin >> v;
+      var_len.push_back(v);
+    }
+}
+void Instruction::output_varlen(ofstream &fout)
+{
+  fout << var_len.size() << endl;
+  for( auto i : var_len )
+    fout << i << ' ';
+  fout << endl;
 }
 void Instruction::output(ofstream &fout)
 {
@@ -218,6 +241,8 @@ void Instruction::output(ofstream &fout)
   
   output_varname(fout);
   
+  output_varlen(fout);
+
   output_do_list(fout);
 }
 void Instruction::output_varname(ofstream &fout)
@@ -263,4 +288,12 @@ void Instruction::read_do_list( ifstream &fin )
       fin >> do_seq;
       do_list.push_back( do_seq );
     }
+}
+void Instruction::get_var_name(vector<string> &vn)
+{
+  vn = var_name;
+}
+void Instruction::get_var_len(vector<int> &vl)
+{
+  vl = var_len;
 }

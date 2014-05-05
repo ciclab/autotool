@@ -20,4 +20,5 @@ const char c_addr_beg='\4';
 const string s_addr_beg="\4";
 typedef pair<int,int> ppi;
 typedef pair<string,string> pps;
+#define LITTLE_END
 #endif

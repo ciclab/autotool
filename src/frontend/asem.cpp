@@ -338,7 +338,7 @@ void Asem::eval_unfold(const string &rule_name,
 	}
     }
   // 计算新生成的code offset和binary offset 信息
-  // 还有do的信息
+  // 还有do的信息, and adjust variable name
   r[k].do_list.push_back( do_seq );
   for(int i=0;i<(int)var_val.size();++i)
     {
@@ -351,6 +351,7 @@ void Asem::eval_unfold(const string &rule_name,
 	{
 	  r[k].off_in_code.push_back(unfolded_list[a][b].off_in_code[j]+oc);
 	  r[k].off_in_binary.push_back(unfolded_list[a][b].off_in_binary[j]+ob);
+	  r[k].var_len.push_back( unfolded_list[a][b].var_len[j] );
 	  if( unfolded_list[a][b].var_name.size() != unfolded_list[a][b].off_in_code.size() )
 	    {
 	      // we can judge var[i] is a enum or type, but not a rule
@@ -461,6 +462,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back(ivec[0].name);
+  unfolded_list[k][0].var_len.push_back( (int)binary.length() );
 #endif
   for(int i=0;i<(int)ivec.size();++i)
     {
@@ -524,6 +526,7 @@ int Asem::unfold_type(ofstream &yout,ofstream & dot_c_out)
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back((string)"");
+  unfolded_list[k][0].var_len.push_back( width );
   return k;
 }
 // process addr description
@@ -562,6 +565,7 @@ int Asem::unfold_addr(ofstream &yout,ofstream & dot_c_out)
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back((string)"");
+  unfolded_list[k][0].var_len.push_back( width );
   return k;
 }
 void dfs_replace( Asem *a, unordered_map<string,string> &tab)
@@ -576,9 +580,12 @@ void dfs_replace( Asem *a, unordered_map<string,string> &tab)
 	    }
 	  else if( a->ivec[i].type == type_is_string1 )
 	    {
-	      if( tab.find( a->name ) != tab.end() )
-		a->name = tab[ a->name ];
+	      if( tab.find( a->ivec[i].name ) != tab.end() )
+		{
+		  a->ivec[i].name = tab[ a->ivec[i].name ];
+		}
 	    }
+	  // else cout << a->ivec[i].type << endl;
 	}
     }
 }

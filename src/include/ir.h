@@ -48,6 +48,8 @@ public:
   string get_instr_binary(int);
   int get_instr_size();
   string get_top_rule_name();
+  void get_instr_var_name(int, vector<string>&);
+  void get_instr_var_len(int, vector<int>&);
   string get_instr_name(int);
   string get_instr_code(int);
   void get_instr_reloc_info(int , vector<int> &);
@@ -72,7 +74,7 @@ public:
   void read_wire(ifstream &fin);
   void add_instruction(const string &name,string &c,string &b,
 		       vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al,
-		       vector<int> &ri,string type, vector<string> &vn, vector<int> &dl);
+		       vector<int> &ri,string type, vector<string> &vn, vector<int> &vl, vector<int> &dl);
   void add_do_content( Asem & dc);
   void output_instruction_set(ofstream &fout);
   void read_instr(ifstream &fin);
