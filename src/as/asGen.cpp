@@ -592,7 +592,8 @@ int main(int argc,char *argv[])
 	  // we assume it already appeared in solo slot instructions
 	  // if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
 	  string rbinary = binary;
-	  string rbinary_beg=binary;
+	  // string rbinary_beg=binary;
+	  string rbinary_end = binary;
 	  // same as simGen.cpp, this control the vliw mode generated
 	  if(vliw_mode_set)
 	    {
@@ -602,7 +603,8 @@ int main(int argc,char *argv[])
 		  assert(binary.length()>vliw_mode_off);
 		  assert(vliw_mode_sig==1);
 		  assert(binary[vliw_mode_off] == '0');
-		  rbinary_beg[vliw_mode_off]='1';
+		  // rbinary_beg[vliw_mode_off]='1';
+		  rbinary_end[ vliw_mode_off ] = '1';
 		}
 	    }
 	  assert((rbinary.length()%8)==0);
@@ -611,7 +613,8 @@ int main(int argc,char *argv[])
 	    for(int k=0;k<8;++k)
 	      {
 		swap(rbinary[i+k],rbinary[j+k]);
-		swap(rbinary_beg[i+k],rbinary_beg[j+k]);
+		// swap(rbinary_beg[i+k],rbinary_beg[j+k]);
+		swap( rbinary_end[ i + k ], rbinary_end[ j + k ] );
 	      }
 #endif
 	      
@@ -638,14 +641,17 @@ int main(int argc,char *argv[])
 	      if(vliw_mode_set)
 		{
 		  assert(vliw_mode_sig);
-		  if(rbinary_beg.length())
+		  // if(rbinary_beg.length())
+		  if( rbinary_end.length() )
 		    {
-		      FRA(i,rbinary_beg)
+		      // FRA(i,rbinary_beg)
+		      FRA( i, rbinary_end )
 			if(*i=='-')
 			  dlout<<"[0|1]";
 			else dlout<<'\"'<<*i<<'\"';
 		    }
-		  dlout<<" {return "<<n<<"_beg"<<";}\n";
+		  // dlout<<" {return "<<n<<"_beg"<<";}\n";
+		  dlout << " { return "<< n << "_end" << ";}\n";
 		}
 	      dcout<<"static char tmp[]="<<'"'<<binary<<"\";"<<endl;
 	      
@@ -708,7 +714,7 @@ int main(int argc,char *argv[])
 	      else
 		{
 		  dytokout<<"%token "<<n<<endl;
-		  dytokout<<"%token "<<n<<"_beg"<<endl;
+		  dytokout<<"%token "<<n<<"_end"<<endl;
 		}
 	    }
 	  else dyout<<n<<":{};\n";// TODO defalut to vliw seperator
@@ -788,12 +794,27 @@ int main(int argc,char *argv[])
 	      if(i!=args.begin())
 		yout<<" TOK_1 "; // TOK_1 is '|', used as seperator between slots
 	      yout<<i->first;
-		dyout<<i->first<<' ';
+	      // dyout << i->first << ' ';
+	    }
+	  for( auto i = args.begin(); i != args.end(); ++i )
+	    {
+	      // dyout << i->first << ' ' ;
+	      if( i != args.begin() )
+	      	dyout << " | ";
+	      for( auto j = args.begin(); ; ++j )
+	      	{
+		  if( j != args.begin() )
+		    dyout << ' ';
+	      	  dyout<< j->first;
+	      	  if( j == i )
+	      	    break;
+	      	}
+	      dyout << "_end";
 	    }
 	  yout<<";"<<endl;
 	  dyout<<";"<<endl;
 	  max_slot_len=max(max_slot_len,(int)args.size());
-	  FRA(i,args)
+	  for( auto i = args.begin(); i != args.end(); ++i )
 	    {
 	      yout<<i->first<<" : ";
 	      dyout<<i->first<<" : ";
@@ -815,14 +836,36 @@ int main(int argc,char *argv[])
 		  if(bi!=&emp)
 		    {
 		      dyout<<name;
-		      if(i==args.begin())
-			dyout<<"_beg";
+		      auto ii = i;
+		      ++ii;
 		      dyout<<" {dis_list_len[dis_list_cnt]="<<name<<"_LEN "<<" ;dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<"; ++dis_list_cnt;}\n";
 		    }
 		  else dyout<<"{}"<<endl;
 		}
 	      yout<<" ; "<<endl;
 	      dyout<<" ; "<<endl;
+
+	      dyout << i->first << "_end" << " : ";
+	      for( int j = 0; j < (int) i->second.size(); ++j )
+		{
+		  if(j)
+		    dyout << " | \n";
+		  string name;
+		  for(;j<(int)i->second.size() && i->second[j]!=c_sep;++j)
+		    {
+		      dyout << i->second[j];
+		      name.push_back( i->second[j] );
+		    }
+		  
+		  binary_info *bi=(binary_info*)rule2func.find(name);
+		  if(bi!=&emp)
+		    {
+		      dyout<<"_end";
+		      dyout<<" {dis_list_len[dis_list_cnt]="<<name<<"_LEN "<<" ;dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<"; ++dis_list_cnt;}\n";
+		    }
+		  else dyout<<"{}"<<endl;
+		}
+	      dyout << " ; " << endl;
 	    }
 	}
     }
@@ -877,16 +920,24 @@ int main(int argc,char *argv[])
   tout<<"dummy__delete_buffer(bs);\n";
   tout<<"int cnt;\n";
   tout<<"int len_left=0;\n";
+  tout << "int lastSlotIdx = -1;\n";
   // calculate total length (including vliw)
   tout<<"for(cnt=0;cnt<instr_cnt;++cnt)\n\n";
   tout<<"{int i=0;\n";
   if(vliw_mode_set)
     {
       assert(vliw_mode_sig==1);
-      tout<<"if(cnt==0) yyret[cnt]["<<vliw_mode_off<<"]='1';\n";
+      // tout<<"if(cnt==0) yyret[cnt]["<<vliw_mode_off<<"]='1';\n";
+      tout<<"if( yyret[cnt][0] ) lastSlotIdx = cnt;\n";
     }
   tout<<"for(;yyret[cnt][i];++len_left,++i)\n;\n";
   tout<<"}\n";
+  if( vliw_mode_set )
+    {
+      tout << " if( lastSlotIdx >= 0 ) \n";
+	tout << " assert( yyret[lastSlotIdx][0] == '0' );\n";
+      tout << " if( lastSlotIdx >= 0 ) yyret[lastSlotIdx][0] = '1';\n";
+    }
   tout<<"len_left/=8;\n";
   tout<<"for(cnt=0;cnt<instr_cnt;++cnt)\n{\n";
   tout<<"int len;\n";
@@ -917,6 +968,8 @@ int main(int argc,char *argv[])
   tout<<"printf(\"  \");\n";
   tout<<"}\n";
   // for debug
+  if( vliw_mode_set )
+    tout << " if( lastSlotIdx >= 0 ) yyret[lastSlotIdx][0] = '0';\n";
   tout<<"printf(\"\\n\");\n";
   tout<<"clear(&strsta);\n";
   tout<<"}\n";
@@ -992,10 +1045,11 @@ indent ./tc-dummy.c");
       bout<<"HOWTO ("<<i->name<<",	/* type */\n";
       bout<<i->right_shift<<",			/* TODO rightshift */\n";//TODO my be variable
       bout<<(i->instr_len>=32?2:1)<<",			/* TODO!! size (0 = byte, 1 = short, 2 = long) */\n";
-      bout<<i->instr_len<<",			/* bitsize */\n";
+      // bout<<i->instr_len<<",			/* bitsize */\n";
+      bout << "0X" << i->off_len << ",			/* bitsize */\n";
       bout<<i->pcrel<<",			/* pc_relative */\n";
       /*TODO output hex default? so i add "ox"*/
-      bout<<"0x"<<(i->off)<<",			/* bitpos */\n";
+      bout<< "0X" <<(i->off)<<",			/* bitpos */\n";
       bout<<"complain_overflow_signed, /*TODO complain_on_overflow */\n";
       bout<<"mips_generic_reloc,			/* special_function */\n";
       bout<<"\""<<i->name<<"\",		/* name */\n";

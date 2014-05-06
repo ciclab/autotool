@@ -180,7 +180,12 @@ void classGen(Ir &ir, ofstream &out)
       string ruleType = ir.get_instr_type(i);
       if( ruleType == "e_notpack" )
 	{
-	  out << "class class_" << ruleName << "{\n init( char *c)\n{\n";
+	  out << "class class_" << ruleName << "{\n ";
+	  vector<string> varName;
+	  ir.get_instr_var_name( i, varName);
+	  // for every class define its own variable
+	  for( auto i : 
+	  out << "init( char *c)\n{\n";
 	  out << "WST(c);\n";
 	  string ruleBinary = ir.get_instr_binary(i);
 	  string ruleRevBinary = ruleBinary;
@@ -223,8 +228,6 @@ void classGen(Ir &ir, ofstream &out)
 		  out << pos << "] = c[ " << j << " ];\n";
 		}
 	    }
-	  vector<string> varName;
-	  ir.get_instr_var_name( i, varName);
 	  vector<int> varLen;
 	  ir.get_instr_var_len( i, varLen);
 	  vector<pair<int,int> > varOff;
@@ -236,7 +239,7 @@ void classGen(Ir &ir, ofstream &out)
 	    {
 	      out << "set_val( " << varName[j] << ", tmp + " << varOff[j].second << ", " << varLen[j] << ");\n";
 	    }
-	  out << "};\n}\n";
+	  out << "};\n};\n";
 	}
       // here we don't check for binary invalidity
       // see asGen.cpp/checkBianry(5) for detail

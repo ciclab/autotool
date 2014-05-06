@@ -8,6 +8,7 @@
 #include "l.h"
 #include "strstack.h"
 #include "stdlib.h"
+#include "assert.h"
 struct strstack strsta;
 extern int dummy_parse (void);
 #define WST(a) ((a)=(a))
