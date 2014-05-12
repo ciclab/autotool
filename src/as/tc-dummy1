@@ -311,7 +311,18 @@ arelent **tc_gen_reloc(asection * section ATTRIBUTE_UNUSED, fixS * fixp)
 	reloc->sym_ptr_ptr = (asymbol **) xmalloc(sizeof(asymbol *));
 	*reloc->sym_ptr_ptr = symbol_get_bfdsym(fixp->fx_addsy);
 	reloc->address = fixp->fx_frag->fr_address + fixp->fx_where;
-	
+
+//  if (fixp->fx_pcrel)
+//    {
+//      if (section->use_rela_p)
+//	{
+//	  assert(0);
+//	  /* fixp->fx_offset -= md_pcrel_from_section (fixp, section); */
+//	}
+  //    else
+//	fixp->fx_offset = reloc->address -  ( fixp->fx_where + fixp->fx_frag->fr_address );
+  //  }
+//  reloc->addend = fixp->fx_offset;	
 	if (fixp->fx_pcrel) {
 //		gas_assert(fixp->fx_r_type == MIPS_RELOC_PCREL18||fixp->fx_r_type == MIPS_RELOC_PCREL8);
 //printf("fixp->fx_addnumber %d ,reloc->address %d \n",(int)fixp->fx_addnumber,(int)reloc->address);
@@ -335,7 +346,6 @@ arelent **tc_gen_reloc(asection * section ATTRIBUTE_UNUSED, fixS * fixp)
 	   reloc->address = reloc->addend;
 	   reloc->addend = 0;
 	   } */
-
 	code = fixp->fx_r_type;
 	reloc->howto = bfd_reloc_type_lookup(stdoutput, code);
 	if (reloc->howto == NULL) {

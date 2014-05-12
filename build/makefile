@@ -17,7 +17,7 @@ input_file = ../swift.des
 # 	$(CXX) $(CXXFLAGS) $(INCLUDE) -I.  $^ -o $@
 
 binutils: y.c y.h l.c l.h coff-dummy.c tc-dummy.c dis_as.c dis_as.h dis_l.h dis_l.c dis_as.y.h
-	cp y.c y.h l.c l.h  $(BINUTILS_DIR)/gas;cp tc-dummy.c $(BINUTILS_DIR)/gas/config;cp coff-dummy.c $(BINUTILS_DIR)/bfd/coff-mips.c;cp ../src/as/strstack.cpp $(BINUTILS_DIR)/gas/strstack.c; cp ../src/include/strstack.h $(BINUTILS_DIR)/gas ; cp ./reloc.c $(BINUTILS_DIR)/bfd ; cp ./reloc.texi $(BINUTILS_DIR)/bfd/doc ;cp ../src/include/strstack.h $(BINUTILS_DIR)/binutils ; cp ../src/as/strstack.cpp $(BINUTILS_DIR)/binutils/strstack.c ; cp ./dummy-dis.c $(BINUTILS_DIR)/opcodes ; cp  dis_l.c dis_as.c $(BINUTILS_DIR)/opcodes ; cp dis_as.h dis_as.y.h  dis_l.h $(BINUTILS_DIR)/include/opcode
+	cp y.c y.h l.c l.h  $(BINUTILS_DIR)/gas;cp tc-dummy.c $(BINUTILS_DIR)/gas/config;cp coff-dummy.c $(BINUTILS_DIR)/bfd/coff-mips.c;cp ../src/as/strstack.cpp $(BINUTILS_DIR)/gas/strstack.c; cp ../src/include/strstack.h $(BINUTILS_DIR)/gas ; cp ./reloc.c $(BINUTILS_DIR)/bfd ; cp ./reloc.texi $(BINUTILS_DIR)/bfd/doc ;cp ../src/include/strstack.h $(BINUTILS_DIR)/binutils ; cp ../src/as/strstack.cpp $(BINUTILS_DIR)/binutils/strstack.c ; cp ./dummy-dis.c $(BINUTILS_DIR)/opcodes ; cp  dis_l.c dis_as.c $(BINUTILS_DIR)/opcodes ; cp dis_as.h dis_as.y.h  dis_l.h $(BINUTILS_DIR)/include/opcode 
 
 simulator: simGen.o ir.o libir.a asem.o hash.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
