@@ -176,6 +176,11 @@
       (pcrel false)
       (right_shift 2)
     )
+    (addr9Rel
+      (width 9)
+      (pcrel TRUE)
+      (right_shift 2)
+    )
   )
   (wire
   )
@@ -598,7 +603,8 @@
       (= i LOAD_E)
       (= rd GR_E)
       (= rs GR_E)
-      (= imm imm9)
+      /*(= imm imm9)*/
+      (= imm addr9Rel)
       (code i ' ' rd ' ' rs ' ' imm)
       (binary '010' '0' rd '0' rs imm '000' i)
     )
