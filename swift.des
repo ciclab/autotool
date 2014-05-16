@@ -176,9 +176,9 @@
       (pcrel false)
       (right_shift 2)
     )
-    (addr9Rel
+    (addr9Abs
       (width 9)
-      (pcrel TRUE)
+      (pcrel FALSE)
       (right_shift 2)
     )
   )
@@ -604,7 +604,7 @@
       (= rd GR_E)
       (= rs GR_E)
       /*(= imm imm9)*/
-      (= imm addr9Rel)
+      (= imm addr9Abs)
       (code i ' ' rd ' ' rs ' ' imm)
       (binary '010' '0' rd '0' rs imm '000' i)
     )

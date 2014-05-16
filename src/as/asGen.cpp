@@ -947,7 +947,10 @@ int main(int argc,char *argv[])
   tout<<"char * f=frag_more(len);\n";      //TODO should be a variable
   tout<<"for(i=0;i<offset_cnt[cnt];++i)\n";
   tout<<"{\n";
-  tout<<"fixS * tmp=fix_new_exp(/*frag_now*/NULL,/*f-frag_now->fr_literal*/0,len,expr_list[cnt]+i,TRUE,offset_reloc[cnt][i]);\n";
+   tout<<"reloc_howto_type *howto;\n";
+  tout<<"howto = bfd_reloc_type_lookup(stdoutput, offset_reloc[cnt][i]);\n";
+  tout<<"assert(howto);\n";
+  tout<<"fixS * tmp=fix_new_exp(/*frag_now*/NULL,/*f-frag_now->fr_literal*/0,len,expr_list[cnt]+i,howto->pc_relative,offset_reloc[cnt][i]);\n";
   tout<<"tmp->fx_frag=frag_now;\n";
   tout<<"tmp->fx_where=f-frag_now->fr_literal;\n";
   tout<<"tmp->fx_addnumber = -len_left;\n";

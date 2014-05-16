@@ -228,7 +228,8 @@ int mips_fix_adjustable(struct fix *fixp)
 {
 DBG(("mips_fix_adjustable\n"));
 	WST(fixp);
-	return 1;
+	//	return 1;
+	return 0;
 }
 
 int mips_force_relocation(struct fix *fixp)

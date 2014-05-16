@@ -172,14 +172,14 @@ PT
   input_section=input_section;
   output_bfd=output_bfd;
   reloc_entry=reloc_entry;
-/*  if (output_bfd != (bfd *) NULL
+  if (output_bfd != (bfd *) NULL
       && (symbol->flags & BSF_SECTION_SYM) == 0
       && reloc_entry->addend == 0)
     {
       reloc_entry->address += input_section->output_offset;
       return bfd_reloc_ok;
     }
-*/
+
   return bfd_reloc_continue;
 }
 
