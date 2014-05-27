@@ -184,7 +184,11 @@ void classGen(Ir &ir, ofstream &out)
 	  vector<string> varName;
 	  ir.get_instr_var_name( i, varName);
 	  // for every class define its own variable
-	  for( auto i : 
+	  for( auto i : varName)
+	    {
+	      // TODO long long should be an adhoc type
+	      out << "long long " << i << ";" << endl;
+	    }
 	  out << "init( char *c)\n{\n";
 	  out << "WST(c);\n";
 	  string ruleBinary = ir.get_instr_binary(i);
@@ -235,11 +239,13 @@ void classGen(Ir &ir, ofstream &out)
 	  assert( varOff.size() == varLen.size() && 
 		  varOff.size() == varName.size() );
 	  out << "//// " << ruleBinary << endl;
-	  for( int j = 0; j < varOff.size(); ++j )
+	  for( int j = 0; j < (int)varOff.size(); ++j )
 	    {
 	      out << "set_val( " << varName[j] << ", tmp + " << varOff[j].second << ", " << varLen[j] << ");\n";
 	    }
 	  out << "};\n};\n";
+
+	  // generate do function for each instruction
 	}
       // here we don't check for binary invalidity
       // see asGen.cpp/checkBianry(5) for detail
@@ -261,3 +267,4 @@ void classGen(Ir &ir, ofstream &out)
 //       out << " 
 //     }
 // }
+
