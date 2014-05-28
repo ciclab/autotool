@@ -46,6 +46,7 @@ public:
   void set_enum_var(vector<string> &ev);
   void set_reloc_info(vector<int> &);
   void set_do_list(vector<int> &);
+  void get_do_list(vector<int> &);
   void set_type(string type);
   void read_do_list( ifstream &fin );
   void output_do_list( ofstream &fout);

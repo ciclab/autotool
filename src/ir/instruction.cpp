@@ -256,6 +256,10 @@ void Instruction::set_do_list( vector<int> &dl)
 {
   do_list = dl;
 }
+void Instruction::get_do_list( vector<int> &dl)
+{
+  dl = do_list;
+}
 void Instruction::read_reloc_info(ifstream &fin)
 {
   int num;

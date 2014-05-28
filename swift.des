@@ -379,7 +379,7 @@
 	// 用一个cycle
 	  (cycle 1)
 	  (= fetch.pc a)
-	  (decode.abort)
+	  (call decode.abort)
 	)
       )
       (code 'jmp' ' ' a)
@@ -393,7 +393,7 @@
 	  (if (& memacc.state 1)
    	    (
 	      (= fetch.pc a)
-	      (decode.abort)
+	      (call decode.abort)
 	    )
 	  )
 	)
@@ -793,7 +793,7 @@
 	  (= valB ([] gr_r rd) )
 	)
 	(execute_s
-          (if (== i 0 )
+          (if (eq i 0 )
 	    (= valA ( | ( & valA 65535 ) (<< valB 16 ) ) )
 	    (= valA ( | ( & valA 4294901760 ) valB ) )
 	  )

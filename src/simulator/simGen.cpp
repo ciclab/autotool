@@ -23,6 +23,9 @@ void pipelineGen(Ir &ir, ofstream &out);
 // generate class for each instruction
 void classGen(Ir &ir, ofstream &out);
 
+// generate C code from do_content 
+void dfsGenCCode( do_content & d, ofstream & out );
+
 // // generate functions for enum, called by classGen;
 // void enumFuncGen(Ir &ir, ofstream &out);
 
@@ -180,7 +183,7 @@ void classGen(Ir &ir, ofstream &out)
       string ruleType = ir.get_instr_type(i);
       if( ruleType == "e_notpack" )
 	{
-	  out << "class class_" << ruleName << "{\n ";
+	  out << "class class_" << ruleName << " : public _class_instr_ {\n ";
 	  vector<string> varName;
 	  ir.get_instr_var_name( i, varName);
 	  // for every class define its own variable
@@ -189,7 +192,7 @@ void classGen(Ir &ir, ofstream &out)
 	      // TODO long long should be an adhoc type
 	      out << "long long " << i << ";" << endl;
 	    }
-	  out << "init( char *c)\n{\n";
+	  out << " void init( char *c)\n{\n";
 	  out << "WST(c);\n";
 	  string ruleBinary = ir.get_instr_binary(i);
 	  string ruleRevBinary = ruleBinary;
@@ -243,9 +246,46 @@ void classGen(Ir &ir, ofstream &out)
 	    {
 	      out << "set_val( " << varName[j] << ", tmp + " << varOff[j].second << ", " << varLen[j] << ");\n";
 	    }
-	  out << "};\n};\n";
+	  out << "};\n";
 
 	  // generate do function for each instruction
+	  vector<do_content> doCnt;
+	  ir.get_do_content(i, doCnt);
+	  out << " Do(){\n" << endl;
+	  for( auto i : doCnt )
+	    {
+	      // iterator over all content in do_content
+	      // index start from 1, 0 -> "do" 
+	      for( int j = 1; j < (int)i.ivec.size(); ++j )
+		{
+		  // stage name, without quote
+		  assert( i.ivec[j].is_vector() &&
+			  i.ivec[j].ivec.size() > 0 );
+		  auto vec = i.ivec[j].ivec;
+		  assert( vec[0].is_str1() );
+		  string stageName = vec[0].str;
+		  out << " if( " << stageName << " ) " << endl;
+		  out << "{\n" ;
+		  for( int k = 1; k < (int)vec.size(); ++k )
+		    {
+		      auto t = vec[k];
+		      if( t.is_vector() && t.ivec[0].is_str1() &&
+			  t.ivec[0].str == "cycle" )
+			{
+			  // update cycle count 
+			}
+		      else
+			{
+			  dfsGenCCode( t, out);
+			}
+		    }
+		  out << "}\n" ;
+		}
+	    }
+	  out << "};\n" << endl;
+
+	  // end of class definition
+	  out << "};\n";
 	}
       // here we don't check for binary invalidity
       // see asGen.cpp/checkBianry(5) for detail
@@ -268,3 +308,108 @@ void classGen(Ir &ir, ofstream &out)
 //     }
 // }
 
+void dfsGenCCode( do_content & d, ofstream & out )
+{
+  if( d.is_str1() )
+    {
+      out << d.str ;
+    }
+  else if( d.is_vector() )
+    {
+      assert( d.ivec.size() > 0 );
+      if( d.ivec[0].is_vector() )
+	{
+	  for( auto i : d.ivec )
+	    dfsGenCCode( i, out );
+	}
+      else
+	{
+	  // equal test expression
+	  // ( eq A B )
+	  // ( ( A ) == ( B ) )
+	  if( d.ivec[0].str == "eq" )
+	    {
+	      assert( d.ivec.size() == 3 );
+	      out << " ( ";
+	      out << " ( ";
+	      dfsGenCCode( d.ivec[1], out);
+	      out << " ) ";
+	      out << " == ";
+	      out << " ( ";
+	      dfsGenCCode( d.ivec[2], out);
+	      out << " ) ";
+	      out << " ) ";
+	      out << endl;
+	    }
+	  // condition expression
+	  // ( if ( cond ) ( true_action ) ( false_ action ) )
+	  // if ( cond ) { treu_action } else { false_action }
+	  else if( d.ivec[0].str == "if" )
+	    {
+	      assert( d.ivec.size() > 2 );
+	      out << " if ( " ;
+	      dfsGenCCode( d.ivec[1], out );
+	      out << " ) ";
+	      out << " { ";
+	      dfsGenCCode( d.ivec[2], out );
+	      out << " } ";
+	      if( d.ivec.size() > 3 )
+		{
+		  out << " else \n{ \n";
+		  for( int j = 3; j < (int)d.ivec.size(); ++j )
+		    {
+		      dfsGenCCode( d.ivec[j], out);
+		    }
+		  out << " }\n";
+		}
+	    }
+	  // assignment expression
+	  // ( = to from )
+	  // to = from
+	  else if( d.ivec[0].str == "=" )
+	    {
+	      assert( d.ivec.size() == 3 );
+	      // TODO we do not check validity of right value
+	      // usually right value should be a variable
+	      dfsGenCCode( d.ivec[1], out );
+	      out << " = ";
+	      dfsGenCCode( d.ivec[2], out );
+	      out << ";\n";
+	    }
+	  // bit operation 
+	  // ( op a b )
+	  // ( ( a ) op ( b ) )
+	  else if( d.ivec[0].str == "&" ||
+		   d.ivec[0].str == "|" ||
+		   d.ivec[0].str == "<<" ||
+		   d.ivec[0].str == ">>" )
+	    {
+	      // TODO 
+	      // we do not check validity of data type
+	      assert( d.ivec.size() == 3 );
+	      out << " ( ";
+	      out << " ( ";
+	      dfsGenCCode( d.ivec[1], out );
+	      out << " ) ";
+	      out << " & ";
+	      out << " ( ";
+	      dfsGenCCode( d.ivec[2], out );
+	      out << " ) ";
+	      out << " ) ";
+	    }
+	  // index operation
+	  // ( [] a b )
+	  // a[b]
+	  // only one dimention allowed
+	  else if( d.ivec[0].str == "[]" )
+	    {
+	      assert( d.ivec.size() == 3 );
+	      // TODO no validity check at present
+	      dfsGenCCode( d.ivec[1], out);
+	      out << " [ ";
+	      dfsGenCCode( d.ivec[2], out);
+	      out << " ] ";
+	    }
+	}
+    }
+}

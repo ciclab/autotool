@@ -472,3 +472,12 @@ void Ir::get_instr_var_len( int i, vector<int> &vl)
 {
   instruction_set[i].get_var_len(vl);
 }
+void Ir::get_do_content( int i, vector<do_content> &dc)
+{
+  vector<int> dl;
+  instruction_set[i].get_do_list(dl);
+  for( auto i : dl )
+    {
+      dc.push_back( docnt[i] );
+    }
+}

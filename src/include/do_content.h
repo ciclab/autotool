@@ -22,5 +22,8 @@ class do_content
   void output(ofstream &fout);
   void output_empty(ofstream &fout);
   void read(ifstream &fin);
+  bool is_vector(){ return type == do_type_is_vector; };
+  bool is_str1(){ return type == do_type_is_string1; };
+  bool is_str2(){ return type == do_type_is_string2; };
 };
 #endif

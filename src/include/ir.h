@@ -76,6 +76,7 @@ public:
 		       vector<pp> &off,vector<string> &enum_var,vector<pair<string,string>  > &al,
 		       vector<int> &ri,string type, vector<string> &vn, vector<int> &vl, vector<int> &dl);
   void add_do_content( Asem & dc);
+  void get_do_content( int i, vector<do_content> &);
   void output_instruction_set(ofstream &fout);
   void read_instr(ifstream &fin);
   void output_type(ofstream &fout);
