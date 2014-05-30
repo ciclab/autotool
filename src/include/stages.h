@@ -12,5 +12,6 @@ class Stage
  Stage(string n):name(n){};
   void read(ifstream &fin);
   void output(ofstream &fout);
+  string get_name();
 };
 #endif

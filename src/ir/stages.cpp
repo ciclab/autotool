@@ -7,4 +7,7 @@ void Stage::output(ofstream &fout)
 {
   fout<<name<<endl;
 }
-
+string Stage::get_name()
+{
+  return name;
+}

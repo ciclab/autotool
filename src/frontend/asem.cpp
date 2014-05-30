@@ -128,7 +128,8 @@ void Asem::gen(FILE * & input){
       asem_3.type=type_is_string1;
       asem_3.name=c1;
       int c3;
-      while((c3=fgetc(input))!=EOF && (c3==(int)']' || isalnum(c3) || c3=='_' || c3=='[' || c3=='.'
+      while((c3=fgetc(input))!=EOF && (c3==(int)']' || isalnum(c3) || c3=='_' || c3=='[' || c3=='.' || c3 == '<' 
+				       || c3 == '>' || c3 == '=' 
 				    /*TODO 这里应该也用isgraph,但是会出现奇怪的效果，暂时列举]*/))
 	asem_3.name+=c3;
       ivec.push_back(asem_3);

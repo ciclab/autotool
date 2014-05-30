@@ -378,8 +378,8 @@
         (execute_s
 	// 用一个cycle
 	  (cycle 1)
-	  (= fetch.pc a)
-	  (call decode.abort)
+	  (= fetch_s.pc a)
+	  (call decode_s.abort)
 	)
       )
       (code 'jmp' ' ' a)
@@ -390,10 +390,10 @@
       (do
         (execute_s
 	  (cycle 1)
-	  (if (& memacc.state 1)
+	  (if (& memacc_s.state 1)
    	    (
-	      (= fetch.pc a)
-	      (call decode.abort)
+	      (= fetch_s.pc a)
+	      (call decode_s.abort)
 	    )
 	  )
 	)

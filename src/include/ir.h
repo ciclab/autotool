@@ -67,6 +67,7 @@ public:
   void add_stage(Stage s);
   void read_stage(ifstream &fin);
   void output_stage(ofstream &fout);
+  string get_stage_name(int);
   void add_type(Type t);
   /* void add_wire(string &n,int w); */
   void add_wire(Wire w);
@@ -101,6 +102,7 @@ public:
   string get_mem_name(int i);
   int get_num_mem();
   int get_num_reg();
+  int get_num_stage();
   string get_reg_name(int i);
   int get_reg_size(int i);
   int get_reg_width(int i);

@@ -481,3 +481,11 @@ void Ir::get_do_content( int i, vector<do_content> &dc)
       dc.push_back( docnt[i] );
     }
 }
+string Ir::get_stage_name(int idx)
+{
+  return stage[idx].get_name();
+}
+int Ir::get_num_stage()
+{
+  return stage.size();
+}

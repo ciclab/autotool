@@ -26,6 +26,9 @@ void classGen(Ir &ir, ofstream &out);
 // generate C code from do_content 
 void dfsGenCCode( do_content & d, ofstream & out );
 
+// generate stage datatype
+void stageGen(Ir &ir, ofstream &out);
+
 // // generate functions for enum, called by classGen;
 // void enumFuncGen(Ir &ir, ofstream &out);
 
@@ -72,6 +75,9 @@ int main(int argc, char *argv[])
 
       ofstream classOut("class");
       classGen(ir, classOut);
+      
+      ofstream stageOut("stage");
+      stageGen( ir, stageOut);
     }
   return 0;
 }
@@ -174,6 +180,21 @@ void classGen(Ir &ir, ofstream &out)
       }
   int vliwModeOff, vliwModeSig;
   bool vliwModeSet = ir.get_vliw_mode( vliwModeSig, vliwModeOff );
+  
+  out << "#include <cstdlib>\n#include <cassert>\ntypedef long long ll;\n#include \"stage\"\nextern void set_val (ll, char *, int);\n#define WST(a) ( (a) = (a) )\n\nextern ll valA, valB, gr_r[], valA0,fetch, valC, valA1, gr[];\n";
+
+  out << "class _class_instr_\
+{\
+public:\n";
+  int stageNum = ir.get_num_stage();
+  for( int i = 0; i < stageNum; ++i )
+    {
+      string stageName = ir.get_stage_name(i);
+      out << "int " << stageName << "_active\n;";
+    }
+    out <<"virtual void inti (char *c);		\
+  virtual void Do ();\
+};\n" ;
   // output class for each instruction
   for( int i = 0 ; i < instrSize; ++i )
     {
@@ -184,6 +205,8 @@ void classGen(Ir &ir, ofstream &out)
       if( ruleType == "e_notpack" )
 	{
 	  out << "class class_" << ruleName << " : public _class_instr_ {\n ";
+	  out << " public : \n ";
+	  
 	  vector<string> varName;
 	  ir.get_instr_var_name( i, varName);
 	  // for every class define its own variable
@@ -251,7 +274,7 @@ void classGen(Ir &ir, ofstream &out)
 	  // generate do function for each instruction
 	  vector<do_content> doCnt;
 	  ir.get_do_content(i, doCnt);
-	  out << " Do(){\n" << endl;
+	  out << "void Do(){\n" << endl;
 	  for( auto i : doCnt )
 	    {
 	      // iterator over all content in do_content
@@ -264,7 +287,8 @@ void classGen(Ir &ir, ofstream &out)
 		  auto vec = i.ivec[j].ivec;
 		  assert( vec[0].is_str1() );
 		  string stageName = vec[0].str;
-		  out << " if( " << stageName << " ) " << endl;
+		  // ._active is generated for each class
+		  out << " if( " << stageName << "_active" << " ) " << endl;
 		  out << "{\n" ;
 		  for( int k = 1; k < (int)vec.size(); ++k )
 		    {
@@ -376,13 +400,15 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	      dfsGenCCode( d.ivec[2], out );
 	      out << ";\n";
 	    }
-	  // bit operation 
+	  // bit/alu operation 
 	  // ( op a b )
 	  // ( ( a ) op ( b ) )
 	  else if( d.ivec[0].str == "&" ||
 		   d.ivec[0].str == "|" ||
 		   d.ivec[0].str == "<<" ||
-		   d.ivec[0].str == ">>" )
+		   d.ivec[0].str == ">>" ||
+		   d.ivec[0].str == "-" ||
+		   d.ivec[0].str == "+" )
 	    {
 	      // TODO 
 	      // we do not check validity of data type
@@ -412,4 +438,24 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	    }
 	}
     }
+}
+
+void stageGen(Ir &ir, ofstream &out)
+{
+  out << "class " << " {\n";
+  // TODO not only int
+  out << "public:\n" << "int state;\n";
+  out << "int pc;\n";
+  // TODO a more unique name
+  out << "}";
+  
+  int num = ir.get_num_stage();
+  for( int i = 0; i < num ; ++i )
+    {
+      string name = ir.get_stage_name(i);
+      if( i > 0 )
+	out << ", ";
+      out << name;
+    }
+  out << ";\n";
 }
