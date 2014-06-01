@@ -110,9 +110,11 @@ public:
   string get_type_name(int i);
   int get_type_width(int i);
   int get_num_pipeline();
-  int get_pipeline_width(int i);
-  string get_pipeline_name(int i);
+  int get_ele_width_pipeline(int i, int j);
+  string get_ele_name_pipeline(int i, int j);
   void output_do_content(ofstream &out);
   void read_do_content(ifstream &fin);
+  string get_name_pipeline(int i);
+  int get_ele_num_pipeline(int i);
 };
 #endif

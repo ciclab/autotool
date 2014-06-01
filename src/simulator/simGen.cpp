@@ -34,7 +34,8 @@ void stageGen(Ir &ir, ofstream &out);
 
 string autoType(int width, bool sig);
 
-
+// generate typedef for each type
+void typeDefGen( ofstream &);
 // hash_control hc_unfold_sim;
 // vector<vector<triple > > unfolded_list_sim;
 // vector<instr_type> u_l_t;
@@ -78,6 +79,11 @@ int main(int argc, char *argv[])
       
       ofstream stageOut("stage");
       stageGen( ir, stageOut);
+      
+      // file include typedef
+      // used by function autoType()
+      ofstream typeOut("type");
+      typeDefGen( typeOut );
     }
   return 0;
 }
@@ -124,15 +130,20 @@ void regGen(Ir &ir, ofstream &out)
 void pipelineGen(Ir &ir, ofstream &out)
 {
   int num = ir.get_num_pipeline();
-  out << " struct pl \n{";
   for( int i = 0; i < num; ++i )
     {
-      string name = ir.get_pipeline_name(i);
-      int width = ir.get_pipeline_width(i);
-      string typeName = autoType( width, true);
-      out << typeName << ' ' << name << ';' << endl; 
+      string name = ir.get_name_pipeline(i);
+      out << " struct " << " \n{";
+      int m = ir.get_ele_num_pipeline(i);
+      for( int j = 0; j < m; ++j )
+	{
+	  string tName = ir.get_ele_name_pipeline( i, j);
+	  int width = ir.get_ele_width_pipeline( i, j);
+	  string typeName = autoType( width, true);
+	  out << typeName << ' ' << tName << ';' << endl;
+	}
+      out << "}" << name << ";" << endl;
     }
-  out << "};" << endl;
 }
 
 // someting like asGen.cpp/main()
@@ -181,8 +192,10 @@ void classGen(Ir &ir, ofstream &out)
   int vliwModeOff, vliwModeSig;
   bool vliwModeSet = ir.get_vliw_mode( vliwModeSig, vliwModeOff );
   
-  out << "#include <cstdlib>\n#include <cassert>\ntypedef long long ll;\n#include \"stage\"\nextern void set_val (ll, char *, int);\n#define WST(a) ( (a) = (a) )\n\nextern ll valA, valB, gr_r[], valA0,fetch, valC, valA1, gr[];\n";
-
+  out << "#include <cstdlib>\n#include <cassert>\ntypedef long long ll;\n#include \"type\"\n#include \"stage\"\nextern void set_val (ll, char *, int);\n#define WST(a) ( (a) = (a) )\n\n";
+  out << "#include \"reg\"\n";
+  out << "#include \"pipeline\"\n";
+  // out << "pipe
   out << "class _class_instr_\
 {\
 public:\n";
@@ -458,4 +471,13 @@ void stageGen(Ir &ir, ofstream &out)
       out << name;
     }
   out << ";\n";
+}
+
+void typeDefGen( ofstream & out )
+{
+  for( auto i : typeSet )
+    {
+      // TODO use gmp here
+      out << "typedef long long " << i << ";\n";
+    }
 }

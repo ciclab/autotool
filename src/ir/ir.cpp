@@ -405,17 +405,25 @@ int Ir::get_type_width(int i)
 {
   return type[i].get_len();
 }
+int Ir::get_ele_num_pipeline(int i)
+{
+  return pipeline[i].get_num_ele();
+}
 int Ir::get_num_pipeline()
 {
   return pipeline.size();
 }
-string Ir::get_pipeline_name(int i)
+string Ir::get_name_pipeline( int i )
 {
   return pipeline[i].get_name();
 }
-int Ir::get_pipeline_width( int i )
+string Ir::get_ele_name_pipeline(int i, int j)
 {
-  return pipeline[i].get_width();
+  return pipeline[i].get_ele_name(j);
+}
+int Ir::get_ele_width_pipeline( int i, int j )
+{
+  return pipeline[i].get_ele_width(j);
 }
 void static dfs_copy_content( Asem & f, do_content & t)
 {
