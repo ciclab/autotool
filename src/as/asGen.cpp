@@ -27,6 +27,14 @@ static bool isTypeAddr(const string s)
   // TODO this may confuse other name definition
   return (s.compare(0,5,"type_")==0 || s.compare(0,5,"addr_")==0);
 }
+string funcName2ClassName( string funcName)
+{
+  // assert( funcName.compare( 0, 5, "FUNC_" ) == 0 );
+  string className = "class_";
+  // className.append( funcName.begin() + 5, funcName.end() );
+  className.append( funcName.begin(), funcName.end() );
+  return className;
+}
 // now every addr type name is translated to addr_name_true/false_width_rightshift
 static int getRightShiftByName(const string s)
 {
@@ -272,8 +280,15 @@ int main(int argc,char *argv[])
   dcout.open(dc_file_name.c_str(),ofstream::out);
   dlout.open(dl_file_name.c_str(),ofstream::out);
   dyout.open(dy_file_name.c_str(),ofstream::out);
-  dytokout.open(dytok_file_name.c_str(),ofstream::out);
+  // out bison file for disassembler of simulator
+  ofstream syout, sytokout;
+  // TODO configurable name
+  string sy_file_name = "sim.y";
+  syout.open(sy_file_name, ofstream::out);
+  string sytok_file_name = "sim.tok";
+  sytokout.open( sytok_file_name, ofstream::out);
 
+  dytokout.open(dytok_file_name.c_str(),ofstream::out);
   dlout<<"%{\n";
   dlout<<"#include \"opcode/dis_as.h\"\n";// TODO file name should be configurable
   dlout<<"#define YY_NO_INPUT\n";// suppress warning: input defined but not used
@@ -281,11 +296,20 @@ int main(int argc,char *argv[])
   dlout<<"%option nounput\n";// suppress warning: yyunput defined but not used
   dlout<<"%%\n";
   dytokout<<"%{\n";
+  sytokout<<"%{\n";
   // TODO function name should be configurable
   dytokout<<"extern void dis_error(const char *s);\n";
   dytokout<<"extern int dis_lex(void);\n";
   dytokout<<"#include \"opcode/dis_as.y.h\"\n";
   dytokout<<"%}\n";
+  sytokout<<"extern void dis_error(const char *s);\n";
+  sytokout<<"extern int dis_lex(void);\n";
+  sytokout<<"#include \"class\"\n";
+  // TODO a configurable number instead of 100 
+  sytokout << " int sim_dis_list_len[100];\n";
+  sytokout << " int sim_dis_list_cnt;\n";
+  sytokout << " _class_instr_ * _sim_dis_list[100];\n";
+  sytokout<<"%}\n";
 
   dhout<<"#ifndef DH_H"<<endl;
   dhout<<"#define DH_H"<<endl;
@@ -369,6 +393,7 @@ int main(int argc,char *argv[])
   // dtokout<<"%type<chp> "<<top_rule_name<<endl;
   yout<<top_rule_name<<": "<<endl;
   dyout<<top_rule_name<<": "<<endl;
+  syout << top_rule_name << ":" << endl;
   // dyout<<top_rule_name<<": "<<endl;
   for(int i=0,j=0;i<instr_size;++i)
     {
@@ -379,15 +404,18 @@ int main(int argc,char *argv[])
 	    {
 	      yout<<"|"<<endl;
 	      dyout<<"|"<<endl;
+	      syout << "|" << endl;
 	    }
 	  yout<<n<<endl;//"{yyret[0]=$1;}"<<endl; no use now
 	  dyout<<n<<endl;
+	  syout << n << endl;
 	  ++j;
 	}
     }
   yout<<";\n";
   dyout<<";\n";
-  
+  syout<<";\n";
+
   // record which rule is used
   vector<bool> useful;
   useful.resize(instr_size);
@@ -710,14 +738,24 @@ int main(int argc,char *argv[])
 		{
 		  dyout<<n<<" : "<<bi->func_name<<"{dis_list_len[dis_list_cnt]="<<rbinary.length()
 		       <<";dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<";++dis_list_cnt;};\n";
+		  string className = funcName2ClassName( bi->func_name );
+		  syout<<n<<" : "<<bi->func_name<<"{ sim_dis_list_len[sim_dis_list_cnt]="<<rbinary.length()
+		       <<";sim_dis_list[sim_dis_list_cnt]= new "<< className <<";++sim_dis_list_cnt;};\n";
 		}
 	      else
 		{
 		  dytokout<<"%token "<<n<<endl;
 		  dytokout<<"%token "<<n<<"_end"<<endl;
+		  sytokout<<"%token "<<n<<endl;
+		  sytokout<<"%token "<<n<<"_end"<<endl;
 		}
 	    }
-	  else dyout<<n<<":{};\n";// TODO defalut to vliw seperator
+	  else
+	    {
+	      // TODO defalut to vliw seperator
+	      dyout << n << ":{};\n";
+	      syout << n << ":{};\n";
+	    }
 
 	  yout<<"int i;\ni^=i;\n";
 	  vector<bfd_info> instr_bfd_info;
@@ -789,6 +827,7 @@ int main(int argc,char *argv[])
 	  ir.get_instr_arglist(i,args);
 	  yout<<n<<" : ";
 	  dyout<<n<<" : ";
+	  syout << n << " : " ;
 	  FRA(i,args)
 	    {
 	      if(i!=args.begin())
@@ -800,30 +839,41 @@ int main(int argc,char *argv[])
 	    {
 	      // dyout << i->first << ' ' ;
 	      if( i != args.begin() )
-	      	dyout << " | ";
+	      	{
+		  dyout << " | ";
+		  syout << " | ";
+		}
 	      for( auto j = args.begin(); ; ++j )
 	      	{
 		  if( j != args.begin() )
-		    dyout << ' ';
+		    {
+		      dyout << ' ';
+		      syout << ' ';
+		    }
 	      	  dyout<< j->first;
+		  syout << j->first;
 	      	  if( j == i )
 	      	    break;
 	      	}
 	      dyout << "_end";
+	      syout << "_end";
 	    }
 	  yout<<";"<<endl;
 	  dyout<<";"<<endl;
+	  syout << ";" << endl;
 	  max_slot_len=max(max_slot_len,(int)args.size());
 	  for( auto i = args.begin(); i != args.end(); ++i )
 	    {
 	      yout<<i->first<<" : ";
 	      dyout<<i->first<<" : ";
+	      syout << i->first << " : ";
 	      for(int j=0;j<(int)i->second.size();++j)
 		{
 		  if(j)
 		    {
 		      yout<<" | \n";
 		      dyout<<" | \n";
+		      syout<<" | \n";
 		    }
 		  string name;
 		  for(;j<(int)i->second.size() && i->second[j]!=c_sep;++j)
@@ -836,36 +886,62 @@ int main(int argc,char *argv[])
 		  if(bi!=&emp)
 		    {
 		      dyout<<name;
+		      syout<<name;
 		      auto ii = i;
 		      ++ii;
 		      dyout<<" {dis_list_len[dis_list_cnt]="<<name<<"_LEN "<<" ;dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<"; ++dis_list_cnt;}\n";
+		      syout << " {sim_dis_list_len[sim_dis_list_cnt]="<<name<<"_LEN " <<
+			" ;sim_dis_list[sim_dis_list_cnt]= new " << funcName2ClassName(bi->func_name) <<"; ++sim_dis_list_cnt;}\n";
 		    }
-		  else dyout<<"{}"<<endl;
+		  else 
+		    {
+		      dyout<<"{}"<<endl;
+		      syout << "{}" << endl;
+		    }
 		}
 	      yout<<" ; "<<endl;
 	      dyout<<" ; "<<endl;
-
+	      syout << " ; " << endl;
 	      dyout << i->first << "_end" << " : ";
-	      for( int j = 0; j < (int) i->second.size(); ++j )
+	      syout << i->first << "_end" << " : ";
+	      for( int j = 0, output = 0; j < (int) i->second.size(); ++j )
 		{
-		  if(j)
-		    dyout << " | \n";
 		  string name;
 		  for(;j<(int)i->second.size() && i->second[j]!=c_sep;++j)
 		    {
-		      dyout << i->second[j];
 		      name.push_back( i->second[j] );
 		    }
 		  
 		  binary_info *bi=(binary_info*)rule2func.find(name);
+		  if( bi != &emp )
+		    {
+		      if(output)
+			{
+			  dyout << " | \n";
+			  syout << " | \n";
+			}
+		      dyout << name;
+		      syout << name;
+		      output = 1;
+		    }
 		  if(bi!=&emp)
 		    {
 		      dyout<<"_end";
+		      syout << "_end";
 		      dyout<<" {dis_list_len[dis_list_cnt]="<<name<<"_LEN "<<" ;dis_list[dis_list_cnt]=FUNC_"<<bi->func_name<<"; ++dis_list_cnt;}\n";
+		      syout<<" {sim_dis_list_len[sim_dis_list_cnt]="<< name
+			   <<"_LEN "<<" ;sim_dis_list[sim_dis_list_cnt]= new "<<
+			funcName2ClassName( bi->func_name ) << "; ++sim_dis_list_cnt;}\n";
 		    }
-		  else dyout<<"{}"<<endl;
+		  else 
+		    {
+		      // we do not allow end with empty binary
+		      // dyout<<"{}"<<endl;
+		      // syout << "{}" << endl;
+		    }
 		}
 	      dyout << " ; " << endl;
+	      syout << " ; " << endl;
 	    }
 	}
     }
@@ -881,20 +957,30 @@ int main(int argc,char *argv[])
   dlout<<"%%\n";
   dlout<<"int yywrap()\n{\nreturn 1;\n}"<<endl;
   dytokout<<"%%\n";
+  sytokout<<"%%\n";
   dyout<<"%%\n";
   dyout<<"void dis_error(const char *s){s=s;}"<<endl;
+  syout<<"%%\n";
+  syout<<"void dis_error(const char *s){s=s;}"<<endl;
 
 
   // TODO function name should be configurable
   // dyout<<"%%\nvoid dis_error(const char *s)\n{\n}\n";
 
   dyout.close();
+  syout.close();
   dytokout.close();
+  sytokout.close();
   string disy_file_name=argv[3];
   string tmpcmd="cat "+  dy_file_name  + " >> " + dytok_file_name;
   system(tmpcmd.c_str());
   tmpcmd="mv " + dytok_file_name + " " + dy_file_name;
   system(tmpcmd.c_str());
+
+  tmpcmd = "cat " + sy_file_name + " >> " + sytok_file_name;
+  system( tmpcmd.c_str() );
+  tmpcmd = "mv " + sytok_file_name + " " + sy_file_name;
+  system( tmpcmd.c_str() );
 
   // dcout<<"assert(0);\n";// there may be some problem with assembler
   // dcout<<"return 0;\n";

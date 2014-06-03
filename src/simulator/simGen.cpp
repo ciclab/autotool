@@ -191,11 +191,11 @@ void classGen(Ir &ir, ofstream &out)
       }
   int vliwModeOff, vliwModeSig;
   bool vliwModeSet = ir.get_vliw_mode( vliwModeSig, vliwModeOff );
-  
+  out << "#ifndef CLASS_H\n";
+  out << "#define CLASS_H\n";
   out << "#include <cstdlib>\n#include <cassert>\ntypedef long long ll;\n#include \"type\"\n#include \"stage\"\nextern void set_val (ll, char *, int);\n#define WST(a) ( (a) = (a) )\n\n";
   out << "#include \"reg\"\n";
   out << "#include \"pipeline\"\n";
-  // out << "pipe
   out << "class _class_instr_\
 {\
 public:\n";
@@ -205,9 +205,11 @@ public:\n";
       string stageName = ir.get_stage_name(i);
       out << "int " << stageName << "_active\n;";
     }
-    out <<"virtual void inti (char *c);		\
+  out <<"virtual void inti (char *c);		\
   virtual void Do ();\
 };\n" ;
+
+  // out << "pipe
   // output class for each instruction
   for( int i = 0 ; i < instrSize; ++i )
     {
@@ -328,6 +330,7 @@ public:\n";
       // see asGen.cpp/checkBianry(5) for detail
       
     }
+  out << "#endif" << endl;
 }
 
 // void enumFuncGen(Ir &ir, ofstream &out)
