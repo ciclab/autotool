@@ -29,7 +29,7 @@ void dfsGenCCode( do_content & d, ofstream & out );
 // generate stage datatype
 void stageGen(Ir &ir, ofstream &out);
 
-// // generate functions for enum, called by classGen;
+// // generate functions for enum, called by en;
 // void enumFuncGen(Ir &ir, ofstream &out);
 
 string autoType(int width, bool sig);
@@ -65,24 +65,25 @@ int main(int argc, char *argv[])
       fin.open(argv[1]);
       ir.read_all(fin);
 
-      ofstream memOut("mem");
+      ofstream memOut("mem.h");
       memGen(ir, memOut);
 
-      ofstream regOut("reg");
+      ofstream regOut("reg.h");
       regGen(ir, regOut);
       
-      ofstream pipelineOut("pipeline");
+      ofstream pipelineOut("pipeline.h");
       pipelineGen(ir, pipelineOut);
 
-      ofstream classOut("class");
+      ofstream classOut("class.h");
       classGen(ir, classOut);
       
-      ofstream stageOut("stage");
+      ofstream stageOut("stage.h");
       stageGen( ir, stageOut);
       
       // file include typedef
       // used by function autoType()
-      ofstream typeOut("type");
+      // this should be called in the last 
+      ofstream typeOut("type.h");
       typeDefGen( typeOut );
     }
   return 0;
@@ -116,6 +117,7 @@ string autoType(int width, bool sig)
 
 void regGen(Ir &ir, ofstream &out)
 {
+  out << "#include \"type.h\"\n";
   int num = ir.get_num_reg();
   for( int i = 0; i < num; ++i )
     {
@@ -129,6 +131,7 @@ void regGen(Ir &ir, ofstream &out)
 
 void pipelineGen(Ir &ir, ofstream &out)
 {
+  out << "#include \"type.h\"\n";
   int num = ir.get_num_pipeline();
   for( int i = 0; i < num; ++i )
     {
@@ -193,9 +196,11 @@ void classGen(Ir &ir, ofstream &out)
   bool vliwModeSet = ir.get_vliw_mode( vliwModeSig, vliwModeOff );
   out << "#ifndef CLASS_H\n";
   out << "#define CLASS_H\n";
-  out << "#include <cstdlib>\n#include <cassert>\ntypedef long long ll;\n#include \"type\"\n#include \"stage\"\nextern void set_val (ll, char *, int);\n#define WST(a) ( (a) = (a) )\n\n";
-  out << "#include \"reg\"\n";
-  out << "#include \"pipeline\"\n";
+  out << "#include \"type.h\"\n";
+  out << "#include \"simlib.h\"";
+  out << "#include <cstdlib>\n#include <cassert>\ntypedef long long ll;\n#include \"stage.h\"\n#define WST(a) ( (a) = (a) )\n\n";
+  out << "#include \"reg.h\"\n";
+  out << "#include \"pipeline.h\"\n";
   out << "class _class_instr_\
 {\
 public:\n";
@@ -205,8 +210,8 @@ public:\n";
       string stageName = ir.get_stage_name(i);
       out << "int " << stageName << "_active\n;";
     }
-  out <<"virtual void inti (char *c);		\
-  virtual void Do ();\
+  out <<"virtual void init (char *c){};		\
+  virtual void Do (){};\
 };\n" ;
 
   // out << "pipe
@@ -260,8 +265,10 @@ public:\n";
 #endif
 	  assert( ( ruleRevBinary.length() % 8 ) == 0 );
 	  out << "char tmp[ " << ruleBinary.length() << " ];" << endl;
-	  out << " assert( tmp != NULL );\n " << endl;
-	  out << " assert( c != NULL );\n" << endl;
+	  // out << " assert(tmp);\n ";
+	  // out << " WST(c);\n ";
+	  // out << " assert( !tmp );\n " << endl;
+	  // out << " assert( !c );\n" << endl;
 
 	  for( int j = 0; j < (int)ruleRevBinary.length(); ++j )
 	    {
@@ -458,6 +465,7 @@ void dfsGenCCode( do_content & d, ofstream & out )
 
 void stageGen(Ir &ir, ofstream &out)
 {
+  out << "#include \"type.h\"\n";
   out << "class " << " {\n";
   // TODO not only int
   out << "public:\n" << "int state;\n";
@@ -478,9 +486,12 @@ void stageGen(Ir &ir, ofstream &out)
 
 void typeDefGen( ofstream & out )
 {
+  out << "#ifndef TYPE_H\n";
+  out << "#define TYPE_H\n";
   for( auto i : typeSet )
     {
       // TODO use gmp here
       out << "typedef long long " << i << ";\n";
     }
+  out << "#endif\n";
 }

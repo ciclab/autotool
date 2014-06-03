@@ -19,11 +19,14 @@ input_file = ../swift.des
 binutils: y.c y.h l.c l.h coff-dummy.c tc-dummy.c dis_as.c dis_as.h dis_l.h dis_l.c dis_as.y.h
 	cp y.c y.h l.c l.h  $(BINUTILS_DIR)/gas;cp tc-dummy.c $(BINUTILS_DIR)/gas/config;cp coff-dummy.c $(BINUTILS_DIR)/bfd/coff-mips.c;cp ../src/as/strstack.cpp $(BINUTILS_DIR)/gas/strstack.c; cp ../src/include/strstack.h $(BINUTILS_DIR)/gas ; cp ./reloc.c $(BINUTILS_DIR)/bfd ; cp ./reloc.texi $(BINUTILS_DIR)/bfd/doc ;cp ../src/include/strstack.h $(BINUTILS_DIR)/binutils ; cp ../src/as/strstack.cpp $(BINUTILS_DIR)/binutils/strstack.c ; cp ./dummy-dis.c $(BINUTILS_DIR)/opcodes ; cp  dis_l.c dis_as.c $(BINUTILS_DIR)/opcodes ; cp dis_as.h dis_as.y.h  dis_l.h $(BINUTILS_DIR)/include/opcode 
 
-simulator: simGen.o ir.o libir.a asem.o hash.o
+simGen: simGen.o ir.o libir.a asem.o hash.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
-class pipeline reg sim: simulator out
-	./simulator out out2
+class.h pipeline.h reg.h : simGen out
+	./simGen out out2
+
+simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 strstack.o: strstack.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
@@ -50,10 +53,13 @@ dis_l.c: dis_as.y.lex
 dis_as.c dis_as.h: dis_as.y.y
 	$(YACC) --name-prefix=dis_ -o $@ $^
 
-sim.c: sim.y
+sim_dis.y.c sim_dis.y.h: sim_dis.y
 	$(YACC) --name-prefix=dis_ -o $@ $^
 
-sim.y dis_as.y.h dis_as.y.lex dis_as.y.y as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c dummy-dis.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4 tc-dummy1 tc-dummy1 tc-dummy3 dummy-dis1.c dummy-dis2.c
+sim_dis.l.c: sim_dis.lex
+	$(LEX) --prefix=dis_ -o $@ $^
+
+sim_dis.lex sim_dis.y dis_as.y.h dis_as.y.lex dis_as.y.y as.lex as.y _as.y coff-dummy.c reloc.c tc-dummy.c dummy-dis.c: asgen out hash.o coff-dummy1 coff-dummy3 coff-dummy4 tc-dummy1 tc-dummy1 tc-dummy3 dummy-dis1.c dummy-dis2.c
 	./asgen out as.lex as.y
 
 asgen: asGen.cpp libir.a

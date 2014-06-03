@@ -281,14 +281,15 @@ int main(int argc,char *argv[])
   dlout.open(dl_file_name.c_str(),ofstream::out);
   dyout.open(dy_file_name.c_str(),ofstream::out);
   // out bison file for disassembler of simulator
-  ofstream syout, sytokout, shout;
+  ofstream syout, sytokout, shout, slout;
   // TODO configurable name
-  string sy_file_name = "sim.y";
+  string sy_file_name = "sim_dis.y";
   syout.open(sy_file_name, ofstream::out);
   string sytok_file_name = "sim.tok";
   sytokout.open( sytok_file_name, ofstream::out);
-  string sh_file_name = "sim.y.h";
+  string sh_file_name = "sim_dis.h";
   shout.open( sh_file_name, ofstream::out);
+  string sl_file_name = "sim_dis.lex";
 
   dytokout.open(dytok_file_name.c_str(),ofstream::out);
   dlout<<"%{\n";
@@ -306,9 +307,9 @@ int main(int argc,char *argv[])
   dytokout<<"%}\n";
   sytokout<<"extern void dis_error(const char *s);\n";
   sytokout<<"extern int dis_lex(void);\n";
-  sytokout<<"#include \"class\"\n";
+  sytokout<<"#include \"class.h\"\n";
   // TODO configurable file name
-  sytokout<<"#include \"sim.y.h\"\n";
+  sytokout<<"#include \"sim_dis.h\"\n";
   // TODO a configurable number instead of 100 
   sytokout << " int sim_dis_list_len[100];\n";
   sytokout << " int sim_dis_list_cnt;\n";
@@ -1339,5 +1340,8 @@ int yywrap()\n\
   shout.close();
   cmd=(string)"cat "+(string)"../src/as/dummy-dis1.c"+(string)" "+dh_file_name+" "+"../src/as/dummy-dis2.c"+" "+dc_file_name+(string)" > dummy-dis.c";
   system(cmd.c_str());
+
+  cmd = (string)"sed  --expression '2i #include \"sim_dis.y.h\"' --expression '2d ' " + dl_file_name + (string)" > " + sl_file_name;
+  system( cmd.c_str() );
   return 0;
 }
