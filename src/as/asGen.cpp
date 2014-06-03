@@ -281,12 +281,14 @@ int main(int argc,char *argv[])
   dlout.open(dl_file_name.c_str(),ofstream::out);
   dyout.open(dy_file_name.c_str(),ofstream::out);
   // out bison file for disassembler of simulator
-  ofstream syout, sytokout;
+  ofstream syout, sytokout, shout;
   // TODO configurable name
   string sy_file_name = "sim.y";
   syout.open(sy_file_name, ofstream::out);
   string sytok_file_name = "sim.tok";
   sytokout.open( sytok_file_name, ofstream::out);
+  string sh_file_name = "sim.y.h";
+  shout.open( sh_file_name, ofstream::out);
 
   dytokout.open(dytok_file_name.c_str(),ofstream::out);
   dlout<<"%{\n";
@@ -305,14 +307,18 @@ int main(int argc,char *argv[])
   sytokout<<"extern void dis_error(const char *s);\n";
   sytokout<<"extern int dis_lex(void);\n";
   sytokout<<"#include \"class\"\n";
+  // TODO configurable file name
+  sytokout<<"#include \"sim.y.h\"\n";
   // TODO a configurable number instead of 100 
   sytokout << " int sim_dis_list_len[100];\n";
   sytokout << " int sim_dis_list_cnt;\n";
-  sytokout << " _class_instr_ * _sim_dis_list[100];\n";
+  sytokout << " _class_instr_ * sim_dis_list[100];\n";
   sytokout<<"%}\n";
 
   dhout<<"#ifndef DH_H"<<endl;
   dhout<<"#define DH_H"<<endl;
+  shout << "#ifndef SH_H " << endl;
+  shout << "#define SH_H " << endl;
   dhout<<"extern int (*dis_list[100])(char *);\nint dis_list_len[100],dis_list_cnt;\n";
 
   // dtokout<<"%{\n";
@@ -729,6 +735,7 @@ int main(int argc,char *argv[])
 	      // 	dcout<<"int(*"<<n<<")(char *)="<<genDecInfo->func_name<<";\n";
 	    }
 	  dhout<<"#define "<<n<<"_LEN "<<rbinary.length()<<endl;
+	  shout << "#define " << n << "_LEN " << rbinary.length() << endl;
 
 	  binary_info *bi=(binary_info*)binaryHash.find(rbinary);
 	  // allow empty binary 
@@ -947,6 +954,8 @@ int main(int argc,char *argv[])
     }
   dhout<<"#define MAX_BINARY_LEN "<<max_binary_len<<endl;// !!TODO max_binary_len should recalculated with vliw info
   dhout<<"#define MAX_SLOT_LEN "<<max_slot_len<<endl;
+  shout<<"#define MAX_BINARY_LEN "<<max_binary_len<<endl;// !!TODO max_binary_len should recalculated with vliw info
+  shout<<"#define MAX_SLOT_LEN "<<max_slot_len<<endl;
   // dhout<<"int dis(struct disassemble_info *,char *c,bfd_vma pc);\n";
   // dcout<<"int dis(struct disassemble_info *info,char * c,bfd_vma pc)\n{";
   // dcout<<"void * unusd=(void*)s2hex;WST(unusd);unusd=(void*)s2int;WST(unusd);\n";
@@ -1325,7 +1334,9 @@ int yywrap()\n\
 
   dcout.close();
   dhout<<"\n#endif"<<endl;
+  shout << "\n#endif" << endl;
   dhout.close();
+  shout.close();
   cmd=(string)"cat "+(string)"../src/as/dummy-dis1.c"+(string)" "+dh_file_name+" "+"../src/as/dummy-dis2.c"+" "+dc_file_name+(string)" > dummy-dis.c";
   system(cmd.c_str());
   return 0;
