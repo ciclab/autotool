@@ -12,10 +12,10 @@ using namespace std;
 static unordered_set<string> typeSet;
 
 // generate mem.cpp file 
-void memGen(Ir &ir, ofstream &out);
+void memGen(Ir &ir, ofstream &outh, ofstream &outc);
 
 // generate reg.cpp file
-void regGen(Ir &ir, ofstream &out);
+void regGen(Ir &ir, ofstream &outh, ofstream &outC);
 
 // generate pipeline data struct
 void pipelineGen(Ir &ir, ofstream &out);
@@ -65,11 +65,13 @@ int main(int argc, char *argv[])
       fin.open(argv[1]);
       ir.read_all(fin);
 
-      ofstream memOut("mem.h");
-      memGen(ir, memOut);
+      ofstream memOutH("mem.h");
+      ofstream memOutC("mem.c");
+      memGen(ir, memOutH, memOutC);
 
-      ofstream regOut("reg.h");
-      regGen(ir, regOut);
+      ofstream regOutH("reg.h");
+      ofstream regOutC("reg.c");
+      regGen(ir, regOutH, regOutC);
       
       ofstream pipelineOut("pipeline.h");
       pipelineGen(ir, pipelineOut);
@@ -89,8 +91,12 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-void memGen(Ir &ir, ofstream & out)
+void memGen(Ir &ir, ofstream & outh, ofstream & outc)
 {
+  outh << "#ifndef MEM_H\n";
+  outh << "#define MEM_H\n";
+  outh << "#include \"type.h\"\n";
+  outc << "#include \"mem.h\"\n";
   int num = ir.get_num_mem();
   for( int i = 0; i < num; ++i )
     {
@@ -98,8 +104,13 @@ void memGen(Ir &ir, ofstream & out)
       int size = ir.get_mem_size(i);
       int width = ir.get_mem_width(i);
       string typeName = autoType(width, 0);
-      out << typeName << " " << name << " [ "<< size << " ];" << endl;
+      // // TODO size information
+      // outh << "extern " << typeName << "*" << name << ';' << endl;
+      // outc << typeName << "*" << name << ';' << endl;
+      outh << "extern " << typeName << " " << name << " [ "<< size << " ];" << endl;
+      outc << typeName << " " << name << " [ "<< size << " ];" << endl;
     }
+  outh << "#endif\n";
 }
 string autoType(int width, bool sig)
 {
@@ -115,9 +126,12 @@ string autoType(int width, bool sig)
   return r;
 }
 
-void regGen(Ir &ir, ofstream &out)
+void regGen(Ir &ir, ofstream &outh, ofstream &outc)
 {
-  out << "#include \"type.h\"\n";
+  outh << "#ifndef REG_H\n";
+  outh << "#define REG_H\n";
+  outh << "#include \"type.h\"\n";
+  outc << "#include \"reg.h\"\n";
   int num = ir.get_num_reg();
   for( int i = 0; i < num; ++i )
     {
@@ -125,8 +139,18 @@ void regGen(Ir &ir, ofstream &out)
       int size = ir.get_reg_size(i);
       int width = ir.get_reg_width(i);
       string typeName = autoType( width, true);
-      out << typeName << ' ' << name << " [ " << size << " ];" << endl;
+      if( size > 1 )
+	{
+	  outh << "extern " << typeName << ' ' << name << " [ " << size << " ];" << endl;
+	  outc << typeName << ' ' << name << " [ " << size << " ];" << endl;
+	}
+      else
+	{
+	  outh << "extern " << typeName << ' ' << name << ";" << endl;
+	  outc << typeName << ' ' << name << ";" << endl;
+	}
     }
+  outh << "#endif\n";
 }
 
 void pipelineGen(Ir &ir, ofstream &out)
@@ -197,7 +221,7 @@ void classGen(Ir &ir, ofstream &out)
   out << "#ifndef CLASS_H\n";
   out << "#define CLASS_H\n";
   out << "#include \"type.h\"\n";
-  out << "#include \"simlib.h\"";
+  out << "#include \"simlib.h\"\n";
   out << "#include <cstdlib>\n#include <cassert>\ntypedef long long ll;\n#include \"stage.h\"\n#define WST(a) ( (a) = (a) )\n\n";
   out << "#include \"reg.h\"\n";
   out << "#include \"pipeline.h\"\n";

@@ -7,7 +7,7 @@ CXXFLAGS=-g -Wall \
 	-std=c++11
 SRC=../src
 VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor:../src/simulator
-INCLUDE=-I../src/include
+INCLUDE=-I../src/include -I.
 LEX = flex -v
 YACC = bison -dv
 BINUTILS_DIR = ../../z/binutils-2.23-r
@@ -25,8 +25,11 @@ simGen: simGen.o ir.o libir.a asem.o hash.o
 class.h pipeline.h reg.h : simGen out
 	./simGen out out2
 
-simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp
+simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp reg.c mem.c sim_dis.l.h
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
+
+runsim: simulator aa.out
+	./simulator aa.out
 
 strstack.o: strstack.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
@@ -55,6 +58,9 @@ dis_as.c dis_as.h: dis_as.y.y
 
 sim_dis.y.c sim_dis.y.h: sim_dis.y
 	$(YACC) --name-prefix=dis_ -o $@ $^
+
+sim_dis.l.h: sim_dis.lex
+	$(LEX) --header-file=sim_dis.l.h --prefix=dis_ $^
 
 sim_dis.l.c: sim_dis.lex
 	$(LEX) --prefix=dis_ -o $@ $^

@@ -193,9 +193,9 @@
   )
   (memory
     ( mem1
-      // define a memory with 4096 * 4 bytes
-      ( size 4096 )
-      ( width 4 )
+      // define a memory with 4096 * 8 bytes
+      ( size 5000000 )
+      ( width 8 )
     )
   )
   (function_unit)
