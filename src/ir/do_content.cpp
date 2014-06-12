@@ -67,4 +67,9 @@ void do_content::read(ifstream &fin)
     default:
       assert(0);
     }
+  if( type == do_type_is_string2 )
+    {
+      str.insert( str.begin(), '"' );
+      str += '"';
+    }
 }

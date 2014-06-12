@@ -25,7 +25,7 @@ simGen: simGen.o ir.o libir.a asem.o hash.o
 class.h pipeline.h reg.h : simGen out
 	./simGen out out2
 
-simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp reg.c mem.c sim_dis.l.h
+simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp reg.c mem.c sim_dis.l.h stage.c
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 runsim: simulator aa.out

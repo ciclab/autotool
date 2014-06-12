@@ -10,7 +10,7 @@
 using namespace std;
 // record type used, first -> length of type, second -> signed
 static unordered_set<string> typeSet;
-
+static unordered_map<string,int> stageMap;
 // generate mem.cpp file 
 void memGen(Ir &ir, ofstream &outh, ofstream &outc);
 
@@ -27,7 +27,7 @@ void classGen(Ir &ir, ofstream &out);
 void dfsGenCCode( do_content & d, ofstream & out );
 
 // generate stage datatype
-void stageGen(Ir &ir, ofstream &out);
+void stageGen(Ir &ir, ofstream &outh, ofstream &outc);
 
 // // generate functions for enum, called by en;
 // void enumFuncGen(Ir &ir, ofstream &out);
@@ -76,11 +76,13 @@ int main(int argc, char *argv[])
       ofstream pipelineOut("pipeline.h");
       pipelineGen(ir, pipelineOut);
 
+      // called before classGen
+      ofstream stageOutC("stage.c");
+      ofstream stageOutH("stage.h");
+      stageGen( ir, stageOutH, stageOutC);
+      
       ofstream classOut("class.h");
       classGen(ir, classOut);
-      
-      ofstream stageOut("stage.h");
-      stageGen( ir, stageOut);
       
       // file include typedef
       // used by function autoType()
@@ -221,6 +223,8 @@ void classGen(Ir &ir, ofstream &out)
   out << "#ifndef CLASS_H\n";
   out << "#define CLASS_H\n";
   out << "#include \"type.h\"\n";
+  // TODO include cstdio for debugging
+  out << "#include <cstdio>\n";
   out << "#include \"simlib.h\"\n";
   out << "#include <cstdlib>\n#include <cassert>\ntypedef long long ll;\n#include \"stage.h\"\n#define WST(a) ( (a) = (a) )\n\n";
   out << "#include \"reg.h\"\n";
@@ -228,12 +232,14 @@ void classGen(Ir &ir, ofstream &out)
   out << "class _class_instr_\
 {\
 public:\n";
-  int stageNum = ir.get_num_stage();
-  for( int i = 0; i < stageNum; ++i )
-    {
-      string stageName = ir.get_stage_name(i);
-      out << "int " << stageName << "_active\n;";
-    }
+  out << " int slotId;\n";
+  out << " enum stage stg;\n";
+  // int stageNum = ir.get_num_stage();
+  // for( int i = 0; i < stageNum; ++i )
+  //   {
+  //     string stageName = ir.get_stage_name(i);
+  //     out << "int " << stageName << "_active\n;";
+  //   }
   out <<"virtual void init (char *c){};		\
   virtual void Do (){};\
 };\n" ;
@@ -334,7 +340,8 @@ public:\n";
 		  assert( vec[0].is_str1() );
 		  string stageName = vec[0].str;
 		  // ._active is generated for each class
-		  out << " if( " << stageName << "_active" << " ) " << endl;
+		  // out << " if( " << stageName << "_active" << " ) " << endl;
+		  out << " if ( " << stageName << " == stg )\n ";
 		  out << "{\n" ;
 		  for( int k = 1; k < (int)vec.size(); ++k )
 		    {
@@ -483,29 +490,65 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	      dfsGenCCode( d.ivec[2], out);
 	      out << " ] ";
 	    }
+	  else if( d.ivec[0].str == "call" )
+	    {
+	      // function call
+	      //( call funcName param.. )
+	      assert( d.ivec.size() > 1 );
+	      string funcName = d.ivec[1].str;
+	      out << funcName << "( ";
+	      for( int i = 2; i < d.ivec.size(); ++i )
+		{
+		  if( i > 2 )
+		    out << ", ";
+		  out << d.ivec[i].str;
+		}
+	      out << ");\n";
+	    }
 	}
     }
 }
 
-void stageGen(Ir &ir, ofstream &out)
+void stageGen(Ir &ir, ofstream &outh, ofstream &outc)
 {
-  out << "#include \"type.h\"\n";
-  out << "class " << " {\n";
-  // TODO not only int
-  out << "public:\n" << "int state;\n";
-  out << "int pc;\n";
-  // TODO a more unique name
-  out << "}";
+  outh << "#ifndef STATE_H\n";
+  outh << "#define STATE_H\n";
+  outh << "#include \"type.h\"\n";
+  // out << "class " << " {\n";
+  // // TODO not only int
+  // out << "public:\n" << "int state;\n";
+  // out << "int pc;\n";
+  // // TODO a more unique name
+  // out << "}";
   
+  // int num = ir.get_num_stage();
+  // for( int i = 0; i < num ; ++i )
+  //   {
+  //     string name = ir.get_stage_name(i);
+  //     if( i > 0 )
+  // 	out << ", ";
+  //     out << name;
+  //   }
+  // out << ";\n";
   int num = ir.get_num_stage();
+  outh << " enum stage{ " ;
+  outc << "#include \"stage.h\"\n";
+  outc << "enum stage _stages[" << num << "] = {";
   for( int i = 0; i < num ; ++i )
     {
       string name = ir.get_stage_name(i);
+      stageMap[ name ] = i;
       if( i > 0 )
-	out << ", ";
-      out << name;
+  	{
+	  outh << ", ";
+	  outc << ", ";
+	}
+      outh << name;
+      outc << name;
     }
-  out << ";\n";
+  outh << " };\n";
+  outc << "};\n";
+  outh << "#endif";
 }
 
 void typeDefGen( ofstream & out )
