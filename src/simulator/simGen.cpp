@@ -495,11 +495,14 @@ void dfsGenCCode( do_content & d, ofstream & out )
 
 	      // get type name of right value
 	      string typeName = getTypeName( d.ivec[1] );
-	      
+	      // TODO see varGen
+	      // name of que should be formalized
+	      string queName = typeName + (string)"Que";
+	      out << queName << ".push( make_pair ( &";
 	      dfsGenCCode( d.ivec[1], out );
-	      out << " = ";
+	      out << " , ";
 	      dfsGenCCode( d.ivec[2], out );
-	      out << ";\n";
+	      out << " ) );\n";
 	    }
 	  else if( d.ivec[0].str == "assign" )
 	    {
