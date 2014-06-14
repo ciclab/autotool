@@ -112,16 +112,16 @@ void varGen( ofstream &outh, ofstream &outc )
   outh << "#ifndef VAR_H\n";
   outh << "#define VAR_H\n";
   outh << "#include <queue>\n";
-  outh << "#include <pair>\n";
+  outh << "#include <utility>\n";
   outh << "#include \"type.h\"\n";
   outh << "using namespace std;\n";
   outc << "#include \"vars.h\"\n";
   for( auto i : typeSet )
     {
       outh << "extern queue < pair< " << i << "*, " << i 
-	   << " > " << i << "Que;\n" ;
+	   << " > >" << i << "Que;\n" ;
       outc << " queue < pair< " << i << "*, " << i << 
-	" > " << i << "Que;\n";
+	" > >" << i << "Que;\n";
     }
   outh << "#endif\n";
 }
