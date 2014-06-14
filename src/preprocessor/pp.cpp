@@ -391,10 +391,10 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[13] =
+static yyconst flex_int16_t yy_accept[12] =
     {   0,
         0,    0,    0,    0,    4,    2,    3,    2,    0,    1,
-        1,    0
+        0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -402,7 +402,7 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    1,    2,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    3,    1,    1,    1,    4,    1,
+        1,    1,    1,    1,    3,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -429,39 +429,39 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int32_t yy_meta[5] =
+static yyconst flex_int32_t yy_meta[4] =
     {   0,
-        1,    2,    3,    4
+        1,    1,    1
     } ;
 
-static yyconst flex_int16_t yy_base[17] =
+static yyconst flex_int16_t yy_base[14] =
     {   0,
-        0,    0,    0,    0,   14,   15,   15,    0,    0,    0,
-        0,   15,    4,   10,    6,    8
+        0,    0,    0,    0,    8,    9,    9,    5,    4,    9,
+        9,    4,    3
     } ;
 
-static yyconst flex_int16_t yy_def[17] =
+static yyconst flex_int16_t yy_def[14] =
     {   0,
-       12,    1,   13,   13,   12,   12,   12,   14,   15,   16,
-       16,    0,   12,   12,   12,   12
+       11,    1,   12,   12,   11,   11,   11,   13,   13,   11,
+        0,   11,   11
     } ;
 
-static yyconst flex_int16_t yy_nxt[20] =
+static yyconst flex_int16_t yy_nxt[13] =
     {   0,
-        6,    7,    6,    8,    7,    7,    7,    7,   11,   10,
-       11,   11,    9,   12,    5,   12,   12,   12,   12
+        6,    7,    8,    9,    7,   10,   10,   11,    5,   11,
+       11,   11
     } ;
 
-static yyconst flex_int16_t yy_chk[20] =
+static yyconst flex_int16_t yy_chk[13] =
     {   0,
-        1,    1,    1,    1,   13,   13,   13,   13,   16,   15,
-       16,   16,   14,    5,   12,   12,   12,   12,   12
+        1,    1,    1,   13,   12,    9,    8,    5,   11,   11,
+       11,   11
     } ;
 
 /* Table of booleans, true if rule could match eol. */
 static yyconst flex_int32_t yy_rule_can_match_eol[4] =
     {   0,
-0, 0, 0,     };
+1, 0, 0,     };
 
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
@@ -541,8 +541,6 @@ extern int yywrap (void );
 #endif
 #endif
 
-    static void yyunput (int c,char *buf_ptr  );
-    
 #ifndef yytext_ptr
 static void yy_flex_strncpy (char *,yyconst char *,int );
 #endif
@@ -669,9 +667,10 @@ YY_DECL
 	register char *yy_cp, *yy_bp;
 	register int yy_act;
     
-#line 7 "pp.lex"
+#line 8 "pp.lex"
 
-#line 675 "pp.cpp"
+
+#line 674 "pp.cpp"
 
 	if ( !(yy_init) )
 		{
@@ -724,13 +723,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 13 )
+				if ( yy_current_state >= 12 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 15 );
+		while ( yy_base[yy_current_state] != 9 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -765,18 +764,19 @@ do_action:	/* This label is used only to access EOF actions. */
 			goto yy_find_action;
 
 case 1:
+/* rule 1 can match eol */
 YY_RULE_SETUP
-#line 8 "pp.lex"
-
+#line 10 "pp.lex"
+{}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 9 "pp.lex"
+#line 12 "pp.lex"
 {ECHO;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 11 "pp.lex"
+#line 14 "pp.lex"
 ECHO;
 	YY_BREAK
 #line 783 "pp.cpp"
@@ -1072,7 +1072,7 @@ static int yy_get_next_buffer (void)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 13 )
+			if ( yy_current_state >= 12 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1100,54 +1100,13 @@ static int yy_get_next_buffer (void)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 13 )
+		if ( yy_current_state >= 12 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 12);
+	yy_is_jam = (yy_current_state == 11);
 
 	return yy_is_jam ? 0 : yy_current_state;
-}
-
-    static void yyunput (int c, register char * yy_bp )
-{
-	register char *yy_cp;
-    
-    yy_cp = (yy_c_buf_p);
-
-	/* undo effects of setting up yytext */
-	*yy_cp = (yy_hold_char);
-
-	if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-		{ /* need to shift things up to make room */
-		/* +2 for EOB chars. */
-		register int number_to_move = (yy_n_chars) + 2;
-		register char *dest = &YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[
-					YY_CURRENT_BUFFER_LVALUE->yy_buf_size + 2];
-		register char *source =
-				&YY_CURRENT_BUFFER_LVALUE->yy_ch_buf[number_to_move];
-
-		while ( source > YY_CURRENT_BUFFER_LVALUE->yy_ch_buf )
-			*--dest = *--source;
-
-		yy_cp += (int) (dest - source);
-		yy_bp += (int) (dest - source);
-		YY_CURRENT_BUFFER_LVALUE->yy_n_chars =
-			(yy_n_chars) = YY_CURRENT_BUFFER_LVALUE->yy_buf_size;
-
-		if ( yy_cp < YY_CURRENT_BUFFER_LVALUE->yy_ch_buf + 2 )
-			YY_FATAL_ERROR( "flex scanner push-back overflow" );
-		}
-
-	*--yy_cp = (char) c;
-
-    if ( c == '\n' ){
-        --yylineno;
-    }
-
-	(yytext_ptr) = yy_bp;
-	(yy_hold_char) = *yy_cp;
-	(yy_c_buf_p) = yy_cp;
 }
 
 #ifndef YY_NO_INPUT
@@ -1790,7 +1749,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 11 "pp.lex"
+#line 14 "pp.lex"
 
 
 int yywrap()

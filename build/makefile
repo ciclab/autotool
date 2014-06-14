@@ -25,7 +25,7 @@ simGen: simGen.o ir.o libir.a asem.o hash.o
 class.h pipeline.h reg.h : simGen out
 	./simGen out out2
 
-simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp reg.c mem.c sim_dis.l.h stage.c
+simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp reg.c mem.c sim_dis.l.h stage.c vars.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 runsim: simulator aa.out
@@ -75,7 +75,7 @@ rd: hash.o ir.o libir.a asem.o read.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 out: rd $(input_file) pp
-	cpp $(input_file) | ./pp  > in.tmp && ./rd in.tmp $@
+	cpp $(input_file) | ../src/preprocessor/pp  > in.tmp && ./rd in.tmp $@
 
 pp: pp.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@

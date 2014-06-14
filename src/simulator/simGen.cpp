@@ -11,6 +11,7 @@ using namespace std;
 // record type used, first -> length of type, second -> signed
 static unordered_set<string> typeSet;
 static unordered_map<string,int> stageMap;
+static unordered_map<string,string> varTypeMap;
 // generate mem.cpp file 
 void memGen(Ir &ir, ofstream &outh, ofstream &outc);
 
@@ -26,6 +27,10 @@ void classGen(Ir &ir, ofstream &out);
 // generate C code from do_content 
 void dfsGenCCode( do_content & d, ofstream & out );
 
+// suppose d is an right-value, 
+// return typename of it
+string getTypeName( do_content &d );
+
 // generate stage datatype
 void stageGen(Ir &ir, ofstream &outh, ofstream &outc);
 
@@ -36,6 +41,10 @@ string autoType(int width, bool sig);
 
 // generate typedef for each type
 void typeDefGen( ofstream &);
+
+// generate variable used by simulator
+void varGen( ofstream &outh, ofstream & outc );
+
 // hash_control hc_unfold_sim;
 // vector<vector<triple > > unfolded_list_sim;
 // vector<instr_type> u_l_t;
@@ -89,8 +98,29 @@ int main(int argc, char *argv[])
       // this should be called in the last 
       ofstream typeOut("type.h");
       typeDefGen( typeOut );
+
+      ofstream varOutC("vars.cpp");
+      ofstream varOutH("vars.h");
+      varGen( varOutH, varOutC);
     }
   return 0;
+}
+void varGen( ofstream &outh, ofstream &outc )
+{
+  // reg, mem, pipeline should be processed first
+  // generate container for assign expression 
+  outh << "#ifndef VAR_H\n";
+  outh << "#define VAR_H\n";
+  outh << "#include <queue>\n";
+  outh << "#include \"type.h\"\n";
+  outh << "using namespace std;\n";
+  outc << "#include \"vars.h\"\n";
+  for( auto i : typeSet )
+    {
+      outh << "extern queue < " << i << " > " << i << "Que;\n" ;
+      outc << " queue < " << i << " > " << i << "Que;\n";
+    }
+  outh << "#endif\n";
 }
 
 void memGen(Ir &ir, ofstream & outh, ofstream & outc)
@@ -106,6 +136,9 @@ void memGen(Ir &ir, ofstream & outh, ofstream & outc)
       int size = ir.get_mem_size(i);
       int width = ir.get_mem_width(i);
       string typeName = autoType(width, 0);
+      // associate name of mem to type name
+      varTypeMap[name] = typeName;
+
       // // TODO size information
       // outh << "extern " << typeName << "*" << name << ';' << endl;
       // outc << typeName << "*" << name << ';' << endl;
@@ -141,6 +174,9 @@ void regGen(Ir &ir, ofstream &outh, ofstream &outc)
       int size = ir.get_reg_size(i);
       int width = ir.get_reg_width(i);
       string typeName = autoType( width, true);
+
+      varTypeMap[name] = typeName;
+
       if( size > 1 )
 	{
 	  outh << "extern " << typeName << ' ' << name << " [ " << size << " ];" << endl;
@@ -169,6 +205,8 @@ void pipelineGen(Ir &ir, ofstream &out)
 	  string tName = ir.get_ele_name_pipeline( i, j);
 	  int width = ir.get_ele_width_pipeline( i, j);
 	  string typeName = autoType( width, true);
+
+	  varTypeMap[ name + (string)"." + tName ] = typeName;
 	  out << typeName << ' ' << tName << ';' << endl;
 	}
       out << "}" << name << ";" << endl;
@@ -229,6 +267,7 @@ void classGen(Ir &ir, ofstream &out)
   out << "#include <cstdlib>\n#include <cassert>\ntypedef long long ll;\n#include \"stage.h\"\n#define WST(a) ( (a) = (a) )\n\n";
   out << "#include \"reg.h\"\n";
   out << "#include \"pipeline.h\"\n";
+  out << "#include \"vars.h\"\n";
   out << "class _class_instr_\
 {\
 public:\n";
@@ -442,6 +481,7 @@ void dfsGenCCode( do_content & d, ofstream & out )
 		}
 	    }
 	  // assignment expression
+	  // assignment is fullfilled at commit ( compared with assign )
 	  // ( = to from )
 	  // to = from
 	  else if( d.ivec[0].str == "=" )
@@ -449,6 +489,20 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	      assert( d.ivec.size() == 3 );
 	      // TODO we do not check validity of right value
 	      // usually right value should be a variable
+
+	      // get type name of right value
+	      string typeName = getTypeName( d.ivec[1] );
+	      
+	      dfsGenCCode( d.ivec[1], out );
+	      out << " = ";
+	      dfsGenCCode( d.ivec[2], out );
+	      out << ";\n";
+	    }
+	  else if( d.ivec[0].str == "assign" )
+	    {
+	      // assign expression
+	      // ( assign to from )
+
 	      dfsGenCCode( d.ivec[1], out );
 	      out << " = ";
 	      dfsGenCCode( d.ivec[2], out );
@@ -562,3 +616,20 @@ void typeDefGen( ofstream & out )
     }
   out << "#endif\n";
 }
+
+string getTypeName( do_content & d )
+{
+  if( d.is_vector() )
+    {
+      if( d.ivec[0].is_vector() )
+	return getTypeName( d.ivec[0] );
+      if( d.ivec[0].str == "[]" )
+	return getTypeName( d.ivec[1] );
+      assert(0);
+    }
+  // is str
+  // cout << d.str << endl;
+  assert( varTypeMap.find( d.str ) != varTypeMap.end() );
+  return varTypeMap[ d.str ];
+}
+

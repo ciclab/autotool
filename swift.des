@@ -69,7 +69,7 @@
       ('vfmul40' 1) 'vfmul20' 'vfmul10'
     )
     (VMAC_E
-      ('vmac40' 1) 'vmac20' 'vmac10'
+      ('vfmac40' 1) 'vfmac20' 'vfmac10'
     )
     (VCMUL_E
       ('vcmulr40' 1) 'vcmul20'
@@ -392,7 +392,7 @@
       )
       (do
         (decode_s
-          ( = slotId 1 )
+          ( assign slotId 1 )
 	)
       )
       (code i)
@@ -408,7 +408,7 @@
       )
       (do
         (decode_s
-	  ( = slotId 2 )
+	  ( assign slotId 2 )
 	)
       )
       (code i)
@@ -423,7 +423,7 @@
       )
       (do
         ( decode_s
-	  ( = slotId 3 )
+	  ( assign slotId 3 )
 	)
       )
       (code i)
@@ -438,7 +438,7 @@
       )
       (do
         ( decode_s 
-	  ( = slotId 4 )
+	  ( assign slotId 4 )
 	)
       )
       (code i)
