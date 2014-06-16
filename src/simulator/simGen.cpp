@@ -115,6 +115,7 @@ void varGen( ofstream &outh, ofstream &outc )
   outh << "#include <utility>\n";
   outh << "#include \"type.h\"\n";
   outh << "using namespace std;\n";
+  outh << "void varUpdate();\n";
   outc << "#include \"vars.h\"\n";
   for( auto i : typeSet )
     {
@@ -124,6 +125,19 @@ void varGen( ofstream &outh, ofstream &outc )
 	" > >" << i << "Que;\n";
     }
   outh << "#endif\n";
+  outc << "void varUpdate()\n";
+  outc << "{\n";
+  for( auto i : typeSet )
+    {
+      string queName = i + (string)"Que";
+      outc << "for( ; !" << queName << ".empty(); )\n";
+      outc << "{\n";
+      outc << " auto i = " << queName << ".front();\n";
+      outc << queName << ".pop();\n";
+      outc << " *(i.first) = i.second;\n";
+      outc << "}\n";
+    }
+  outc << "}";
 }
 
 void memGen(Ir &ir, ofstream & outh, ofstream & outc)

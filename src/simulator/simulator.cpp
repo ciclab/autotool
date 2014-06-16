@@ -77,14 +77,16 @@ int main(int argc, char *argv[])
 	      pc = 1LL << 20;
 
 	      char buf[ MAX_INSTR_LEN ], bi(0);
-	      for(int insti = 0 ; ; insti = ( insti + 1 ) % MAX_PIPLINE_NUMBER )
+	      for(int insti = 0 ; ; 
+		  insti = ( insti + 1 ) % MAX_PIPLINE_NUMBER )
 		{
 		  bi = 0;
 		  for( int i = 0 ; i < ( MAX_INSTR_LEN + 7 ) / 8 ; ++i )
 		    {
 		      for( int j = 0 ; j < 8 ; ++j )
 			{
-			  buf[bi] = ( *((char*)mem1 + pc + i ) & ( 1 << ( 7 - j ) ) ) ? '1' : '0';
+			  buf[bi] = ( *((char*)mem1 + pc + i ) &
+				      ( 1 << ( 7 - j ) ) ) ? '1' : '0';
 			  ++bi;
 			}
 		    }
@@ -103,7 +105,7 @@ int main(int argc, char *argv[])
 		  cout << (*(sim_dis_list[0])).slotId << ' ' << sim_dis_list_len[0] << endl;
 
 		  memcpy( instrs[insti], sim_dis_list, sizeof( instrs[insti] ) );
-		  for( int instj = insti, sti = 0; ; ++sti )
+		  for( int instj = insti, sti = 0; ; )
 		    {
 		      for( int slotj = 0; slotj < MAX_SLOT_LEN; ++slotj )
 			{
@@ -121,6 +123,7 @@ int main(int argc, char *argv[])
 			break;
 		    }
 		}
+	      
     //   buf[MAX_BINARY_LEN*ii]='\0';
     // YY_BUFFER_STATE bs = dis__scan_string (buf);
     // dis_list_cnt=0;
