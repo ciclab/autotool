@@ -7,7 +7,15 @@
 #include <string>
 #include "hash.h"
 #include "def.h"
+#include <queue>
 using namespace std;
+static int str2int( string &s )
+{
+  int r(0);
+  for( auto i : s )
+    r = r * 10 + i - '0';
+  return r;
+}
 // record type used, first -> length of type, second -> signed
 static unordered_set<string> typeSet;
 static unordered_map<string,int> stageMap;
@@ -26,6 +34,25 @@ void classGen(Ir &ir, ofstream &out);
 
 // generate C code from do_content 
 void dfsGenCCode( do_content & d, ofstream & out );
+// record clock info in each do
+vector< pair<string,int> > timCnt;
+// for example
+// ( do
+//  ( stage_1
+//   ( clock 1 )
+//   ( call read .. 2 )
+//   ... )
+//  ( stage_1
+//   ( clock 1 )
+//   ... )
+//  ( stage_2
+//   ( clock 1 )
+//   ... )
+//  ...)
+// stage_1 and stage_2 uses 3 and 1 clock respectively.
+// if there are other function call cost clocks, there are sumed.
+// however clock for same name with different entry are parallely counted
+
 
 // suppose d is an right-value, 
 // return typename of it
@@ -289,6 +316,7 @@ void classGen(Ir &ir, ofstream &out)
 {\
 public:\n";
   out << " int slotId;\n";
+  out << " bool doOk;\n";
   out << " enum stage stg;\n";
   // int stageNum = ir.get_num_stage();
   // for( int i = 0; i < stageNum; ++i )
@@ -297,7 +325,7 @@ public:\n";
   //     out << "int " << stageName << "_active\n;";
   //   }
   out <<"virtual void init (char *c){};		\
-  virtual void Do (){};\
+  virtual bool Do (){};\
 };\n" ;
 
   // out << "pipe
@@ -382,7 +410,8 @@ public:\n";
 	  // generate do function for each instruction
 	  vector<do_content> doCnt;
 	  ir.get_do_content(i, doCnt);
-	  out << "void Do(){\n" << endl;
+	  out << "bool Do(){\n" << endl;
+	  out << " doOk = true;\n ";
 	  for( auto i : doCnt )
 	    {
 	      // iterator over all content in do_content
@@ -397,26 +426,49 @@ public:\n";
 		  string stageName = vec[0].str;
 		  // ._active is generated for each class
 		  // out << " if( " << stageName << "_active" << " ) " << endl;
-		  out << " if ( " << stageName << " == stg )\n ";
+		  out << " for ( ;" << stageName << " == stg; )\n ";
 		  out << "{\n" ;
 		  for( int k = 1; k < (int)vec.size(); ++k )
 		    {
 		      auto t = vec[k];
 		      if( t.is_vector() && t.ivec[0].is_str1() &&
-			  t.ivec[0].str == "cycle" )
+			  t.ivec[0].str == "clock" )
 			{
-			  // update cycle count 
+			  // // update cycle count 
+			  out << " if( -- " << stageName << "_clock > 0 ) {";
+			  out << " doOk = false;\n";
+			  out << " break;\n} ";
+			  timCnt.push_back( make_pair( stageName +
+						       (string)"_clock",
+						       str2int(t.ivec[1].str) ) );
 			}
 		      else
 			{
-			  dfsGenCCode( t, out);
+			  dfsGenCCode( t, out );
 			}
 		    }
+		  out << " break;\n ";
 		  out << "}\n" ;
 		}
 	    }
+	  out << "return doOk;\n";
 	  out << "};\n" << endl;
 
+	  for( auto i : timCnt )
+	    {
+	      string clockName = i.first;
+	      out << "int " << clockName << ";\n";
+	    }
+
+	  out << "class_" << ruleName << "(){\n";
+	  for( auto i : timCnt )
+	    {
+	      string clockName = i.first;
+	      int clockNum = i.second;
+	      out << clockName << " = " << clockNum << ";\n" << endl;
+	    }
+	  timCnt.resize(0);
+	  out << "};\n";
 	  // end of class definition
 	  out << "};\n";
 	}

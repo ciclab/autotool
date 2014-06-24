@@ -391,7 +391,7 @@
 	LOOP BFST TEST BST ADDI BFEXT MOVV2G MOVG2V 
       )
       (do
-        (decode_s
+        (fetch_s
           ( assign slotId 1 )
 	)
       )
@@ -407,7 +407,7 @@
 	LOOP BFST TEST BST ADDI BFEXT MOVV2G MOVG2V
       )
       (do
-        (decode_s
+        (fetch_s
 	  ( assign slotId 2 )
 	)
       )
@@ -422,7 +422,7 @@
 	VSTOREEU  MOVG2G MOVV2V  VMOVR  MOVI
       )
       (do
-        ( decode_s
+        ( fetch_s
 	  ( assign slotId 3 )
 	)
       )
@@ -437,7 +437,7 @@
 	VSTOREEU  MOVG2G MOVV2V  VMOVR MOVI
       )
       (do
-        ( decode_s 
+        ( fetch_s 
 	  ( assign slotId 4 )
 	)
       )

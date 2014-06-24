@@ -100,11 +100,18 @@ int main(int argc, char *argv[])
 		  YY_BUFFER_STATE bs = dis__scan_string(buf);
 		  sim_dis_list_cnt = 0;
 		  dis_parse();
-		  
+
 		  cout << endl << sim_dis_list_cnt << endl;
 		  cout << (*(sim_dis_list[0])).slotId << ' ' << sim_dis_list_len[0] << endl;
 
 		  memcpy( instrs[insti], sim_dis_list, sizeof( instrs[insti] ) );
+		  for( int instj = 0, off = 0;
+		       instj < sim_dis_list_cnt; ++instj )
+		    if( sim_dis_list[instj] )
+		      {
+			(*(sim_dis_list[instj])).init( buf + off );
+			off += sim_dis_list_len[instj];
+		      }
 		  for( int instj = insti, sti = 0; ; )
 		    {
 		      for( int slotj = 0; slotj < MAX_SLOT_LEN; ++slotj )
