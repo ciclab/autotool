@@ -461,12 +461,12 @@
     )
     (VSEL20
       (= rd VR_E)
-      (= rs VR_E)
-      (= rt GR_E)
-      (= rs1 GR_E)
+      (= rs GR_E)
+      (= rt VR_E)
+      (= rs1 VR_E)
       (do)
       (code 'vsel20' ' ' rd ' ' rs ' ' rt ' ' rs1)
-      (binary '000' rd rs '0' rt '0'  rs1 '10')
+      (binary '000' rd '0' rs rt rs1 '10')
     )
     (JMP
       (= a addr21Rel)
@@ -575,9 +575,9 @@
       (do)
       (= rd VR_E)
       (= rs VR_E)
-      (= rt VR_E)
+      (= rt GR_E)
       (code 'vmovcv2v' ' ' rd ' ' rs ' ' rt)
-      (binary '001' rd rs rt '011' '00000')
+      (binary '001' rd rs '0' rt '011' '00000')
     )
     (V10BIT11
       (do)
