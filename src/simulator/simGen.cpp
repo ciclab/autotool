@@ -16,6 +16,16 @@ static int str2int( string &s )
     r = r * 10 + i - '0';
   return r;
 }
+static string int2str( int num )
+{
+  if( num == 0 )
+    return (string)"0";
+  string r;
+  for( ; num > 0; num /= 10 )
+    r.push_back( '0' + ( num % 10 ) );
+  reverse( r.begin(), r.end() );
+  return r;
+}
 // record type used, first -> length of type, second -> signed
 static unordered_set<string> typeSet;
 static unordered_map<string,int> stageMap;
@@ -33,7 +43,7 @@ void pipelineGen(Ir &ir, ofstream &out);
 void classGen(Ir &ir, ofstream &out);
 
 // generate C code from do_content 
-void dfsGenCCode( do_content & d, ofstream & out );
+void dfsGenCCode( do_content & d, ofstream & out, int lev );
 // record clock info in each do
 vector< pair<string,int> > timCnt;
 // for example
@@ -444,7 +454,7 @@ public:\n";
 			}
 		      else
 			{
-			  dfsGenCCode( t, out );
+			  dfsGenCCode( t, out, 0 );
 			}
 		    }
 		  out << " break;\n ";
@@ -494,7 +504,7 @@ public:\n";
 //     }
 // }
 
-void dfsGenCCode( do_content & d, ofstream & out )
+void dfsGenCCode( do_content & d, ofstream & out, int lev )
 {
   if( d.is_str1() )
     {
@@ -505,8 +515,16 @@ void dfsGenCCode( do_content & d, ofstream & out )
       assert( d.ivec.size() > 0 );
       if( d.ivec[0].is_vector() )
 	{
+	  out << "{\nbool __ok" << lev + 1 << " = true;\n";
 	  for( auto i : d.ivec )
-	    dfsGenCCode( i, out );
+	    {
+	      out << " for( ;__ok" << lev + 1 << "; ){\n";
+	      dfsGenCCode( i, out, lev + 1 );
+	      out << "break;\n";
+	      out << "}\n";
+	    }
+	  out << " doOk = ( doOk && __ok" << lev + 1 << ") ;\n";
+	  out << "}\n";
 	}
       else
 	{
@@ -518,11 +536,11 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	      assert( d.ivec.size() == 3 );
 	      out << " ( ";
 	      out << " ( ";
-	      dfsGenCCode( d.ivec[1], out);
+	      dfsGenCCode( d.ivec[1], out, lev + 1);
 	      out << " ) ";
 	      out << " == ";
 	      out << " ( ";
-	      dfsGenCCode( d.ivec[2], out);
+	      dfsGenCCode( d.ivec[2], out, lev + 1);
 	      out << " ) ";
 	      out << " ) ";
 	      out << endl;
@@ -534,17 +552,17 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	    {
 	      assert( d.ivec.size() > 2 );
 	      out << " if ( " ;
-	      dfsGenCCode( d.ivec[1], out );
+	      dfsGenCCode( d.ivec[1], out, lev + 1 );
 	      out << " ) ";
 	      out << " { ";
-	      dfsGenCCode( d.ivec[2], out );
+	      dfsGenCCode( d.ivec[2], out, lev + 1 );
 	      out << " } ";
 	      if( d.ivec.size() > 3 )
 		{
 		  out << " else \n{ \n";
 		  for( int j = 3; j < (int)d.ivec.size(); ++j )
 		    {
-		      dfsGenCCode( d.ivec[j], out);
+		      dfsGenCCode( d.ivec[j], out, lev + 1);
 		    }
 		  out << " }\n";
 		}
@@ -565,9 +583,9 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	      // name of que should be formalized
 	      string queName = typeName + (string)"Que";
 	      out << queName << ".push( make_pair ( &";
-	      dfsGenCCode( d.ivec[1], out );
+	      dfsGenCCode( d.ivec[1], out, lev + 1 );
 	      out << " , ";
-	      dfsGenCCode( d.ivec[2], out );
+	      dfsGenCCode( d.ivec[2], out, lev + 1 );
 	      out << " ) );\n";
 	    }
 	  else if( d.ivec[0].str == "assign" )
@@ -575,9 +593,9 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	      // assign expression
 	      // ( assign to from )
 
-	      dfsGenCCode( d.ivec[1], out );
+	      dfsGenCCode( d.ivec[1], out, lev + 1 );
 	      out << " = ";
-	      dfsGenCCode( d.ivec[2], out );
+	      dfsGenCCode( d.ivec[2], out, lev + 1 );
 	      out << ";\n";
 	    }
 	  // bit/alu operation 
@@ -595,11 +613,11 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	      assert( d.ivec.size() == 3 );
 	      out << " ( ";
 	      out << " ( ";
-	      dfsGenCCode( d.ivec[1], out );
+	      dfsGenCCode( d.ivec[1], out, lev + 1 );
 	      out << " ) ";
 	      out << " & ";
 	      out << " ( ";
-	      dfsGenCCode( d.ivec[2], out );
+	      dfsGenCCode( d.ivec[2], out, lev + 1 );
 	      out << " ) ";
 	      out << " ) ";
 	    }
@@ -611,9 +629,9 @@ void dfsGenCCode( do_content & d, ofstream & out )
 	    {
 	      assert( d.ivec.size() == 3 );
 	      // TODO no validity check at present
-	      dfsGenCCode( d.ivec[1], out);
+	      dfsGenCCode( d.ivec[1], out, lev + 1);
 	      out << " [ ";
-	      dfsGenCCode( d.ivec[2], out);
+	      dfsGenCCode( d.ivec[2], out, lev + 1);
 	      out << " ] ";
 	    }
 	  else if( d.ivec[0].str == "call" )
@@ -630,6 +648,20 @@ void dfsGenCCode( do_content & d, ofstream & out )
 		  out << d.ivec[i].str;
 		}
 	      out << ");\n";
+	    }
+	  else if( d.ivec[0].str == "clock" )
+	    {
+	      assert( d.ivec.size() == 2 &&
+		      d.ivec[1].is_str1() );
+	      int num = str2int( d.ivec[1].str );
+	      string clockName = (string)"clock" +
+		int2str(timCnt.size());
+	      timCnt.push_back( make_pair( clockName
+					   , num ) );
+	      out << " if( --" << clockName << " > 0 ){\n ";
+	      out << " __ok" << lev <<  " = false;\n";
+	      out  << " doOk = false; \n";
+	      out << "break;}\n";
 	    }
 	}
     }

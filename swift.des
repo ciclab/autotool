@@ -939,7 +939,10 @@
 	      (= p1.valC1 i)
 	    )
 	  )
-	  ( call printf 'decode_s' )
+	  (
+	    ( clock 3 )
+	    ( call printf 'decode_s' )
+	  )
 	)
         (execute_s
 	  ( clock 1 )
