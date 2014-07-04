@@ -84,7 +84,7 @@
       ('loado32' 1) 'loado16'
     )
     (VSTOREO_E
-      ('vstoreo20' 1) 'vstoreo40' 'vstoreo10'
+      ('vstoreo40' 1) 'vstoreo20' 'vstoreo10'
     )
     (SSTOREO_E
       ('storeo32' 1) 'storeo16'

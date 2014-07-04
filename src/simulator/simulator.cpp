@@ -14,15 +14,18 @@ using namespace std;
 #include "sim_dis.h"
 #include "sim_dis.l.h"
 #include "class.h"
+#include "vars.h"
 #define MAX_INSTR_LEN ( MAX_BINARY_LEN * MAX_SLOT_LEN + 7 )
 extern int sim_dis_list_cnt;
 extern int dis_parse(void);
 extern  _class_instr_ * sim_dis_list[100];
 extern int sim_dis_list_len[100];
+// TODO replace 100
 extern enum stage _stages[];
 //TODO get from ir
-#define MAX_PIPLINE_NUMBER 5
+#define MAX_PIPLINE_NUMBER 10
 _class_instr_ * instrs[MAX_PIPLINE_NUMBER][MAX_SLOT_LEN];
+bool sim_do_status[MAX_PIPLINE_NUMBER][MAX_SLOT_LEN];
 int main(int argc, char *argv[])
 {
   if( argc != 2 )
@@ -122,7 +125,11 @@ int main(int argc, char *argv[])
 			      ins.stg = _stages[ sti ];
 			      // cout << "!" << ' ' << ins.stg << ' ' << slotj << ' ' << insti << ' ' << instj << endl;
 			      // ins.slotId;
-			      ins.Do();
+			      sim_do_status[instj][slotj] = ins.Do();
+			    }
+			  else
+			    {
+			      //sim_do_status
 			    }
 			}
 		      instj = ( instj + 1 ) % MAX_PIPLINE_NUMBER;
@@ -130,7 +137,7 @@ int main(int argc, char *argv[])
 			break;
 		    }
 		}
-	      
+	      varUpdate();
     //   buf[MAX_BINARY_LEN*ii]='\0';
     // YY_BUFFER_STATE bs = dis__scan_string (buf);
     // dis_list_cnt=0;
