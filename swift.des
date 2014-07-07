@@ -159,10 +159,10 @@
       'bfext' 'bfextu'
     )
     (MOVV2G_E
-       'movv2g40' 'movv2g20' 'movv2g10'
+       ( 'movv2g40' 1 ) 'movv2g20' 'movv2g10'
     )
     (MOVG2V_E
-      'movg2v40' 'movg2v20' 'movg2v10'
+      ( 'movg2v40' 1) 'movg2v20' 'movg2v10'
     )
   )
   (address
