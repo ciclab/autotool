@@ -359,7 +359,31 @@
     (top instrs)
     (instrs
       (= i  slots_4 )
-      (do)
+      (do
+        (seq 1
+	  (execute_s
+	    (if (not execute_s.doOk /* doOk is buildin variable */ )
+	      (
+	        (frozen
+		  fetch_s
+		  decode_s)
+		(goOn memacc_s)
+		(flush writeback_s)
+	      )
+	    )
+	  )
+	  (memacc_s
+ 	    (if (not memacc_s.doOk)
+	      (frozen
+	        fetch_s
+		decode_s
+		execute_s)
+	      (goOn execute_s)
+	      (flush writeback_s)
+	    )
+	  )
+	)
+      )
       (code i)
       (binary i)
       (vliw 1 0)

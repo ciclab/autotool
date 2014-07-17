@@ -1308,7 +1308,7 @@ indent ./reloc.c");
   lout<<"[_a-zA-Z][_a-zA-Z0-9]*	{\n\
         dummy_lval.chp=newstr1(&strsta,yytext);/*TODO*/return TOK_LABEL;}"<<endl;
   lout<<"[0-9]+	{dummy_lval.integer=atoi(dummy_text);return TOK_INT;}"<<endl;
-
+  lout << "\"0x\"[a-fA-F0-9]+ {dummy_lval.integer=strtol(dummy_text,NULL,16);return TOK_INT;}"<<endl;
   //lout<<"[\"0\"|\"1\"] dummy_lval=(*dummytext)=='1'?1:0;return C01;\n";
 
 

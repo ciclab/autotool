@@ -663,6 +663,13 @@ void dfsGenCCode( do_content & d, ofstream & out, int lev )
 	      out  << " doOk = false; \n";
 	      out << "break;}\n";
 	    }
+	  else if( d.ivec[0].str == "not" )
+	    {
+	      assert( d.ivec.size() == 2 );
+	      out << " ! ( " ;
+	      dfsGenCCode( d.ivec[1], out, lev + 1 );
+	      out << " ) ";
+	    }
 	}
     }
 }
