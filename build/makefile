@@ -4,6 +4,7 @@ CXXFLAGS=-g -Wall \
 	-DASEM_COUT=0 \
 	-DINSTR_COUT=0 \
 	-DASGEN_COUT=0 \
+	-DIGNORE_CASE\
 	-std=c++11
 SRC=../src
 VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor:../src/simulator

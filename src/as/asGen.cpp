@@ -1007,7 +1007,12 @@ int main(int argc,char *argv[])
   tout<<"{\n";
   // for debug
   tout<<"printf(\"!%s!\\n\",str);\n";
-
+#ifdef IGNORE_CASE
+  tout<<"int itei;\n";
+  tout<<"for( itei = 0 ; str[itei] ; ++itei )\n";
+  tout<<"if(str[itei] <= 'Z' && str[itei] >= 'A' )\n";
+  tout<<"str[itei] += 'z' - 'Z';\n";
+#endif
   tout<<"YY_BUFFER_STATE bs=dummy__scan_string(str);\n";
   tout<<"memset(yyret,0,sizeof(yyret));\n";
   tout<<"instr_cnt=0;\n";

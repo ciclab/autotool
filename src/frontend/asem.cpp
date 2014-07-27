@@ -101,7 +101,12 @@ void Asem::display(int lev){
       }
   }
 }
-
+static void toDownCase( string & s )
+{
+  for( auto &i : s )
+    if( i <= 'Z' && i >= 'A' )
+      i += ( 'z' - 'Z' );
+}
 void Asem::gen(FILE * & input){
   int c1;
   while((c1=fgetc(input))!=EOF){
@@ -120,6 +125,10 @@ void Asem::gen(FILE * & input){
       int c2;
       while((c2=fgetc(input))!=EOF && c2!='\'')
 	asem_2.name+=c2;
+      // ruoYuan said that it is more convenient to ignore the case
+      #ifdef IGNORE_CASE
+      toDownCase(asem_2.name);
+      #endif
       ivec.push_back(asem_2);
     }
     //普通string
