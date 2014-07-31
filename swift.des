@@ -264,7 +264,7 @@
     )
   )
   (pipe_line
-    ( p1
+    ( fetch1
       ( state imm11 )
       ( binary int128 )
       ( valA1 int32 )
@@ -282,7 +282,7 @@
       ( rs2 imm5 )
       ( rt2 imm5 )
     )
-    ( p2
+    ( fetch2
       ( state imm11 )
       ( binary int128 )
       ( valA1 int32 )
@@ -300,7 +300,7 @@
       ( rs2 imm5 )
       ( rt2 imm5 )
     )
-    ( p3
+    ( decode
       ( state imm11 )
       ( binary int128 )
       ( valA1 int32 )
@@ -318,7 +318,7 @@
       ( rs2 imm5 )
       ( rt2 imm5 )
     )
-    ( p4
+    ( execute
       ( state imm11 )
       ( binary int128 )
       ( valA1 int32 )
@@ -336,7 +336,7 @@
       ( rs2 imm5 )
       ( rt2 imm5 )
     )
-    ( p5
+    ( mem1
       ( state imm11 )
       ( binary int128 )
       ( valA1 int32 )
@@ -354,6 +354,10 @@
       ( rs2 imm5 )
       ( rt2 imm5 )
     )
+    (mem2)
+    (vex2)
+    (vex3)
+    (writeback)
   )
   (instruction
     (top instrs)
@@ -412,7 +416,7 @@
 	V10BIT11 V20BIT10 V40BIT01 V11 VFMUL VMAC VCMUL VCMULI40
 	VCMAC MOVI
 	 CMP CMPU CH MOVG2G MOVV2V  VMOVR VNOT VABS VSUM
-	LOOP BFST TEST BST ADDI BFEXT MOVV2G MOVG2V 
+	LOOP BFST TEST BST ADDI BFEXT MOVV2G MOVG2V SYNCH MOVV2L
       )
       (do
         (fetch_s
@@ -428,7 +432,7 @@
 	V10BIT11 V20BIT10 V40BIT01 V11 VFMUL VMAC VCMUL VCMULI40
 	VCMAC MOVI
 	 CMP CMPU CH MOVG2G MOVV2V  VMOVR VNOT VABS VSUM
-	LOOP BFST TEST BST ADDI BFEXT MOVV2G MOVG2V
+	LOOP BFST TEST BST ADDI BFEXT MOVV2G MOVG2V MOVL2V
       )
       (do
         (fetch_s
@@ -474,14 +478,51 @@
       (binary '000' '000000' '000000' '000000' '00000000') 
     )
     (RET
-      (do)
+      (do
+        (decode_s
+	  /*user implemented function readReg,
+	  return true if funished*/
+	  (gr31_val)
+	  (call readReg 'gr' 31 (& gr31_val) )
+	  (= execute.rd gr31_val)
+	)
+        (execute_s
+	  (
+	    (assign decode.pc ?)
+	   /*TODO we don't flush decode, fetch1, fetch2*/
+	  )
+	)
+      )
       (code 'ret')
       (binary '000' '000000' '000000' '000000' '000001' '00')
     )
     (RTT
       (do)
+      /* TODO what is ica ?? */
       (code 'rtt')
       (binary '000' '000000' '000000' '000000' '000010' '00')
+    )
+    (SYNCH
+      (do)
+      (code 'synch')
+      /* document not complete */
+      (binary '000' '000000' '000000' '000000' '000011' '00')
+    )
+    (MOVV2L
+      (do
+        (mem2
+	  (rs_t)
+	  (call getReg 'vr' (& rs_t ) )
+	))
+      (= rs VR_E)
+      (code 'movv2l' ' ' rs)
+      (binary '000' '000000' rs '000000' '000110' '11')
+    )
+    (MOVL2V
+      (do)
+      (= rd VR_E)
+      (code 'movl2v' ' ' rd)
+      (binary '000' rd '000000' '000000' '000111' '11')
     )
     (VSEL20
       (= rd VR_E)
