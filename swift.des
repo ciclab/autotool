@@ -171,6 +171,11 @@
       (pcrel TRUE)
       (right_shift 2)
     )
+    (addr16Rel
+      (width 16)
+      (pcrel TRUE)
+      (right_shift 2)
+    )
     (addr21Abs
       (width 21)
       (pcrel false)
@@ -444,7 +449,6 @@
     )
     (slot2
       (= i NOP 
-             VMOVCV2V
 	 VLOADO SLOADO VSTOREO SSTOREO LOAD LOADU VLOAD 
 	VLOADUR VLOADU VLOADR STORE STOREU STOREI VSTORE STOREUU
 	VSTOREEU  MOVG2G MOVV2V  VMOVR  MOVI MOVV2G MOVG2V
@@ -459,7 +463,6 @@
     )
     (slot3
       (= i NOP 
-             VMOVCV2V
 	 VLOADO SLOADO VSTOREO SSTOREO LOAD LOADU VLOAD
 	VLOADUR VLOADU VLOADR STORE STOREU STOREI VSTORE STOREUU
 	VSTOREEU  MOVG2G MOVV2V  VMOVR MOVI MOVV2G MOVG2V
@@ -940,7 +943,7 @@
     )
     (LOOP
       (do)
-      (= imm imm16)
+      (= imm addr16Rel)
       (= rd GR_E)
       (code 'loop' ' ' rd ' ' imm)
       (binary '101' '0' rd imm '0000' )
