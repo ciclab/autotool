@@ -210,6 +210,7 @@ int main(int argc,char *argv[])
   //lex file head
   lout<<"%{\n";
   lout<<"#include \"y.h\""<<endl;
+  lout<<"#include <stdio.h>\n";
   lout<<"#include \"strstack.h\"\n";
   lout<<"extern struct strstack strsta;\n";
   lout<<"#define YY_NO_INPUT\n";
@@ -1316,7 +1317,7 @@ indent ./reloc.c");
   lout << "\"0x\"[a-fA-F0-9]+ {dummy_lval.integer=strtol(dummy_text,NULL,16);return TOK_INT;}"<<endl;
   //lout<<"[\"0\"|\"1\"] dummy_lval=(*dummytext)=='1'?1:0;return C01;\n";
 
-
+  lout <<". {fprintf(stderr, \"invalid token '%s'\\n\", dummy_text);}\n";
   lout<<"%%\n\
 int yywrap()\n\
 {\n\
