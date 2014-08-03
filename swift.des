@@ -573,7 +573,7 @@
       (binary '000' a '0' '10' '01')
     )
     (CALL
-      (= a addr21Abs)
+      (= a addr21Rel)
       (do
       )
       (code 'call' ' ' a)
