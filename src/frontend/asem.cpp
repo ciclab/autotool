@@ -840,7 +840,8 @@ void Asem::dfs_insert_hash(string pwd)
       if(ivec[0].name=="=" || 
 	 ivec[0].name=="+" ||
 	 ivec[0].name=="if" ||
-	 ivec[0].name=="[]")
+	 ivec[0].name=="[]" ||
+	 ivec[0].name=="call")
 	return ;
       pwd+=ivec[0].name;
       // 不应该有重复定义
