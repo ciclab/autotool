@@ -6,26 +6,13 @@
 #include <utility>
 #include <string>
 #include "hash.h"
-#include "def.h"
 #include <queue>
+
+#include "def.h"
+#include "common/utility.h"
+
 using namespace std;
-static int str2int( string &s )
-{
-  int r(0);
-  for( auto i : s )
-    r = r * 10 + i - '0';
-  return r;
-}
-static string int2str( int num )
-{
-  if( num == 0 )
-    return (string)"0";
-  string r;
-  for( ; num > 0; num /= 10 )
-    r.push_back( '0' + ( num % 10 ) );
-  reverse( r.begin(), r.end() );
-  return r;
-}
+
 // record type used, first -> length of type, second -> signed
 static unordered_set<string> typeSet;
 static unordered_map<string,int> stageMap;
@@ -142,6 +129,7 @@ int main(int argc, char *argv[])
     }
   return 0;
 }
+
 void varGen( ofstream &outh, ofstream &outc )
 {
   // reg, mem, pipeline should be processed first
@@ -739,7 +727,7 @@ string getTypeName( do_content & d )
       assert(0);
     }
   // is str
-  // cout << d.str << endl;
+  cout << d.str << endl;
   assert( varTypeMap.find( d.str ) != varTypeMap.end() );
   return varTypeMap[ d.str ];
 }

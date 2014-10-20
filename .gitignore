@@ -5,3 +5,7 @@ build/in
 
 build/asgen
 build/rd
+
+build/
+
+*.*~

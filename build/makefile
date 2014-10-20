@@ -7,7 +7,7 @@ CXXFLAGS=-g -Wall \
 	-DIGNORE_CASE\
 	-std=c++11
 SRC=../src
-VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor:../src/simulator
+VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor:../src/simulator:../src/simulator/common
 INCLUDE=-I../src/include -I.
 LEX = flex -v
 YACC = bison -dv
@@ -26,7 +26,7 @@ simGen: simGen.o ir.o libir.a asem.o hash.o
 class.h pipeline.h reg.h : simGen out
 	./simGen out out2
 
-simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp reg.c mem.c sim_dis.l.h stage.c vars.cpp
+simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp reg.c mem.c sim_dis.l.h stage.c vars.cpp utility.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 runsim: simulator aa.out
