@@ -20,13 +20,13 @@ input_file = ../swift.des
 binutils: y.c y.h l.c l.h coff-dummy.c tc-dummy.c dis_as.c dis_as.h dis_l.h dis_l.c dis_as.y.h
 	cp y.c y.h l.c l.h  $(BINUTILS_DIR)/gas;cp tc-dummy.c $(BINUTILS_DIR)/gas/config;cp coff-dummy.c $(BINUTILS_DIR)/bfd/coff-mips.c;cp ../src/as/strstack.cpp $(BINUTILS_DIR)/gas/strstack.c; cp ../src/include/strstack.h $(BINUTILS_DIR)/gas ; cp ./reloc.c $(BINUTILS_DIR)/bfd ; cp ./reloc.texi $(BINUTILS_DIR)/bfd/doc ;cp ../src/include/strstack.h $(BINUTILS_DIR)/binutils ; cp ../src/as/strstack.cpp $(BINUTILS_DIR)/binutils/strstack.c ; cp ./dummy-dis.c $(BINUTILS_DIR)/opcodes ; cp  dis_l.c dis_as.c $(BINUTILS_DIR)/opcodes ; cp dis_as.h dis_as.y.h  dis_l.h $(BINUTILS_DIR)/include/opcode 
 
-simGen: simGen.o ir.o libir.a asem.o hash.o
+simGen: simGen.o ir.o libir.a asem.o hash.o utility.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 class.h pipeline.h reg.h : simGen out
 	./simGen out out2
 
-simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp reg.c mem.c sim_dis.l.h stage.c vars.cpp utility.cpp
+simulator: class.h pipeline.h reg.h simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.y.h simlib.cpp reg.c mem.c sim_dis.l.h stage.c vars.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 runsim: simulator aa.out
@@ -134,5 +134,10 @@ addr.o: addr.cpp
 simGen.o: simGen.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
+utility.o: utility.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
 clean:
 	rm *.* rd asgen out pp simulator
+
+
