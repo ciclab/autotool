@@ -1,6 +1,7 @@
 #ifndef _MEM_BASE_H_
 #define _MEM_BASE_H_
 
+#include <functional>
 #incldue <string>
 
 class MemoryBase
@@ -8,19 +9,29 @@ class MemoryBase
  public:
   const static std::string name = "MemoryBase";
   const static uint size = 0;
-  const static uint width = 0;
+
+  // called before ReadMemory
+  // return 0 if ok, else ReadMemory won't be called
+  virtual int BeforeRead(std::function func);
+  virtual int AfterRead(std::function func);
+
+  // called before WriteMemory is called
+  // return 0 if ok, else WriteMemory won't be called
+  virtual int BeforeWrite(std::function func);
+  virtual int AfterWrite(std::function func);
+
  private:
   // return true if placeHoder is valid address in offset
-  <typename Type>bool CheckAddressValidity(uint offset, const Type& placeHolder);
+  int CheckAddressValidity(uint offset, uint size);
 
   // read value from memory
-  <typename Type>bool Read(uint offset, Type& value);
+  int ReadMemory(uint offset, uint size, vector<char>& value);
 
   // write value from memory
-  <typename Type>bool Write(uint offset, const Type& value);
+  int WriteMemory(uint offset, uint size, const vector<char>& value);
 
   // Initialize memory default to set memory zero 
-  virtual void Init();
+  virtual int Init();
 };
 
 #endif
