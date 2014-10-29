@@ -7,8 +7,8 @@
 class MemoryBase
 {
  public:
-  const static std::string name = "MemoryBase";
-  const static uint size = 0;
+  const static std::string mName = "MemoryBase";
+  const static uint mSize = 0;
 
   // called before ReadMemory
   // return 0 if ok, else ReadMemory won't be called
