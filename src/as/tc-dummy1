@@ -7,8 +7,9 @@
 #include "dw2gencfi.h"
 #include "l.h"
 #include "strstack.h"
+#include "stdlib.h"
+#include "assert.h"
 struct strstack strsta;
-char *yyret;
 extern int dummy_parse (void);
 #define WST(a) ((a)=(a))
 #define DEBUG
@@ -227,7 +228,8 @@ int mips_fix_adjustable(struct fix *fixp)
 {
 DBG(("mips_fix_adjustable\n"));
 	WST(fixp);
-	return 1;
+	//	return 1;
+	return 0;
 }
 
 int mips_force_relocation(struct fix *fixp)
@@ -289,6 +291,8 @@ long md_pcrel_from(fixS * fixP)
     case MIPS_RELOC_PCREL5:
       return addr + 4;*/
     default:
+    //printf("!md_pcrel_from %d",(int)fixP->fx_size);
+      return addr + fixP->fx_size;
       /* We have no relocation type for PC relative MIPS16 instructions.  */
       if (fixP->fx_addsy && S_GET_SEGMENT (fixP->fx_addsy) != now_seg)
 	as_bad_where (fixP->fx_file, fixP->fx_line,
@@ -308,7 +312,18 @@ arelent **tc_gen_reloc(asection * section ATTRIBUTE_UNUSED, fixS * fixp)
 	reloc->sym_ptr_ptr = (asymbol **) xmalloc(sizeof(asymbol *));
 	*reloc->sym_ptr_ptr = symbol_get_bfdsym(fixp->fx_addsy);
 	reloc->address = fixp->fx_frag->fr_address + fixp->fx_where;
-	
+
+//  if (fixp->fx_pcrel)
+//    {
+//      if (section->use_rela_p)
+//	{
+//	  assert(0);
+//	  /* fixp->fx_offset -= md_pcrel_from_section (fixp, section); */
+//	}
+  //    else
+//	fixp->fx_offset = reloc->address -  ( fixp->fx_where + fixp->fx_frag->fr_address );
+  //  }
+//  reloc->addend = fixp->fx_offset;	
 	if (fixp->fx_pcrel) {
 //		gas_assert(fixp->fx_r_type == MIPS_RELOC_PCREL18||fixp->fx_r_type == MIPS_RELOC_PCREL8);
 //printf("fixp->fx_addnumber %d ,reloc->address %d \n",(int)fixp->fx_addnumber,(int)reloc->address);
@@ -332,7 +347,6 @@ arelent **tc_gen_reloc(asection * section ATTRIBUTE_UNUSED, fixS * fixp)
 	   reloc->address = reloc->addend;
 	   reloc->addend = 0;
 	   } */
-
 	code = fixp->fx_r_type;
 	reloc->howto = bfd_reloc_type_lookup(stdoutput, code);
 	if (reloc->howto == NULL) {

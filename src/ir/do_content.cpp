@@ -11,7 +11,7 @@ void do_content::output(ofstream &fout)
     case do_type_is_vector:
       fout<<ivec.size()<<endl;
       FR(i,ivec)
-	i->output(fout);
+	i.output(fout);
       // for(int i=0;i<ivec.size();++i)
       // 	ivec[i].output(fout);
       break;
@@ -66,5 +66,10 @@ void do_content::read(ifstream &fin)
       break;
     default:
       assert(0);
+    }
+  if( type == do_type_is_string2 )
+    {
+      str.insert( str.begin(), '"' );
+      str += '"';
     }
 }

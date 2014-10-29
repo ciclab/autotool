@@ -16,36 +16,40 @@ using namespace std;
 //表示有引号的string
 #define type_is_string2 2
 
-
+enum instr_type {e_pack,e_notpack} ;// record type of unfolded instr
 class Asem{
  private:
   void eval_unfold(const string &,
 		   vector<string> &var_name,
+		   vector<string> &var_uni_name,
 		   vector<vector<string> >&var_choose_name,
 		   vector<vector<int> >&var_val,
 		   vector<pair<int,int> > &var_choosed_val,
 		   Asem &code,
 		   Asem &binary,
-		   Asem * doo,
-		   vector<triple> &r);
+		   /* Asem * doo, */
+		   vector<triple> &r,
+		   int do_seq);
   void dfs_unfold_instr(const string &,vector<string> &var_name, // 变量名字
+			vector<string> &var_uni_name, // 替换原变量名的唯一名字
 			vector<vector<string> > &var_choose_name, // 变量可选的值的名字
 			vector<vector<int> > &var_val,		// 变量可选值对应unfolded_list的索引
 			vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
 			Asem &code,				// 待展开的code对应asem
 			Asem &binary,				// 待展开的binary对应asem
-			Asem * doo,				// 待展开do对应的asem
-			int lev,					// 当前枚举到第lev个变量
-			vector<triple> &r);			// 保存展开结果
+			/* Asem *doo,				// 待展开do对应的asem */
+			int lev,			        // 当前枚举到第lev个变量
+			vector<triple> &r,			// 保存展开结果
+			int do_seq);
   int unfold_enum(ofstream & yout,ofstream & dot_c_out);
   int unfold_type(ofstream & yout,ofstream & dot_c_out);
+  int unfold_addr(ofstream & yout,ofstream & dot_c_out);
   int unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out);
   void switch_chg(vector<string> &var_name,
 		  vector<vector<string> >&var_choose_name,
 		  vector<vector<int> >&var_val,
 		  vector<pair<int,int> > &var_choosed_val
 		  );
-  void dfs_copy_content(do_content &dl);
   void translate_doo(ofstream &dot_h_out,ofstream & dot_c_out,vector<string> &var_list,const string & rule_name);
   string doo_translate_statement(ofstream & dot_h_out,ofstream & dot_c_out,const string & rule_name);
   bool doo_is_assignment();
@@ -64,8 +68,11 @@ class Asem{
   void doo_output_switch_beg(ofstream &dot_c_out);
  public:
   /*TODO chang following member to private*/
+  /* void dfs_copy_content(do_content &dl); */
   static hash_control & hc_unfold;
   static vector<vector<triple > > & unfolded_list;
+  static vector<Asem> & do_content;
+  static vector<instr_type> & unfolded_list_type; // record type of entries in unfolded_list
   static vector<string> & unfolded_list_name;// name of rule of corresponding unfolded_list
   static class hash_control & hc;
   vector<Asem> ivec;
@@ -76,9 +83,11 @@ class Asem{
   // 哈希表 hash controller
   bool is_string();
   bool is_vec();
+  bool is_assign();
   bool is_instr(string name);
   bool is_type(string name);
   bool is_enum(string name);
+  bool is_addr(string name);
   string get_string();
   Asem *get_asem(string name);
   string get_full_name(string name,string pwd);

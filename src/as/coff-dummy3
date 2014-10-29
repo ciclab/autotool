@@ -35,7 +35,6 @@ PT
    is external.  */
 
 /* Swap a reloc in.  */
-
 static void
 mips_ecoff_swap_reloc_in (bfd *  abfd,
 			  void * ext_ptr,
@@ -54,7 +53,7 @@ PT
 			  | ((int) ext->r_bits[2]
 			     << RELOC_BITS2_SYMNDX_SH_LEFT_BIG));
       intern->r_type = ((ext->r_bits[3] & RELOC_BITS3_TYPE_BIG)
-			>> RELOC_BITS3_TYPE_SH_BIG);
+			>> RELOC_BITS3_TYPE_SH_BIG)+ BFD_DUMMY_OFF /*TODO*/;
       intern->r_extern = (ext->r_bits[3] & RELOC_BITS3_EXTERN_BIG) != 0;
     }
   else
@@ -68,7 +67,7 @@ PT
       intern->r_type = (((ext->r_bits[3] & RELOC_BITS3_TYPE_LITTLE)
 			 >> RELOC_BITS3_TYPE_SH_LITTLE)
 			| ((ext->r_bits[3] & RELOC_BITS3_TYPEHI_LITTLE)
-			   << RELOC_BITS3_TYPEHI_SH_LITTLE));
+			   << RELOC_BITS3_TYPEHI_SH_LITTLE)) + BFD_DUMMY_OFF /*TODO*/;
       intern->r_extern = (ext->r_bits[3] & RELOC_BITS3_EXTERN_LITTLE) != 0;
     }
 }
@@ -88,14 +87,14 @@ PT
 	      || (intern->r_symndx >= 0 && intern->r_symndx <= 12));
 
   r_symndx = intern->r_symndx;
-
+printf("%d_______",(int)intern->r_type);
   H_PUT_32 (abfd, intern->r_vaddr, ext->r_vaddr);
   if (bfd_header_big_endian (abfd))
     {
       ext->r_bits[0] = r_symndx >> RELOC_BITS0_SYMNDX_SH_LEFT_BIG;
       ext->r_bits[1] = r_symndx >> RELOC_BITS1_SYMNDX_SH_LEFT_BIG;
       ext->r_bits[2] = r_symndx >> RELOC_BITS2_SYMNDX_SH_LEFT_BIG;
-      ext->r_bits[3] = (((intern->r_type << RELOC_BITS3_TYPE_SH_BIG)
+      ext->r_bits[3] = ((((intern->r_type-BFD_DUMMY_OFF /*TODO*/) << RELOC_BITS3_TYPE_SH_BIG)
 			 & RELOC_BITS3_TYPE_BIG)
 			| (intern->r_extern ? RELOC_BITS3_EXTERN_BIG : 0));
     }
@@ -104,9 +103,9 @@ PT
       ext->r_bits[0] = r_symndx >> RELOC_BITS0_SYMNDX_SH_LEFT_LITTLE;
       ext->r_bits[1] = r_symndx >> RELOC_BITS1_SYMNDX_SH_LEFT_LITTLE;
       ext->r_bits[2] = r_symndx >> RELOC_BITS2_SYMNDX_SH_LEFT_LITTLE;
-      ext->r_bits[3] = (((intern->r_type << RELOC_BITS3_TYPE_SH_LITTLE)
+      ext->r_bits[3] = ((((intern->r_type-BFD_DUMMY_OFF /*TODO*/) << RELOC_BITS3_TYPE_SH_LITTLE)
 			 & RELOC_BITS3_TYPE_LITTLE)
-			| ((intern->r_type >> RELOC_BITS3_TYPEHI_SH_LITTLE
+			| (((intern->r_type-BFD_DUMMY_OFF /*TODO*/) >> RELOC_BITS3_TYPEHI_SH_LITTLE
 			    & RELOC_BITS3_TYPEHI_LITTLE))
 			| (intern->r_extern ? RELOC_BITS3_EXTERN_LITTLE : 0));
     }
@@ -134,7 +133,7 @@ PT
      the absolute section so that the reloc is ignored.  */
   if (intern->r_type == MIPS_R_IGNORE)
     rptr->sym_ptr_ptr = bfd_abs_section_ptr->symbol_ptr_ptr;
-
+	BFD_ASSERT(intern->r_type<sizeof(mips_howto_table)/sizeof(mips_howto_table[0]));
   rptr->howto = &mips_howto_table[intern->r_type];
 }
 
@@ -169,6 +168,10 @@ mips_generic_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		    char **error_message ATTRIBUTE_UNUSED)
 {
 PT
+  symbol=symbol;
+  input_section=input_section;
+  output_bfd=output_bfd;
+  reloc_entry=reloc_entry;
   if (output_bfd != (bfd *) NULL
       && (symbol->flags & BSF_SECTION_SYM) == 0
       && reloc_entry->addend == 0)
@@ -198,8 +201,8 @@ struct mips_hi
 
 /* FIXME: This should not be a static variable.  */
 
-static struct mips_hi *mips_refhi_list;
-
+//static struct mips_hi *mips_refhi_list;
+/*
 static bfd_reloc_status_type
 mips_refhi_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		  arelent *reloc_entry,
@@ -214,8 +217,6 @@ PT
   bfd_vma relocation;
   struct mips_hi *n;
 
-  /* If we're relocating, and this an external symbol, we don't want
-     to change anything.  */
   if (output_bfd != (bfd *) NULL
       && (symbol->flags & BSF_SECTION_SYM) == 0
       && reloc_entry->addend == 0)
@@ -241,7 +242,6 @@ PT
   if (reloc_entry->address > bfd_get_section_limit (abfd, input_section))
     return bfd_reloc_outofrange;
 
-  /* Save the information, and let REFLO do the actual relocation.  */
   n = (struct mips_hi *) bfd_malloc ((bfd_size_type) sizeof *n);
   if (n == NULL)
     return bfd_reloc_outofrange;
@@ -255,11 +255,11 @@ PT
 
   return ret;
 }
-
+*/
 /* Do a REFLO relocation.  This is a straightforward 16 bit inplace
    relocation; this function exists in order to do the REFHI
    relocation described above.  */
-
+/*
 static bfd_reloc_status_type
 mips_reflo_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		  arelent *reloc_entry,
@@ -282,22 +282,12 @@ PT
 	  unsigned long vallo;
 	  struct mips_hi *next;
 
-	  /* Do the REFHI relocation.  Note that we actually don't
-	     need to know anything about the REFLO itself, except
-	     where to find the low 16 bits of the addend needed by the
-	     REFHI.  */
 	  insn = bfd_get_32 (abfd, l->addr);
 	  vallo = (bfd_get_32 (abfd, (bfd_byte *) data + reloc_entry->address)
 		   & 0xffff);
 	  val = ((insn & 0xffff) << 16) + vallo;
 	  val += l->addend;
 
-	  /* The low order 16 bits are always treated as a signed
-	     value.  Therefore, a negative value in the low order bits
-	     requires an adjustment in the high order bits.  We need
-	     to make this adjustment in two ways: once for the bits we
-	     took from the data, and once for the bits we are putting
-	     back in to the data.  */
 	  if ((vallo & 0x8000) != 0)
 	    val -= 0x10000;
 	  if ((val & 0x8000) != 0)
@@ -314,14 +304,13 @@ PT
       mips_refhi_list = NULL;
     }
 
-  /* Now do the REFLO reloc in the usual way.  */
   return mips_generic_reloc (abfd, reloc_entry, symbol, data,
 			      input_section, output_bfd, error_message);
-}
+}*/
 
 /* Do a GPREL relocation.  This is a 16 bit value which must become
    the offset from the gp register.  */
-
+/*
 static bfd_reloc_status_type
 mips_gprel_reloc (bfd *abfd ATTRIBUTE_UNUSED,
 		  arelent *reloc_entry,
@@ -338,10 +327,6 @@ PT
   unsigned long val;
   unsigned long insn;
 
-  /* If we're relocating, and this is an external symbol with no
-     addend, we don't want to change anything.  We will only have an
-     addend if this is a newly created reloc, not read from an ECOFF
-     file.  */
   if (output_bfd != (bfd *) NULL
       && (symbol->flags & BSF_SECTION_SYM) == 0
       && reloc_entry->addend == 0)
@@ -361,11 +346,6 @@ PT
   if (bfd_is_und_section (symbol->section) && ! relocatable)
     return bfd_reloc_undefined;
 
-  /* We have to figure out the gp value, so that we can adjust the
-     symbol value correctly.  We look up the symbol _gp in the output
-     BFD.  If we can't find it, we're stuck.  We cache it in the ECOFF
-     target data.  We don't need to adjust the symbol value for an
-     external symbol if we are producing relocatable output.  */
   gp = _bfd_get_gp_value (output_bfd);
   if (gp == 0
       && (! relocatable
@@ -373,7 +353,6 @@ PT
     {
       if (relocatable)
 	{
-	  /* Make up a value.  */
 	  gp = symbol->section->output_section->vma + 0x4000;
 	  _bfd_set_gp_value (output_bfd, gp);
 	}
@@ -406,7 +385,6 @@ PT
 
 	  if (i >= count)
 	    {
-	      /* Only get the error once.  */
 	      gp = 4;
 	      _bfd_set_gp_value (output_bfd, gp);
 	      *error_message =
@@ -429,14 +407,10 @@ PT
 
   insn = bfd_get_32 (abfd, (bfd_byte *) data + reloc_entry->address);
 
-  /* Set val to the offset into the section or symbol.  */
   val = ((insn & 0xffff) + reloc_entry->addend) & 0xffff;
   if (val & 0x8000)
     val -= 0x10000;
 
-  /* Adjust val for the final section location and GP value.  If we
-     are producing relocatable output, we don't want to do this for
-     an external symbol.  */
   if (! relocatable
       || (symbol->flags & BSF_SECTION_SYM) != 0)
     val += relocation - gp;
@@ -447,10 +421,9 @@ PT
   if (relocatable)
     reloc_entry->address += input_section->output_offset;
 
-  /* Make sure it fit in 16 bits.  */
   if ((long) val >= 0x8000 || (long) val < -0x8000)
     return bfd_reloc_overflow;
 
   return bfd_reloc_ok;
-}
+}*/
 

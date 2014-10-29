@@ -1,0 +1,81 @@
+/* BFD back-end for MIPS Extended-Coff files.
+   Copyright 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999,
+   2000, 2001, 2002, 2003, 2004, 2005, 2007, 2008, 2009, 2011, 2012
+   Free Software Foundation, Inc.
+   Original version by Per Bothner.
+   Full support added by Ian Lance Taylor, ian@cygnus.com.
+
+   This file is part of BFD, the Binary File Descriptor library.
+
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 3 of the License, or
+   (at your option) any later version.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
+   MA 02110-1301, USA.  */
+
+#include "sysdep.h"
+#include "bfd.h"
+#include "bfdlink.h"
+#include "libbfd.h"
+#include "coff/internal.h"
+#include "coff/sym.h"
+#include "coff/symconst.h"
+#include "coff/ecoff.h"
+#include "coff/mips.h"
+#include "libcoff.h"
+#include "libecoff.h"
+#define PT printf("%s %d\n",__FILE__,__LINE__);
+#define BFD_DUMMY_OFF 1747
+
+static bfd_reloc_status_type
+mips_generic_reloc
+  (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
+/* Prototypes for static functions.
+static bfd_reloc_status_type
+mips_refhi_reloc
+  (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
+static bfd_reloc_status_type
+mips_reflo_reloc
+  (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
+static bfd_reloc_status_type
+mips_gprel_reloc 
+  (bfd *, arelent *, asymbol *, void *, asection *, bfd *, char **);
+  */
+
+/* ECOFF has COFF sections, but the debugging information is stored in
+   a completely different format.  ECOFF targets use some of the
+   swapping routines from coffswap.h, and some of the generic COFF
+   routines in coffgen.c, but, unlike the real COFF targets, do not
+   use coffcode.h itself.
+
+   Get the generic COFF swapping routines, except for the reloc,
+   symbol, and lineno ones.  Give them ECOFF names.  */
+#define MIPSECOFF
+#define NO_COFF_RELOCS
+#define NO_COFF_SYMBOLS
+#define NO_COFF_LINENOS
+#define coff_swap_filehdr_in  mips_ecoff_swap_filehdr_in
+#define coff_swap_filehdr_out mips_ecoff_swap_filehdr_out
+#define coff_swap_aouthdr_in  mips_ecoff_swap_aouthdr_in
+#define coff_swap_aouthdr_out mips_ecoff_swap_aouthdr_out
+#define coff_swap_scnhdr_in   mips_ecoff_swap_scnhdr_in
+#define coff_swap_scnhdr_out  mips_ecoff_swap_scnhdr_out
+
+#include "coffswap.h"
+
+/* Get the ECOFF swapping routines.  */
+#define ECOFF_32
+#include "ecoffswap.h"
+
+/* How to process the various relocs types.  */
+
+

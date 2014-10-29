@@ -1,15 +1,16 @@
 
 int/*TODO*/ get_expr(char *str,int bfd_type)
 {
-  my_getExpression(expr_list+offset_cnt,str);
-  offset_reloc[offset_cnt]=bfd_type;
-  if(expr_list[offset_cnt].X_op==O_constant)
+  expr_list[instr_cnt][offset_cnt[instr_cnt]].X_op = O_absent;
+  offset_reloc[instr_cnt][offset_cnt[instr_cnt]]=bfd_type;
+  my_getExpression(expr_list[instr_cnt]+offset_cnt[instr_cnt],str);
+  if(expr_list[instr_cnt][offset_cnt[instr_cnt]].X_op==O_constant)
   {
-    return expr_list[offset_cnt].X_add_number;
+    return expr_list[instr_cnt][offset_cnt[instr_cnt]].X_add_number;
   }
-  else if(expr_list[offset_cnt].X_op==O_symbol)
+  else if(expr_list[instr_cnt][offset_cnt[instr_cnt]].X_op==O_symbol)
   {
-    ++offset_cnt;
+    ++offset_cnt[instr_cnt];
   }
   else
     as_bad(_("get_expr"));

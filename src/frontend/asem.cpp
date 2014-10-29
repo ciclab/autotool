@@ -1,6 +1,25 @@
 #include "asem.h"
 #include <cstdlib>
 #include "def.h"
+#include <unordered_map>
+#include "do_content.h"
+using namespace std;
+
+hash_control hc_unfold_read;
+vector<vector<triple > > unfolded_list_read;
+vector<instr_type> u_l_t;
+vector<string> unfolded_list_name_read;// name of rule of corresponding unfolded_list
+class hash_control hc_read;
+vector<Asem> do_content_read;
+
+class hash_control & Asem::hc_unfold=hc_unfold_read;
+vector<Asem> & Asem::do_content = do_content_read;
+vector<vector<triple > > & Asem::unfolded_list=unfolded_list_read;
+vector<instr_type> &Asem::unfolded_list_type=u_l_t;
+vector<string> & Asem::unfolded_list_name=unfolded_list_name_read;// name of rule of corresponding unfolded_list
+class hash_control & Asem::hc=hc_read;
+
+
 //#define DOT_Y
 // 返回v的二进制，宽度能表示w项（从0开始）
 // static string num2string(int v,int w)
@@ -16,6 +35,14 @@
 // }
 
 // v should be positive
+bool isNumber(const string s)
+{
+  FRA(i,s)
+    if(*i<'0' || *i>'9')
+      return false;
+  return true;
+}
+
 static string int2string(int v)
 {
   char tmp[330];
@@ -74,7 +101,12 @@ void Asem::display(int lev){
       }
   }
 }
-
+static void toDownCase( string & s )
+{
+  for( auto &i : s )
+    if( i <= 'Z' && i >= 'A' )
+      i += ( 'z' - 'Z' );
+}
 void Asem::gen(FILE * & input){
   int c1;
   while((c1=fgetc(input))!=EOF){
@@ -93,6 +125,10 @@ void Asem::gen(FILE * & input){
       int c2;
       while((c2=fgetc(input))!=EOF && c2!='\'')
 	asem_2.name+=c2;
+      // ruoYuan said that it is more convenient to ignore the case
+      #ifdef IGNORE_CASE
+      toDownCase(asem_2.name);
+      #endif
       ivec.push_back(asem_2);
     }
     //普通string
@@ -101,7 +137,8 @@ void Asem::gen(FILE * & input){
       asem_3.type=type_is_string1;
       asem_3.name=c1;
       int c3;
-      while((c3=fgetc(input))!=EOF && (c3==(int)']' || isalnum(c3) || c3=='_' || c3=='[' || c3=='.'
+      while((c3=fgetc(input))!=EOF && (c3==(int)']' || isalnum(c3) || c3=='_' || c3=='[' || c3=='.' || c3 == '<' 
+				       || c3 == '>' || c3 == '=' 
 				    /*TODO 这里应该也用isgraph,但是会出现奇怪的效果，暂时列举]*/))
 	asem_3.name+=c3;
       ivec.push_back(asem_3);
@@ -111,12 +148,13 @@ void Asem::gen(FILE * & input){
   }
 }
 
+// unfold a description, including enum, instruction, type and addr
 // 展开一个描述，包括枚举，指令，类型
 int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
 {
   string & name=ivec[0].name;
-
   // 如果已经展开过
+  // if done
   if(hc_unfold.find(name)!=0)
     {
       return (long long)hc_unfold.find(name)-1; // 由于加入hash表的时候加过1
@@ -133,6 +171,8 @@ int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
     r=unfold_enum(yout,dot_c_out);
   else if(is_type(name))
     r=unfold_type(yout,dot_c_out);
+  else if(is_addr(name))
+    r=unfold_addr(yout,dot_c_out);
   else assert(0);
   if((int)unfolded_list_name.size()<=r)
     unfolded_list_name.resize(r+1);
@@ -147,18 +187,23 @@ int Asem::unfold(ofstream &yout,ofstream & dot_c_out,ofstream & dot_h_out)
 
 void Asem::dfs_unfold_instr(const string &rule_name,
 			    vector<string> &var_name, // 变量名字
+			    vector<string> &var_uni_name, // 为变量取的唯一的名字，用来替换do里的变量
 			    vector<vector<string> > &var_choose_name, // 变量可选的值的名字
 			    vector<vector<int> > &var_val,		// 变量可选值对应unfolded_list的索引
 			    vector<pair<int,int> > &var_choosed_val,	// 变量取值的情况
-		      Asem &code,				// 待展开的code对应asem
+			    Asem &code,				// 待展开的code对应asem
 			    Asem &binary,				// 待展开的binary对应asem
-			    Asem * doo,				// 待展开do对应的asem
+			    // Asem *doo,				// 待展开do对应的asem
 			    int lev,					// 当前枚举到第lev个变量
-			    vector<triple> &r)			// 保存展开结果
+			    vector<triple> &r,			// 保存展开结果
+			    int do_seq)
 {
   if(lev>=(int)var_name.size())
-    eval_unfold(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
-		code,binary,doo,r);
+    {
+      eval_unfold(rule_name,var_name,var_uni_name, var_choose_name,var_val,var_choosed_val,
+		  code,binary,// doo,
+		  r, do_seq);
+    }
   else
     for(int i=0;i<(int)var_val[lev].size();++i)
       {
@@ -168,8 +213,9 @@ void Asem::dfs_unfold_instr(const string &rule_name,
 	  {
 	    // 第i个值中第j个展开项
 	    var_choosed_val[lev].second=j;
-	    dfs_unfold_instr(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
-			     code,binary,doo,lev+1,r);
+	    dfs_unfold_instr(rule_name,var_name, var_uni_name,var_choose_name,var_val,var_choosed_val,
+			     code,binary,// doo,
+			     lev+1,r, do_seq);
 	  }
       }
 }
@@ -177,19 +223,22 @@ void Asem::dfs_unfold_instr(const string &rule_name,
 // 每个变量已经定好取值后计算code，binary，do并保存到r中
 void Asem::eval_unfold(const string &rule_name,
 		       vector<string> &var_name,
+		       vector<string> &var_uni_name, 
 		       vector<vector<string> >&var_choose_name,
 		       vector<vector<int> >&var_val,
 		       vector<pair<int,int> > &var_choosed_val,
 		       Asem &code,
 		       Asem &binary,
-		       Asem * doo,
-		       vector<triple> &r)
+		       // Asem *doo,
+		       vector<triple> &r,
+		       int do_seq
+		       )
 {
   // 记录变量在code中出现的位置，目前认为一个变量在code中只出现一次
   vector<int> var_off_in_code;
   // 记录变量在binary中出现的位置，目前认为一个变量在binary中只出现一次
   vector<int> var_off_in_bin;
-
+  vector<int> var_reloc_info;
   var_off_in_code.resize(var_name.size());
   var_off_in_bin.resize(var_name.size());
 
@@ -198,19 +247,39 @@ void Asem::eval_unfold(const string &rule_name,
   r.resize(k+1);
   r[k].rulename=rule_name+"_"+int2string(k);
   // store name of argments and their values
+  string type;
   for(int i=0;i<(int)var_name.size();++i)
-    r[k].arg_list.push_back(make_pair(var_name[i],var_choose_name[i][var_choosed_val[i].first]+"_"+int2string(var_choosed_val[i].second)));
+    {
+      r[k].arg_list.push_back(make_pair(var_name[i],var_choose_name[i][var_choosed_val[i].first]+"_"+int2string(var_choosed_val[i].second)));
+      string t=unfolded_list[var_val[i][var_choosed_val[i].first]][var_choosed_val[i].second].type;
+      if(type.size())
+	{
+	  assert(type==t || t!="e_pack");
+	}
+      else type=t;
+    }
+  if(type != "e_pack")
+    r[k].type = "e_notpack";
+  else r[k].type = "e_pack";
 
+  if(type == "e_pack")
+    {
+      assert(var_name.size()==1);
+      triple & t = unfolded_list[var_val[0][var_choosed_val[0].first]][var_choosed_val[0].second];
+      r[k].code = t.code;
+      r[k].arg_list = t.arg_list;
+      r[k].do_list.push_back( do_seq );
+    }
+  
   // 对code和binary的求值应该可以写成函数
   // 求出code
-  code.display(0);
   assert(code.ivec[0].name==(string)"code");
   for(int i=1;i<(int)code.ivec.size();++i)
     {
       if(code.ivec[i].type==type_is_string2)
 	{// 是带引号的string
 	  if(code.ivec[i].name.length() && code.ivec[i].name[0]!=c_sep)
-	      r[k].code=r[k].code+c_sep+code.ivec[i].name;
+	    r[k].code=r[k].code+c_sep+code.ivec[i].name;
 	  else
 	    r[k].code+=code.ivec[i].name;
 	}
@@ -258,7 +327,8 @@ void Asem::eval_unfold(const string &rule_name,
 	{
 	  // 目前只可能是switch语句
 	  assert(binary.ivec[i].ivec[0].name==(string)"switch");
-	  
+	  // 暂时不支持
+	  assert(0);
 	  // 找到switch中指定的变量在var_name中的序号
 	  int j=0;
 	  for(;j<(int)var_name.size() && var_name[j]!=binary.ivec[i].ivec[1].name;++j)
@@ -278,16 +348,31 @@ void Asem::eval_unfold(const string &rule_name,
 	}
     }
   // 计算新生成的code offset和binary offset 信息
+  // 还有do的信息, and adjust variable name
+  r[k].do_list.push_back( do_seq );
   for(int i=0;i<(int)var_val.size();++i)
     {
       int a=var_val[i][var_choosed_val[i].first];
       int b=var_choosed_val[i].second;
       int oc=var_off_in_code[i];
       int ob=var_off_in_bin[i];
+      r[k].do_list.insert( r[k].do_list.end(), unfolded_list[a][b].do_list.begin(), unfolded_list[a][b].do_list.end() );
       for(int j=0;j<(int)unfolded_list[a][b].off_in_code.size();++j)
 	{
 	  r[k].off_in_code.push_back(unfolded_list[a][b].off_in_code[j]+oc);
 	  r[k].off_in_binary.push_back(unfolded_list[a][b].off_in_binary[j]+ob);
+	  r[k].var_len.push_back( unfolded_list[a][b].var_len[j] );
+	  if( unfolded_list[a][b].var_name.size() != unfolded_list[a][b].off_in_code.size() )
+	    {
+	      // we can judge var[i] is a enum or type, but not a rule
+	      // in this case, size of var_name should be zero
+	      assert( unfolded_list[a][b].var_name.size() == 0 &&
+		       unfolded_list[a][b].off_in_code.size() == 1 );
+	      r[k].var_name.push_back( var_uni_name[i] );
+	    }
+	  else
+	    r[k].var_name.push_back( unfolded_list[a][b].var_name[j] );
+	  r[k].reloc_info.push_back(unfolded_list[a][b].reloc_info[j]);
 	  if(unfolded_list[a][b].enum_name[j].length()>0)
 	    r[k].enum_name.push_back(var_name[i]+(string)"#"+unfolded_list[a][b].enum_name[j]);
 	  else r[k].enum_name.push_back((string)"");
@@ -296,10 +381,10 @@ void Asem::eval_unfold(const string &rule_name,
   // 处理do描述
   // 要做的包括
   // 代换do表述中变量的do
-  if(doo)
-    {
+  // if(doo)
+  //   {
       // copy content in do  description
-      (*doo).dfs_copy_content(r[k].doo);
+      // (*doo).dfs_copy_content(r[k].doo);
       // if((*doo).ivec.size()>2)
       // 	cout<<k<<' '<<(*doo).ivec[1].ivec.size()<<' '<<r[k].doo.ivec[1].ivec.size()<<endl;
       // 对可能出现的switch中的变量进行代换
@@ -332,9 +417,9 @@ void Asem::eval_unfold(const string &rule_name,
       // 	    }
       // 	  else assert(0);
 
-	  //r[k].doo.push_back(analyze_do_expr((*doo).ivec[i]));
-	// }
-    }
+      //r[k].doo.push_back(analyze_do_expr((*doo).ivec[i]));
+      // }
+    // }
 
   //   for(int i=0;i<var_val.size();++i)
   //     {
@@ -360,25 +445,45 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
 
 #ifdef ENUM_NOT_UNFOLDED
   //cout<<"enum_"<<ivec[0].name<<":"<<endl;
+  int cnt=0,m=0;
+  for(int i=1;i<(int)ivec.size();++i)
+    {
+      if(ivec[i].is_string())
+	{
+	}
+      else if(isNumber(ivec[i].ivec[1].name))
+	{
+	  cnt=string2num(ivec[i].ivec[1].name);
+	}
+      else if(ivec[i].ivec.size()==3 && isNumber(ivec[i].ivec[2].name))
+	{
+	  cnt=string2num(ivec[i].ivec[2].name);
+	}
+      if(m<cnt)
+	m=cnt;
+      ++cnt;
+    }
   string binary;
-  for(int i=1;i<(int)(ivec.size()-1);i<<=1)
+  for(long long i=1;i<=m;i<<=1)
     binary+="-";
   //cout<<(ivec.size()-1)<<' '<<binary<<endl;
-  unfolded_list[k].push_back(triple(ivec[0].name,s_enum_beg+ivec[0].name,binary));
+  unfolded_list[k].push_back(triple(ivec[0].name,s_enum_beg+ivec[0].name,binary,"e_enum"));
+  unfolded_list[k][0].reloc_info.push_back(0);
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back(ivec[0].name);
+  unfolded_list[k][0].var_len.push_back( (int)binary.length() );
 #endif
-  for(int i=1;i<(int)ivec.size();++i)
+  for(int i=0;i<(int)ivec.size();++i)
     {
       if(ivec[i].type==type_is_vector)
 	{
+#ifndef ENUM_NOT_UNFOLDED
 	  // 如果是ivec那么只有两个元素,且都是有引号的string
 	  assert(ivec[i].ivec.size()==2 && 
 		 ivec[i].ivec[0].type==type_is_string2 && 
 		 ivec[i].ivec[1].type==type_is_string2);
 	  
-#ifndef ENUM_NOT_UNFOLDED
 	  unfolded_list[k].push_back(triple((string)"#ENUM_"+
 					    ivec[i].ivec[1].name,num2string(i-1,ivec.size()-1)));
 	  cout<<"!!"<<ivec[1].name<<endl;
@@ -396,6 +501,7 @@ int Asem::unfold_enum(ofstream &yout,ofstream & dot_c_out)
 	  // TODO 产生这个枚举相应的lex规则和处理函数
 	}
     }
+  
   return k;
 }
 
@@ -425,11 +531,81 @@ int Asem::unfold_type(ofstream &yout,ofstream & dot_c_out)
 				    s_type_beg+"type_"+ivec[0].name+
 				    "_"+tmpw.ivec[1].name+
 				    "_"+tmpf.ivec[1].name,
-				    binary));
+				    binary,"e_type"));
+  unfolded_list[k][0].reloc_info.push_back(0);
   unfolded_list[k][0].off_in_code.push_back(0);
   unfolded_list[k][0].off_in_binary.push_back(0);
   unfolded_list[k][0].enum_name.push_back((string)"");
+  unfolded_list[k][0].var_len.push_back( width );
   return k;
+}
+// process addr description
+// (name (width num) (pcrel TRUE/FALSE) (right_shift num) )
+// generate corresponding code: name_width_TRUE/FALSE_num
+// generate corresponding binary: '----...'
+int Asem::unfold_addr(ofstream &yout,ofstream & dot_c_out)
+{
+  // 4 fileds
+  assert(ivec.size()==4);
+
+  Asem & tmp_w=*find("width");
+  assert(tmp_w.ivec.size()==2 && tmp_w.ivec[1].type==type_is_string1);
+  int width=string2num(tmp_w.ivec[1].name);
+
+  Asem & tmp_pcrel=*find("pcrel");
+  assert(tmp_pcrel.ivec.size()==2 && tmp_pcrel.ivec[1].type==type_is_string1);
+  bool pcrel=tmp_pcrel.ivec[1].name=="TRUE";
+
+  Asem & tmp_rs=*find("right_shift");
+  assert(tmp_rs.ivec.size()==2 && tmp_pcrel.ivec[1].type==type_is_string1);
+  int right_shift=string2num(tmp_rs.ivec[1].name);
+  int k=unfolded_list.size();
+  unfolded_list.resize(k+1);
+
+  string binary;
+  for(int i=0;i<width;++i)
+    binary+=(string)"-";
+  unfolded_list[k].push_back(triple(ivec[0].name,
+				    s_addr_beg+"addr_"+ivec[0].name+
+				    "_"+(pcrel?"true":"false")+
+				    "_"+tmp_w.ivec[1].name+/*TODO sequence of name corresponds to code of info extract in asGen.cpp*/
+				    "_"+tmp_rs.ivec[1].name,
+				    binary,"e_addr"));
+  unfolded_list[k][0].reloc_info.push_back((right_shift<<1)|(pcrel?1:0));
+  unfolded_list[k][0].off_in_code.push_back(0);
+  unfolded_list[k][0].off_in_binary.push_back(0);
+  unfolded_list[k][0].enum_name.push_back((string)"");
+  unfolded_list[k][0].var_len.push_back( width );
+  return k;
+}
+void dfs_replace( Asem *a, unordered_map<string,string> &tab)
+{
+  if( a )
+    {
+      for( int i = 0; i < (int)a->ivec.size(); ++i )
+	{
+	  if( a->ivec[i].is_vec() )
+	    {
+	      dfs_replace( &(a->ivec[i]), tab);
+	    }
+	  else if( a->ivec[i].type == type_is_string1 )
+	    {
+	      if( tab.find( a->ivec[i].name ) != tab.end() )
+		{
+		  a->ivec[i].name = tab[ a->ivec[i].name ];
+		}
+	    }
+	  // else cout << a->ivec[i].type << endl;
+	}
+    }
+}
+void replace_name( Asem * a, vector<string> &from, vector<string> &to)
+{
+  unordered_map<string,string> tab;
+  assert( from.size() == to.size() );
+  for( int i = 0; i < (int)from.size(); ++i )
+    tab[ from[i] ] = to[i];
+  dfs_replace(a, tab);
 }
 // 对instruction展开
 int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out)
@@ -468,18 +644,22 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
 	    // 保存可选的值的名字
 	    var_choose_name[k].push_back(name);
 	    // 如果变量对应的是一个instruction 或者是type或者是枚举 递归地展开先
-	    if(this->is_instr(name) || this->is_type(name) || this->is_enum(name))
+	    if(this->is_instr(name) || this->is_type(name) || this->is_enum(name) || this->is_addr(name))
 	      {
-		int val=(*get_asem(name)).unfold(yout,dot_c_out,dot_h_out);
+		//cout<<name<<"!"<<endl;
+		Asem * tmp=get_asem(name);
+		assert(tmp!=NULL);
+		int val=(*tmp).unfold(yout,dot_c_out,dot_h_out);
 		// 保存展开的索引
 		var_val[k].push_back(val);
 	      }
 	    else
 	      {// 不然报错
+		cerr << name << endl;
 		assert(0);
 	      }
 	  }
-	
+
 #ifdef DOT_Y
 	yout<<rule_name<<'_'<<ivec[i].ivec[1].name<<':'<<' ';
 	// every varibale in rule correspond to a global variable in .y 
@@ -503,32 +683,102 @@ int Asem::unfold_instr(ofstream & yout,ofstream & dot_c_out,ofstream & dot_h_out
   dot_c_out<<"}"<<endl;
   yout<<"};"<<endl;
 #endif  
+
+	// 为所有变量取唯一的名字
+  vector<string> var_uni_name;
+  for( auto i : var_name)
+    {
+      string name = rule_name + "_" + i;
+      var_uni_name.push_back( name );
+    }
+
+  // 在unfolded_list和unfolded_list_type新增加一项
+  int k=this->unfolded_list.size();
+  unfolded_list.resize(k+1);
+  unfolded_list_type.resize(k+1);
+  do_content.resize( k + 1 );
+
   // 保存待展开instruction项的binary,code,do的asem地址
   Asem & code=*(this->find("code"));
   Asem & binary=*(this->find("binary"));
   Asem * doo=this->find("do");
-  if(!(&code!=0) && (&binary!=0) && (doo!=NULL))
+  replace_name( doo, var_name, var_uni_name);
+  Asem & pack=*(this->find("pack"));
+  if(&code==NULL)
     {
-      cerr<<"rule "<<rule_name<<" code/binary/do empty"<<endl;
-      assert(0);
+      // may be a instruction description with pack attribute
+      if(&pack==NULL)
+	{
+	  cerr<<"invalid instruction description"<<endl;
+	  assert(0);
+	}
+      unfolded_list_type[k]=e_pack;
     }
-
-  // 在unfolded_list新增加一项
-  int k=this->unfolded_list.size();
-  unfolded_list.resize(k+1);
+  else
+    {
+      if(!((&binary!=0) && (doo!=NULL)))
+	{
+	  cerr<<"rule "<<rule_name<<" code/binary/do empty"<<endl;
+	  assert(0);
+	}
+      unfolded_list_type[k]=e_notpack;
+    }
 
   // 保存当前变量取的值，二元组表示：
   // (= a b c)
   // 第一项表示a取b还是c
   // 第二项表示取b或是c中的第几条（b和c已被展开，可能有多条可选项）
-  vector<pair<int,int> > var_choosed_val;
-  var_choosed_val.resize(var_name.size());
-  // 针对变量取不同值的时候得到展开的code，binary和do
-  dfs_unfold_instr(rule_name,var_name,var_choose_name,var_val,var_choosed_val,
-		   code,binary,doo,0,unfolded_list[k]);
+  if(unfolded_list_type[k]==e_notpack)
+    {
+      vector<pair<int,int> > var_choosed_val;
+      var_choosed_val.resize(var_name.size());
+      // 针对变量取不同值的时候得到展开的code，binary和do
+      dfs_unfold_instr(rule_name,var_name,var_uni_name, var_choose_name,var_val,var_choosed_val,
+		       code,binary,// doo,
+		       0,unfolded_list[k], k);
+      do_content[k] = *doo;
+    }
+  else
+    {
+      unfolded_list[k].resize(1);
+      for(int i=0;i<(int)var_val.size();++i)
+	{
+	  string candidate_name;
+	  for(int j=0;j<(int)var_val[i].size();++j)
+	    {
+	      vector<triple> & t=unfolded_list[var_val[i][j]];
+	      for(int k=0;k<(int)t.size();++k)
+		{
+		  if(candidate_name.size())
+		    candidate_name = candidate_name + s_sep + t[k].rulename;
+		  else candidate_name = t[k].rulename;
+		}
+	    }
+	  unfolded_list[k][0].arg_list.
+	    push_back(make_pair(ivec[0].name + "_" + var_name[i],candidate_name));
+	}
+      string code;
+      for(int i=1;i<(int)pack.ivec.size();++i)
+	{
+	  // entries must be variable
+	  assert(pack.ivec[i].is_string());
+	  if(i==1)
+	    code = ivec[0].name + "_" + pack.ivec[i].name;
+	  else code = code + s_sep + ivec[0].name + "_" + pack.ivec[i].name;
+	}
+      unfolded_list[k][0].rulename = ivec[0].name;
+      unfolded_list[k][0].code = code;
+      unfolded_list[k][0].type = "e_pack";
+    }
   return k;
 }
 
+bool Asem::is_assign()
+{
+  // is an assignment statement. such as (= a ...)
+  return is_vec() && ivec.size()>2 && ivec[0].is_string() &&
+    ivec[0].name=="=";
+}
 // TODO 代换switch中的变量，目前什么都没做
 void Asem::switch_chg(vector<string> &var_name,
 		vector<vector<string> >&var_choose_name,
@@ -549,8 +799,8 @@ void Asem::switch_chg(vector<string> &var_name,
 		{
 		  // 分成这个变量是var.value 和 var两种
 		  // 前一种对应变量是一个枚举类型
-		  int pos=ivec[1].name.find(".value");
-		  if(pos!=(typeof(pos))string::npos)
+		  auto pos=ivec[1].name.find(".value");
+		  if(pos!=string::npos)
 		    {
 		      // 第一种情况
 		      // 由于现在对enum类型的是不展开，所以在执行时再处理
@@ -590,7 +840,8 @@ void Asem::dfs_insert_hash(string pwd)
       if(ivec[0].name=="=" || 
 	 ivec[0].name=="+" ||
 	 ivec[0].name=="if" ||
-	 ivec[0].name=="[]")
+	 ivec[0].name=="[]" ||
+	 ivec[0].name=="call")
 	return ;
       pwd+=ivec[0].name;
       // 不应该有重复定义
@@ -653,6 +904,10 @@ bool Asem::is_enum(string name)
 {
   return (hc.find((string)"...enum."+name)!=0);
 }
+bool Asem::is_addr(string name)
+{
+  return (hc.find("...address."+name)!=0);
+}
 // 返回name对应的那一项asem地址，现在的实现是首先假设是instruction，
 // 然后是type最后是enum。对这些可能依次查找
 Asem * Asem::get_asem(string name)
@@ -663,25 +918,27 @@ Asem * Asem::get_asem(string name)
       tmp=hc.find((string)"...type."+name);
       if(tmp==NULL)
 	tmp=hc.find((string)"...enum."+name);
+      if(tmp==NULL)
+	tmp=hc.find((string)"...address."+name);
     }
   return (Asem*)tmp;
 }
 
-void Asem::dfs_copy_content(do_content &dl)
-{
-  dl.type=type;
-  if(type==type_is_vector)
-    {
-      dl.ivec.resize(ivec.size());
-      for(int i=0;i<(int)ivec.size();++i)
-	ivec[i].dfs_copy_content(dl.ivec[i]);
-    }
-  else if(type==type_is_string1 || type==type_is_string2)
-    {
-      dl.str=name;
-    }
-  else assert(0);
-}
+// void Asem::dfs_copy_content(do_content &dl)
+// {
+//   dl.type=type;
+//   if(type==type_is_vector)
+//     {
+//       dl.ivec.resize(ivec.size());
+//       for(int i=0;i<(int)ivec.size();++i)
+// 	ivec[i].dfs_copy_content(dl.ivec[i]);
+//     }
+//   else if(type==type_is_string1 || type==type_is_string2)
+//     {
+//       dl.str=name;
+//     }
+//   else assert(0);
+// }
 
 void Asem::translate_doo(ofstream &dot_h_out,ofstream &dot_c_out,vector<string> &var_list,const string & rule_name)
 {

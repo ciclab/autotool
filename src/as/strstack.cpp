@@ -5,6 +5,7 @@
 #define DBG_STRSTACK
 #define STACK_SIZE (257)
 #include "strstack.h"
+#include <string.h>
 int isnumber(const char *c)
 {
   for(;*c;++c)
@@ -12,6 +13,44 @@ int isnumber(const char *c)
       return 0;
   return 1;
 }
+// int s2i(char *buf,int width)
+// {
+// 	int i,r;
+// 	for(i=r=0;i<width;++i)
+// 		r=(r<<1)|buf[i];
+// 	return r;
+// }
+char * s2hex(char *buf,int len)
+{
+  int val,i;
+  for(val=i=0;i<len;++i)
+    val=(val<<1)|(buf[i]=='1'?1:0);
+  static char tmp[1000];/*TODO*/
+  sprintf(tmp,"%X",val);
+  return tmp;
+}
+const char * get_entry(const char * a[],const char * b,int num)
+{
+  int i,j;
+  for(i=0;i<num;++i)
+    {
+      for(j=0;a[i<<1][j];++j)
+	if(a[i<<1][j]!=b[j])
+	  break;
+      if(a[i<<1][j]=='\0')
+	return a[(i<<1)+1];
+    }
+  return NULL;
+}
+// void con(char *a,char *b,int num)
+// {
+// 	int i,j;
+// 	for(i=0;a[i];++i)
+// 		;
+// 	for(j=0;j<num;++j,++i)
+// 		a[i]=b[j];
+// 	a[i]=0;
+// }
 void i2bs(char *buf,int v,int len)
 {
   for(;len;v>>=1)

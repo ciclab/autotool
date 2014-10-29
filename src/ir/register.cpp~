@@ -1,0 +1,6 @@
+#include "register.h"
+void Register::read(ifstream & fin)
+{}
+void Register::write(ofstream & fout)
+{
+  
