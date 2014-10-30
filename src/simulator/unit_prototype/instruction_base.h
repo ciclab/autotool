@@ -6,7 +6,6 @@
 class InstructionBase
 {
  public:
-  const std::string mName;
 };
 
 #endif

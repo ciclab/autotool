@@ -5,10 +5,15 @@ CXXFLAGS=-g -Wall \
 	-DINSTR_COUT=0 \
 	-DASGEN_COUT=0 \
 	-DIGNORE_CASE\
-	-std=c++11
+	-std=c++11\
+	-lglog\
+	-lgflags
+
 SRC=../src
-VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor:../src/simulator:../src/simulator/common
-INCLUDE=-I../src/include -I.
+
+VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor:../src/simulator:../src/simulator/common:../src/simulator/unit_prototype:../src/simulator/framework
+
+INCLUDE=-I../src/include -I. -I..
 LEX = flex -v
 YACC = bison -dv
 BINUTILS_DIR = ../../z/binutils-2.23-r
@@ -137,7 +142,8 @@ simGen.o: simGen.cpp
 utility.o: utility.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
+sample_simulator: sample_simulator.cpp simulator.cpp mem_base.cpp register_base.cpp pipeline_base.cpp type_base.cpp instruction_base.cpp
+	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS)
+
 clean:
-	rm *.* rd asgen out pp simulator
-
-
+	rm *.* rd asgen out pp simulator sample_simulator

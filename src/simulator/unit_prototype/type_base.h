@@ -7,7 +7,7 @@ class TypeBase
 {
  public:
   static const std::string mName;
-  static int width;
+  static const int mWidth;
 };
 
 #endif
