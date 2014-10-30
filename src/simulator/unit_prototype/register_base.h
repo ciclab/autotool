@@ -1,9 +1,10 @@
 #ifndef _REGISTER_BASE_H_
 #define _REGISTER_BASE_H_
 
+#include <vector>
 #include <string>
+#include <functional>
 
-template<typename TRegister>
 class RegisterBase
 {
  public:
@@ -11,15 +12,16 @@ class RegisterBase
   const uint mWidth;
   const uint mSize;
   // called before Read is called. If return false, Read won't be called
-  virutal bool BeforeRead();
+  bool BeforeRead();
   // called after Read is called.
-  virtual bool AfterRead();
+  bool AfterRead();
   // If reutrn false, Write won't be called
-  virtual bool BeforeWrite();
+  bool BeforeWrite();
   // called after Write
-  virtual bool AfterWrite();
- protect:
-  bool Read(uint offset, TRegister& value);
-  bool Write(uint offset, const TRegister& value);
+  bool AfterWrite();
+  // read a register
+  bool Read(uint offset, std::vector<char>& value);
+  // write a register
+  bool Write(uint offset, const std::vector<char>& value);
 };
 #endif

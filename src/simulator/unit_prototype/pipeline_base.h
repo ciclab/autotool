@@ -6,9 +6,12 @@
 class PipelineBase
 {
  public:
-  status const std::string mName = "PipelineBase";
+  // pipeline freeze
   virtual void Freeze();
+  // flush pipeline
   virtual void Flush();
+  // init, return true if success
+  bool Init();
  private:
   bool mFlushed;
 };
