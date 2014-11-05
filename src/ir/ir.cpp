@@ -366,6 +366,17 @@ string Ir::get_mem_name(int i)
 {
   return memory[i].get_name();
 }
+
+int Ir::GetMemory(int i, Memory& ret)
+{
+	if (memory.size() <= i)
+		return 1;
+
+	ret = memory[i];
+
+	return 0;
+}
+
 int Ir::get_num_mem()
 {
   return memory.size();

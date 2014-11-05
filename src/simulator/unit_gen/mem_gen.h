@@ -3,13 +3,18 @@
 
 #include <string>
 
-#include "memory.h"
+#include "include/memory.h"
 
 class MemGen
 {
- public:
-  // generate C++ code in string for memory class
-  static std::string GenMemCStr(Memory& memory);
+public:
+	/*
+	 *  generate C++ code in string for memory class
+	 * @param memory ir holding info about memory
+	 *
+	 * @return C++ code generated
+	 */
+	std::string GenMemCStr(Memory& memory);
 };
 
 #endif

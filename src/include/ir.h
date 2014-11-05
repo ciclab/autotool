@@ -101,6 +101,7 @@ public:
   int get_mem_size(int i);
   int get_mem_width(int i);
   string get_mem_name(int i);
+  int GetMemory(int i, Memory& memory);
   int get_num_mem();
   int get_num_reg();
   int get_num_stage();

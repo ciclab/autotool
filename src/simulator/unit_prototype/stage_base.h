@@ -4,25 +4,18 @@
 #include <string>
 #include <vector>
 
+template<typename Tstage>
 class StageBase
 {
- public:
-  static const std::string mName;
+public:
+	virtual ~StageBase();
 
-  // number of stages
-  static const uint mStageCnt;
+	// turn into next stage, reutrn false if no next stage
+	virtual bool NextStage();
 
-  // all stages
-  enum StageListType{};
+	// Init
+	virtual bool Init();
 
-  // turn into next stage, reutrn false if no next stage
-  virtual bool NextStage();
-
-  // Init
-  virtual bool Init();
-
- private:
-  StageListType stage;
 };
 
 #endif

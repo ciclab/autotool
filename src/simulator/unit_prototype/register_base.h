@@ -4,46 +4,43 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <boost/multiprecision/gmp.hpp>
 
 class RegisterBase
 {
- public:
-  static const std::string cName;
-  static const uint cWidth;
-  static const uint cSize;
+public:
+	virtual ~RegisterBase();
 
-  RegisterBase();
-  ~RegisterBase();
+	virtual bool Init();
 
-  virtual bool Init();
+	// called before Read is called. If return false,
+	// Read won't be called
+	virtual bool BeforeRead();
 
-  // called before Read is called. If return false,
-  // Read won't be called
-  virtual bool BeforeRead();
+	// called after Read is called.
+	virtual bool AfterRead();
 
-  // called after Read is called.
-  virtual bool AfterRead();
+	// If reutrn false, Write won't be called
+	virtual bool BeforeWrite();
 
-  // If reutrn false, Write won't be called
-  virtual bool BeforeWrite();
+	// called after Write
+	virtual bool AfterWrite();
 
-  // called after Write
-  virtual bool AfterWrite();
+	// read a register into value, value will be resized to cWidth
+	bool Read(uint offset, boost::multiprecision::mpz_int& value);
 
-  // read a register into value, value will be resized to cWidth
-  bool Read(uint offset, std::vector<char>& value);
+	// write a register
+	bool Write(uint offset, const boost::multiprecision::mpz_int& value);
+private:
+	std::vector<boost::multiprecision::mpz_int> mContent;
+	const int mWidth;
 
-  // write a register
-  bool Write(uint offset, const std::vector<char>& value);
- private:
-  std::vector<char> mContent;
-
-  bool CheckAddressValidity(uint offset);
- private:
-  RegisterBase(const RegisterBase& RegisterBase);
-  RegisterBase(RegisterBase& RegisterBase);
-  RegisterBase& operator=(const RegisterBase& RegisterBase);
-  RegisterBase& operator=(const RegisterBase&& RegisterBase);
+	bool CheckAddressValidity(uint offset);
+private:
+	RegisterBase(const RegisterBase& RegisterBase);
+	RegisterBase(RegisterBase& RegisterBase);
+	RegisterBase& operator=(const RegisterBase& RegisterBase);
+	RegisterBase& operator=(const RegisterBase&& RegisterBase);
 };
 
 #endif

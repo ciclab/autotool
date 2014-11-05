@@ -12,18 +12,19 @@
 #include <unordered_map>
 #include <memory>
 #include <vector>
+#include <boost/shared_ptr.hpp>
 
-typedef std::shared_ptr<MemoryBase> MemoryBasePtr;
-typedef std::shared_ptr<RegisterBase> RegisterBasePtr;
-typedef std::shared_ptr<PipelineBase> PipelineBasePtr;
-typedef std::shared_ptr<InstructionBase> InstructionBasePtr;
+typedef boost::shared_ptr<MemoryBase> MemoryBasePtr;
+typedef boost::shared_ptr<RegisterBase> RegisterBasePtr;
+typedef boost::shared_ptr<PipelineBase> PipelineBasePtr;
+typedef boost::shared_ptr<InstructionBase> InstructionBasePtr;
 
 class Simulator
 {
  public:
   Simulator();
 
-  ~Simulator();
+  virtual ~Simulator();
 
   // initialize internal data
   virtual bool Init();

@@ -3,22 +3,24 @@
 
 #include <string>
 
-class PipelineBase
-{
- public:
-  static const std::string mName;
+class PipelineBase {
+public:
 
-  // pipeline freeze
-  virtual void Freeze();
+	virtual ~PipelineBase();
 
-  // flush pipeline
-  virtual void Flush();
+	static const std::string mName;
 
-  // init, return true if success
-  bool Init();
- private:
-  bool mFlushed;
-  bool mFreezed;
+	// pipeline freeze
+	virtual void Freeze();
+
+	// flush pipeline
+	virtual void Flush();
+
+	// init, return true if success
+	bool Init();
+private:
+	bool mFlushed;
+	bool mFreezed;
 };
 
 #endif

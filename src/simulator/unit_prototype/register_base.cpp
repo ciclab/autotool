@@ -6,88 +6,68 @@
 #include <string>
 
 using namespace std;
+using namespace boost::multiprecision;
 
-const string RegisterBase::cName = "RegisterBase";
-const uint RegisterBase::cWidth = 0;
-const uint RegisterBase::cSize = 0;
+RegisterBase::~RegisterBase()
+{
+	LOG(INFO)<< "do nothing";
+}
 
 bool RegisterBase::BeforeRead()
 {
-  LOG(INFO) << "do nothing";
-  return true;
+	LOG(INFO)<< "do nothing";
+	return true;
 }
 
 bool RegisterBase::AfterRead()
 {
-  LOG(INFO) << "do nothing";
-  return true;
+	LOG(INFO)<< "do nothing";
+	return true;
 }
 
 bool RegisterBase::BeforeWrite()
 {
-  LOG(INFO) << "do nothing";
-  return true;
+	LOG(INFO)<< "do nothing";
+	return true;
 }
 
 bool RegisterBase::AfterWrite()
 {
-  LOG(INFO) << "do nothing";
-  return true;
+	LOG(INFO)<< "do nothing";
+	return true;
 }
 
-bool RegisterBase::Read(uint offset, vector<char>& value)
+bool RegisterBase::Read(uint offset, mpz_int& value)
 {
-  if (!CheckAddressValidity(offset))
-    {
-      LOG(ERROR) << cName << "Read address invalid: " << 
-	offset;
-    }
+	if (!CheckAddressValidity(offset))
+	{
+		LOG(ERROR)<< "Read address invalid: " << offset;
+	}
 
-  value.assign(mContent.begin() + offset * cWidth, 
-	       mContent.begin() + offset * (1 + cWidth));
+	value = mContent[offset];
 
-  return true;
+	return true;
 }
 
-bool RegisterBase::Write(uint offset, const vector<char>& value)
+bool RegisterBase::Write(uint offset, const mpz_int& value)
 {
-  if (!CheckAddressValidity(offset))
-    {
-      LOG(ERROR) << cName << "Write address invalid: " <<
-	offset;
-    }
+	if (!CheckAddressValidity(offset))
+	{
+		LOG(ERROR)<< "Write address invalid: " << offset;
+	}
 
-  if (value.size() < cWidth)
-    {
-      LOG(ERROR) << "Size of value write to register is less than\
- expected( " << cWidth << "): " << value.size();
-      return false;
-    }
+	mContent[offset] = value;
 
-  for (int i = 0; i < cWidth; ++i)
-    {
-      mContent[offset * cWidth + i] = value[i];
-    }
-
-  return true;
+	return true;
 }
 
 bool RegisterBase::CheckAddressValidity(uint offset)
 {
-  if ((long long)offset * cWidth >= cSize)
-    {
-      return false;
-    }
-
-  return true;
+	return offset < mContent.size();
 }
 
 bool RegisterBase::Init()
 {
-  LOG(INFO) << "RegisterBase initialized, clear all content to\
-zero";
-
-  fill(mContent.begin(), mContent.end(), 0);
-
-  return true;
+	LOG(INFO)<< "do nothing";
+	return true;
 }

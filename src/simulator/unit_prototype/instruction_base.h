@@ -6,6 +6,7 @@
 class InstructionBase
 {
  public:
+	virtual ~InstructionBase();
 };
 
 #endif

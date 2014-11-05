@@ -16,7 +16,7 @@ bool Simulator::LoadBinaryFile(const std::string& filePath)
 
   LOG(INFO) << "do nothing";
 
-  return false;
+  return true;
 }
 
 void Simulator::Run()

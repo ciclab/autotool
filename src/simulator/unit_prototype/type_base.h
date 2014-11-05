@@ -8,6 +8,8 @@ class TypeBase
  public:
   static const std::string mName;
   static const int mWidth;
+
+  virtual ~TypeBase();
 };
 
 #endif

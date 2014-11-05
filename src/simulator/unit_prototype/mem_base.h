@@ -8,37 +8,37 @@
 
 class MemoryBase
 {
- public:
-  const static std::string cName;
-  const static uint cSize;
+public:
+//	const static std::string cName;
+//	const static uint cSize;
 
-  // called before ReadMemory
-  // return 0 if ok, else ReadMemory won't be called
-  virtual bool BeforeRead();
-  virtual bool AfterRead();
+	virtual ~MemoryBase();
 
-  // called before WriteMemory is called
-  // return 0 if ok, else WriteMemory won't be called
-  virtual bool BeforeWrite();
-  virtual bool AfterWrite();
+	// called before ReadMemory
+	// return 0 if ok, else ReadMemory won't be called
+	virtual bool BeforeRead();
+	virtual bool AfterRead();
 
-  // read value from memory, return true if success
-  bool Read(uint offset, uint size,
-	    std::vector<char>& value);
+	// called before WriteMemory is called
+	// return 0 if ok, else WriteMemory won't be called
+	virtual bool BeforeWrite();
+	virtual bool AfterWrite();
 
-  // write value from memory, return true if success
-  bool Write(uint offset, uint size,
-	     const std::vector<char>& value);
+	// read value from memory, return true if success
+	bool Read(uint offset, uint size, std::vector<char>& value);
 
-  // Initialize memory default to set memory zero 
-  virtual bool Init();
+	// write value from memory, return true if success
+	bool Write(uint offset, uint size, const std::vector<char>& value);
 
- private:
-  // return true if placeHoder is valid address in offset
-  bool CheckAddressValidity(uint offset, uint size);
+	// Initialize memory default to set memory zero
+	virtual bool Init();
 
-  // memory data
-  std::vector<char> mContent;
+private:
+	// return true if placeHoder is valid address in offset
+	bool CheckAddressValidity(uint offset, uint size);
+
+	// memory data
+	std::vector<char> mContent;
 };
 
 #endif
