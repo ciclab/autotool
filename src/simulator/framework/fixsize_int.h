@@ -10,8 +10,9 @@
 
 #include <boost/multiprecision/gmp.hpp>
 
-class FixInt
+class FixsizeInt
 {
+public:
 	bool Init(int len);
 	boost::multiprecision::mpz_int value;
 private:

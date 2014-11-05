@@ -12,7 +12,7 @@
 
 using namespace std;
 
-string GenRegCStr(Register& reg)
+string RegGen::GenRegCStr(Register& reg)
 {
 	string name = reg.get_name();
 	uint size = reg.get_size();
@@ -20,13 +20,15 @@ string GenRegCStr(Register& reg)
 
 	string code = boost::lexical_cast<string>(
 			boost::format("class %1%: public RegisterBase{"
+					"public:"
 					"bool Init() override"
 					"{"
+					"LOG(INFO) << \"Init register:  %1%\";"
 					"mWidth = %2%;"
 					"mContent.resize(%3%);"
 					"return true;"
 					"};"
-					"}") % name % width % size);
+					"};") % name % width % size);
 
 	return code;
 }

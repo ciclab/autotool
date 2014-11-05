@@ -25,23 +25,25 @@ string PipelineGen::GenPipelineCStr(Pipeline& pipeline)
 		int eleWidth = pipeline.get_ele_width(i);
 
 		code4Ele += boost::lexical_cast<string>(
-				boost::format("FixInt %1%;" ) % eleName);
+				boost::format("FixsizeInt %1%;") % eleName);
 
 		code4Init += boost::lexical_cast<string>(
-				boost::format("%1%.Init(%2%);" ) % eleName % eleWidth);
+				boost::format("%1%.Init(%2%);") % eleName % eleWidth);
 	}
 
 	string code;
 	code = boost::lexical_cast<string>(
 			boost::format("class %1%: public PipelineBase"
 					"{"
+					"public:"
 					"bool Init() override"
 					"{"
+					"LOG(INFO) << \"Init pipeline: %1%\";"
 					"%2%"
 					"return 0;"
 					"}"
 					"%3%"
-					"};" ) % name % code4Init % code4Ele);
+					"};") % name % code4Init % code4Ele);
 
 	return code;
 }

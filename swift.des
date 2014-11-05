@@ -190,15 +190,15 @@
   (wire
   )
   (stage
-/*    ( fetch1_s )
-    ( fetch2_s
+    ( fetch1_s )
+    ( fetch2_s )
     ( decode_s )
     ( execute_s )
     ( mem1_s )
     ( mem2_s )
     ( vex2_s )
     ( vex3_s )
-    ( writeback_s ) */
+    ( writeback_s ) 
   )
   (memory
     ( mem1

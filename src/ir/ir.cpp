@@ -367,12 +367,12 @@ string Ir::get_mem_name(int i)
   return memory[i].get_name();
 }
 
-int Ir::GetMemory(int i, Memory& ret)
+int Ir::GetMemory(int i, Memory** ret)
 {
 	if (memory.size() <= i)
 		return 1;
 
-	ret = memory[i];
+	*ret = &memory[i];
 
 	return 0;
 }
@@ -507,4 +507,29 @@ string Ir::get_stage_name(int idx)
 int Ir::get_num_stage()
 {
   return stage.size();
+}
+
+int Ir::GetStageVec(vector<Stage>** pStage)
+{
+	*pStage = &stage;
+
+	return 0;
+}
+
+int Ir::GetRegister(int idx, Register** pRegister)
+{
+	assert(registers.size() > idx);
+
+	*pRegister = &registers[idx];
+
+	return 0;
+}
+
+int Ir::GetPipline(int idx, Pipeline** pPipeline)
+{
+	assert(pipeline.size() > idx);
+
+	*pPipeline = &pipeline[idx];
+
+	return 0;
 }

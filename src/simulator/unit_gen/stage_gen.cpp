@@ -14,44 +14,51 @@ using namespace std;
 
 string StageGen::GenStageCStr(vector<Stage>& stage)
 {
-	string name = "stage";
+	string name = "Stage";
 
 	string enumList;
+	string lastStageName;
 	for (int i = 0; i < stage.size(); ++i)
 	{
-		if (i != stage.size() - 1)
+		if (i != 0)
 		{
 			enumList += ", ";
 		}
 
-		enumList += stage[i].get_name();
+		lastStageName = stage[i].get_name();
+		enumList += lastStageName;
+		if (i == 0)
+		{
+			enumList += "= 0";
+		}
 	}
-
-	string enumEndToken = "STAGE_END_TOKEN";
 
 	string code;
 
 	code = boost::lexical_cast<string>(
 			boost::format(
-					"class %1%: public StageBase<StageList%1%>"
+					"class %1%: public StageBase"
 					"{"
 					"public:"
 					"enum StageList {%2%};"
 					"bool Init() override"
 					"{"
-					"stage = 0;"
+					"LOG(INFO) << \"Init stage: %1%\";"
+					"stage = StageList(0);"
 					"return true;"
 					"};"
 					"bool NextStage() override"
 					"{"
 					"if (stage != %3%)"
 					"{"
-					"++stage;"
+					"int tmp = (int)stage + 1;"
+					"stage = StageList(tmp);"
 					"return true;"
 					"}"
 					"return false;"
 					"};"
-					"};") % name % enumList % enumEndToken);
+					"StageList stage;"
+					"};") % name % enumList % lastStageName);
 
 	return code;
 }

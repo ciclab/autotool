@@ -31,12 +31,12 @@ public:
 
 	// write a register
 	bool Write(uint offset, const boost::multiprecision::mpz_int& value);
-private:
+protected:
 	std::vector<boost::multiprecision::mpz_int> mContent;
-	const int mWidth;
+	int mWidth;
 
 	bool CheckAddressValidity(uint offset);
-private:
+protected:
 	RegisterBase(const RegisterBase& RegisterBase);
 	RegisterBase(RegisterBase& RegisterBase);
 	RegisterBase& operator=(const RegisterBase& RegisterBase);

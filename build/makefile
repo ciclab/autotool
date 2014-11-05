@@ -13,7 +13,7 @@ SRC=../src
 
 VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor:../src/simulator:../src/simulator/common:../src/simulator/unit_prototype:../src/simulator/framework:../src/simulator/unit_gen
 
-INCLUDE=-I../src/include -I. -I.. -I../src
+INCLUDE=-I../src/include -I. -I.. -I../src -I../src
 LEX = flex -v
 YACC = bison -dv
 BINUTILS_DIR = ../../z/binutils-2.23-r
@@ -157,8 +157,11 @@ register_gen.o: register_gen.cpp
 stage_gen.o: stage_gen.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
-simulator_gen_lib: mem_gen.o pipeline_gen.o register_gen.o stage_gen.o
+simulator_gen_lib.a: mem_gen.o pipeline_gen.o register_gen.o stage_gen.o
 	ar crv $@ $^
+
+simulator_gen: simulator_generator.cpp ir.o libir.a simulator_gen_lib.a  
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
 
 clean:
 	rm *.* rd asgen out pp simulator sample_simulator

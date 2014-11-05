@@ -5,9 +5,9 @@
  *      Author: q
  */
 
-#include "FixInt.h"
+#include "fixsize_int.h"
 
-void FixInt::round()
+void FixsizeInt::round()
 {
 
 }

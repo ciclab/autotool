@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-template<typename Tstage>
 class StageBase
 {
 public:
@@ -15,7 +14,6 @@ public:
 
 	// Init
 	virtual bool Init();
-
 };
 
 #endif

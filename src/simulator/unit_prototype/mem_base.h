@@ -33,7 +33,7 @@ public:
 	// Initialize memory default to set memory zero
 	virtual bool Init();
 
-private:
+protected:
 	// return true if placeHoder is valid address in offset
 	bool CheckAddressValidity(uint offset, uint size);
 

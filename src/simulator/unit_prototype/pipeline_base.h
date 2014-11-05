@@ -17,8 +17,8 @@ public:
 	virtual void Flush();
 
 	// init, return true if success
-	bool Init();
-private:
+	virtual bool Init();
+protected:
 	bool mFlushed;
 	bool mFreezed;
 };
