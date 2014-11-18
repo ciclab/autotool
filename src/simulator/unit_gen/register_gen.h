@@ -2,6 +2,7 @@
 #define _REG_GEN_H_
 
 #include <string>
+#include <vector>
 
 #include "include/register.h"
 
@@ -19,7 +20,7 @@ class RegGen
    *
    * @return generated code in string
    */
-  std::string GenRegCStr(Register& reg);
+  std::string GenRegCStr(Register& reg, std::vector<std::string>& needInit);
 };
 
 #endif

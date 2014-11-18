@@ -1,7 +1,12 @@
 #include <glog/logging.h>
 #include <gflags/gflags.h>
 
-#include "src/simulator/framework/simulator.h"
+//#include "src/simulator/unit_prot/simulator.h"
+
+#include "build/memory_out.h"
+#include "build/stage_out.h"
+#include "build/pipeline_out.h"
+#include "build/simulator_out.h"
 
 using namespace std;
 
@@ -16,11 +21,11 @@ int main(int argc, char* argv[])
 
 	LOG(INFO)<< "binaryFilePath: " << FLAGS_binaryFilePath;
 
-	Simulator simulator1;
+	TSimulator simulator;
 
-	if (simulator1.LoadBinaryFile(FLAGS_binaryFilePath) && simulator1.Init())
+	if (simulator.LoadBinaryFile(FLAGS_binaryFilePath) && simulator.Init())
 	{
-		simulator1.Run();
+		simulator.Run();
 	}
 	else
 	{

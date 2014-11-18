@@ -2,6 +2,7 @@
 #define _MEM_GEN_H_
 
 #include <string>
+#include <vector>
 
 #include "include/memory.h"
 
@@ -14,7 +15,7 @@ public:
 	 *
 	 * @return C++ code generated
 	 */
-	std::string GenMemCStr(Memory& memory);
+	std::string GenMemCStr(Memory& memory, std::vector<std::string>& needInit);
 };
 
 #endif

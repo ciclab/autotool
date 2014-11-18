@@ -12,14 +12,14 @@
 
 using namespace std;
 
-string RegGen::GenRegCStr(Register& reg)
+string RegGen::GenRegCStr(Register& reg, vector<string>& needInit)
 {
 	string name = reg.get_name();
 	uint size = reg.get_size();
 	uint width = reg.get_width();
 
 	string code = boost::lexical_cast<string>(
-			boost::format("class %1%: public RegisterBase{"
+			boost::format("class T%1%: public RegisterBase{"
 					"public:"
 					"bool Init() override"
 					"{"
@@ -29,6 +29,8 @@ string RegGen::GenRegCStr(Register& reg)
 					"return true;"
 					"};"
 					"};") % name % width % size);
+
+	needInit.push_back(name);
 
 	return code;
 }

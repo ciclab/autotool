@@ -10,7 +10,7 @@ class StageGen
 {
 public:
   // generate C++ code for stage class
-  static string GenStageCStr(std::vector<Stage>& stage);
+  string GenStageCStr(std::vector<Stage>& stage);
 };
 
 #endif

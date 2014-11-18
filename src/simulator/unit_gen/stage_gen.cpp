@@ -18,7 +18,7 @@ string StageGen::GenStageCStr(vector<Stage>& stage)
 
 	string enumList;
 	string lastStageName;
-	for (int i = 0; i < stage.size(); ++i)
+	for (int i = 0; i < (int)stage.size(); ++i)
 	{
 		if (i != 0)
 		{
@@ -37,7 +37,7 @@ string StageGen::GenStageCStr(vector<Stage>& stage)
 
 	code = boost::lexical_cast<string>(
 			boost::format(
-					"class %1%: public StageBase"
+					"class T%1%: public StageBase"
 					"{"
 					"public:"
 					"enum StageList {%2%};"

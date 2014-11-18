@@ -36,11 +36,6 @@ protected:
 	int mWidth;
 
 	bool CheckAddressValidity(uint offset);
-protected:
-	RegisterBase(const RegisterBase& RegisterBase);
-	RegisterBase(RegisterBase& RegisterBase);
-	RegisterBase& operator=(const RegisterBase& RegisterBase);
-	RegisterBase& operator=(const RegisterBase&& RegisterBase);
 };
 
 #endif

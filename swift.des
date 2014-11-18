@@ -201,7 +201,7 @@
     ( writeback_s ) 
   )
   (memory
-    ( mem1
+    ( memory1
       // define a memory with 4096 * 8 bytes
       ( size 5000000 )
       ( width 8 )

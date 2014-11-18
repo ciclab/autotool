@@ -12,7 +12,7 @@
 
 using namespace std;
 
-string MemGen::GenMemCStr(Memory& memory)
+string MemGen::GenMemCStr(Memory& memory, vector<string>& needInit)
 {
 	string name = memory.get_name();
 	int size = memory.get_size();
@@ -23,7 +23,7 @@ string MemGen::GenMemCStr(Memory& memory)
 	code =
 			boost::lexical_cast<string>(
 					boost::format(
-							"class %1%: public MemoryBase{"
+							"class T%1%: public MemoryBase{"
 									"public:"
 									"bool Init() override"
 									"{"
@@ -32,6 +32,8 @@ string MemGen::GenMemCStr(Memory& memory)
 									"return true;"
 									"};"
 									"};") % name % size);
+
+	needInit.push_back(name);
 
 	return code;
 }
