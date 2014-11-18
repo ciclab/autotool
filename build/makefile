@@ -7,7 +7,9 @@ CXXFLAGS=-g -Wall \
 	-DIGNORE_CASE\
 	-std=c++11\
 	-lglog\
-	-lgflags
+	-lgflags\
+	-lboost_system\
+	-lboost_filesystem
 
 SRC=../src
 

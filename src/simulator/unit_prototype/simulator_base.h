@@ -13,6 +13,7 @@
 #include <memory>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <vector>
 
 typedef boost::shared_ptr<MemoryBase> MemoryBasePtr;
 typedef boost::shared_ptr<RegisterBase> RegisterBasePtr;
@@ -31,6 +32,16 @@ public:
 
 	// load binary file, called before run
 	virtual bool LoadBinaryFile(const std::string& filePath);
+
+	/*
+	 * called before loading file
+	 */
+	virtual bool BeforeLoadBinaryFile(const std::string& filePath);
+
+	/*
+	 * called after loading file
+	 */
+	virtual bool AfterLoadBinaryFile(const std::vector<char>& content);
 
 	// run simulator
 	virtual void Run();

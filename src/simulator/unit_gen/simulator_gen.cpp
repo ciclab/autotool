@@ -16,10 +16,13 @@ using namespace boost;
 string SimulatorGen::GenSimulatorCStr(const vector<string>& memory,
 		const vector<string>& registerFile)
 {
+	/*
+	 * step 1. generate function unit declatation and init code
+	 */
 	string functionUnitDeclarationCode;
 	string functionUnitInitCode;
 	{
-		functionUnitDeclarationCode += "private:\n";
+		functionUnitDeclarationCode += "protected:\n";
 		/*
 		 * generate code for memory declaration and initialization in simulator
 		 */
@@ -40,7 +43,7 @@ string SimulatorGen::GenSimulatorCStr(const vector<string>& memory,
 		/*
 		 * generate code for register declaration and initialization in simulator
 		 */
-		functionUnitDeclarationCode += "private:\n";
+		functionUnitDeclarationCode += "protected:\n";
 		for (auto i : registerFile)
 		{
 			functionUnitDeclarationCode += lexical_cast<string>(

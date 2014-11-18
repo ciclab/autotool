@@ -12,6 +12,14 @@ using namespace std;
 
 DEFINE_string(binaryFilePath, "./binary", "path of binary file");
 
+class SampleSimulator: public TSimulator
+{
+	bool AfterLoadBinaryFile(const vector<char>& content)
+	{
+		return memory1->Write(0, content.size(), content);
+	}
+};
+
 int main(int argc, char* argv[])
 {
 	google::InitGoogleLogging(argv[0]);
@@ -21,9 +29,9 @@ int main(int argc, char* argv[])
 
 	LOG(INFO)<< "binaryFilePath: " << FLAGS_binaryFilePath;
 
-	TSimulator simulator;
+	SampleSimulator simulator;
 
-	if (simulator.LoadBinaryFile(FLAGS_binaryFilePath) && simulator.Init())
+	if (simulator.Init() && simulator.LoadBinaryFile(FLAGS_binaryFilePath))
 	{
 		simulator.Run();
 	}
