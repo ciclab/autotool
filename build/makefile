@@ -143,7 +143,7 @@ utility.o: utility.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
 sample_simulator: sample_simulator.cpp simulator.cpp mem_base.cpp register_base.cpp pipeline_base.cpp type_base.cpp instruction_base.cpp
-	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS)
+	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS) -lgmp -lgmpxx
 
 mem_gen.o: mem_gen.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
