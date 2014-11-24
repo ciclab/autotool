@@ -1,5 +1,5 @@
 (
-  (enum
+ (enum
     (GR_E 
       'GR0' 'GR1' 'GR2' 'GR3' 'GR4' 'GR5' 'GR6' 'GR7'
       'GR8' 'GR9' 'GR10' 'GR11' 'GR12' 'GR13' 'GR14' 'GR15'
@@ -202,7 +202,7 @@
   )
   (memory
     ( memory1
-      // define a memory with 4096 * 8 bytes
+      // define a memory with 5000000 bytes
       ( size 5000000 )
       ( width 8 )
     )
@@ -373,22 +373,11 @@
     (instrs
       (= i slots_4 )
       (do
-        (seq 1
-	  (decode_s
-	    (if (not decode_s.doOk /* doOk is buildin variable */ )
-	      (
-	        (frozen
-		  fetch1_s fetch2_s decode_s )
-		(flush execute_s)
-	      )
-	    )
-	  )
-	  (execute_s
- 	    (if (not execute_s.doOk)
-	      (frozen fetch1_s
-	        fetch2_s decode_s execute_s)
-	      (flush mem1_s)
-	    )
+	(
+	/* InStage is a built-in method */
+	  (if (call InStage decode_s)
+	    (call Decode)
+	    /* decode is an built-in method */
 	  )
 	)
       )

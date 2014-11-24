@@ -30,16 +30,24 @@ public:
 	// initialize internal data
 	virtual bool Init();
 
+	// called in Init, executed first
+	virtual bool BeforeInit();
+
+	// called in Init, executed last
+	virtual bool AfterInit();
+
+	// called in Init, executed last
+
 	// load binary file, called before run
 	virtual bool LoadBinaryFile(const std::string& filePath);
 
 	/*
-	 * called before loading file
+	 * called in LoadBinaryFile(), fist to be executed
 	 */
 	virtual bool BeforeLoadBinaryFile(const std::string& filePath);
 
 	/*
-	 * called after loading file
+	 * called in LoadBinaryFile(), last to be executed
 	 */
 	virtual bool AfterLoadBinaryFile(const std::vector<char>& content);
 

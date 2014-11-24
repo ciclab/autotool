@@ -63,7 +63,7 @@ bool SimulatorBase::LoadBinaryFile(const std::string& filePath)
 		content.push_back(t);
 	}
 
-	LOG(INFO) << "binary file loaded, file name: " << filePath;
+	LOG(INFO)<< "binary file loaded, file name: " << filePath;
 
 	return AfterLoadBinaryFile(content);
 }
@@ -75,7 +75,31 @@ void SimulatorBase::Run()
 
 bool SimulatorBase::Init()
 {
+	if (!BeforeInit())
+	{
+		LOG(WARNING) << "Before Init failed";
+		return false;;
+	}
+
 	LOG(INFO)<< "do nothing";
 
+	if (!AfterInit())
+	{
+		LOG(WARNING) << "After Init failed";
+		return false;
+	}
+
+	return true;
+}
+
+bool SimulatorBase::BeforeInit()
+{
+	LOG(INFO)<< "Before init, do nothing";
+	return true;
+}
+
+bool SimulatorBase::AfterInit()
+{
+	LOG(INFO)<< "After init, do nothing";
 	return true;
 }

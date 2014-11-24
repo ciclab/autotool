@@ -57,12 +57,23 @@ string SimulatorGen::GenSimulatorCStr(const vector<string>& memory,
 		}
 	}
 
+	/*
+	 * output class definition code for simulator
+	 */
 	string code = lexical_cast<string>(
 			format("class TSimulator: public SimulatorBase{\n"
 					"%1%\n"
 					"public:"
 					"bool Init() override{\n"
+					"if (!BeforeInit())"
+					"{"
+					"return false;"
+					"}\n"
 					"%2%\n"
+					"if (!AfterInit())"
+					"{"
+					"return false;"
+					"}\n"
 					"return true;\n"
 					"}"
 					"};") % functionUnitDeclarationCode % functionUnitInitCode);

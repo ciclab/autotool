@@ -4,9 +4,6 @@
 
 using namespace std;
 
-const std::string StageBase::mName = "StatgeBase";
-const uint StageBase::mStageCnt = 0;
-
 StageBase::~StageBase()
 {
 	LOG(INFO) << "do nothing";

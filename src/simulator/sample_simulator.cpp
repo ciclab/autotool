@@ -14,9 +14,22 @@ DEFINE_string(binaryFilePath, "./binary", "path of binary file");
 
 class SampleSimulator: public TSimulator
 {
-	bool AfterLoadBinaryFile(const vector<char>& content)
+public:
+	bool AfterLoadBinaryFile(const vector<char>& content) override
 	{
+		LOG(INFO) << "In AfterLoadBinaryFile";
 		return memory1->Write(0, content.size(), content);
+	}
+
+	bool AfterInit() override
+	{
+		LOG(INFO) << "In afterInit";
+		return pc->Write(0, 0);
+	}
+
+	void Run() override
+	{
+		LOG(INFO) << "In Run";
 	}
 };
 
@@ -37,7 +50,7 @@ int main(int argc, char* argv[])
 	}
 	else
 	{
-		LOG(INFO) << "cannot load/init simulaor";
+		LOG(INFO)<< "cannot load/init simulaor";
 	}
 
 	return 0;

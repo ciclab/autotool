@@ -144,7 +144,7 @@ simGen.o: simGen.cpp
 utility.o: utility.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
-sample_simulator: sample_simulator.cpp mem_base.cpp register_base.cpp pipeline_base.cpp type_base.cpp instruction_base.cpp simulator_base.cpp
+sample_simulator: sample_simulator.cpp mem_base.cpp register_base.cpp pipeline_base.cpp type_base.cpp instruction_base.cpp simulator_base.cpp stage_base.cpp sim_dis.y.c sim_dis.l.c
 	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS) -lgmp -lgmpxx
 
 mem_gen.o: mem_gen.cpp
