@@ -3,8 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "instruction_base.h"
+#include "do_content.h"
+
+typedef std::pair<std::string, std::string> pss;
 
 class InstructionGen
 {
@@ -13,7 +17,8 @@ class InstructionGen
   /*
    * generate C++ code for instruction class
    */
-  std::string GenInstructionCStr(Instruction& Instruction, std::vector<std::string>& needInit);
+  std::string GenInstructionCStr(const std::string& instructionName , const std::vector<do_content>& doContentVec, 
+          const std::vector<pss>& argList);
 };
 
 #endif

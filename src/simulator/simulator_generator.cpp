@@ -10,6 +10,7 @@
 #include "simulator/unit_gen/register_gen.h"
 #include "simulator/unit_gen/stage_gen.h"
 #include "simulator/unit_gen/simulator_gen.h"
+#include "simulator/unit_gen/instruction_gen.h"
 #include "ir.h"
 
 #include <gflags/gflags.h>
@@ -27,8 +28,9 @@ DEFINE_string(pipelineOutputFilePath, "pipeline_out.h",
 		"pipeline output file path");
 DEFINE_string(simulatorOutputFilePath, "simulator_out.h",
 		"simulator output file path");
-using
-namespace std;
+DEFINE_string(instructionOutputFilePath, "instruction_out.h", "simulator output file path");
+
+using namespace std;
 using namespace boost;
 
 int main(int argc, char* argv[])
@@ -48,7 +50,7 @@ int main(int argc, char* argv[])
 
 	LOG(INFO)<< "ir loaded";
 
-	vector<string> memoryNeedInit;
+	std::vector<std::string> memoryNeedInit;
 
 	{
 		/*
@@ -126,7 +128,7 @@ int main(int argc, char* argv[])
 		fout.close();
 	}
 
-	vector<string> registerNeedInit;
+	std::vector<std::string> registerNeedInit;
 	{
 		/*
 		 * step 3. generate code for register
@@ -207,12 +209,54 @@ int main(int argc, char* argv[])
 
 		LOG(INFO) << "code for pipeline generated";
 	}
+        
+//                    std::vector<std::string> instructionNeedInit;
+                  {
+                                    /*
+                                     * step 5. generate code for instruction
+                                    */
+                                    LOG(INFO) << "generating code for instructions...";
+                                    
+                                    ofstream fout;
+                                    fout.open(FLAGS_instructionOutputFilePath.c_str());
+                                    
+                                    fout << "#ifndef _instruction_GEN_H_\n";
+                                    fout << "#define _instruction_GEN_H_\n";
+		fout << "#include \"instruction_base.h\"\n";
+                                    fout << "#include <boost/multiprecision/gmp.hpp>\n";
+                
+                                    int size = ir.get_instr_size();
+                                    LOG(INFO) << "number of instruction: " << size;
+                                    
+                                    InstructionGen instructionGenerator;
+                                    for (int i  = 0; i < size; ++i)
+                                    {
+                                        LOG(INFO) << "generating code for " << i << "th instruction";
+                                        
+                                        std::vector<do_content> doContentVec;
+                                        ir.get_instruction_do_content(i, doContentVec);
+                                        std::string instructionName = ir.get_instr_name(i);
+                                        std::vector<pss> argList;
+                                        ir.get_instr_arglist(i, argList);
+                                        
+                                        std::string instructionCode = instructionGenerator.GenInstructionCStr(instructionName, 
+                                                doContentVec, argList);
+                                        
+                                        fout << instructionCode << endl;;
+                                    }
+                                    
+		fout << "\n#endif\n";
+		fout.close();
 
-	/*
-	 * final step. generate code for simulator
-	 */
+		LOG(INFO) << "code for instruction generated";
+                  }
 
 	{
+
+                                    /*
+                                     * final step. generate code for simulator
+                                     */
+            
 		LOG(INFO)<< "generating code for simulator...";
 
 		ofstream fout;

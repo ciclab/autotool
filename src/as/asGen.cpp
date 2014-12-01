@@ -34,7 +34,7 @@ static bool isTypeAddr(const string s)
 string funcName2ClassName(string funcName)
 {
 	// assert( funcName.compare( 0, 5, "FUNC_" ) == 0 );
-	string className = "class_";
+	string className = "instr_";
 	// className.append( funcName.begin() + 5, funcName.end() );
 	className.append(funcName.begin(), funcName.end());
 	return className;
@@ -314,13 +314,14 @@ int main(int argc, char *argv[])
 	dytokout << "%}\n";
 	sytokout << "extern void dis_error(const char *s);\n";
 	sytokout << "extern int dis_lex(void);\n";
-	sytokout << "#include \"class.h\"\n";
+	sytokout << "#include \"instruction_out.h\"\n";
 	// TODO configurable file name
 	sytokout << "#include \"sim_dis.h\"\n";
+                  sytokout << "#include \"instruction_base.h\"\n";
 	// TODO a configurable number instead of 100
 	sytokout << " int sim_dis_list_len[100];\n";
 	sytokout << " int sim_dis_list_cnt;\n";
-	sytokout << " _class_instr_ * sim_dis_list[100];\n";
+	sytokout << " InstructionBase * sim_dis_list[100];\n";
 	sytokout << "%}\n";
 
 	dhout << "#ifndef DH_H" << endl;
@@ -957,7 +958,8 @@ int main(int argc, char *argv[])
 					else
 					{
 						dyout << "{}" << endl;
-						syout << "{}" << endl;
+						syout << "{sim_dis_list_len[sim_dis_list_cnt] = 0,\
+sim_dis_list[sim_dis_list_cnt] = NULL, ++sim_dis_list_cnt;}" << endl;
 					}
 				}
 				yout << " ; " << endl;

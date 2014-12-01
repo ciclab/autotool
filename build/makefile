@@ -144,7 +144,7 @@ simGen.o: simGen.cpp
 utility.o: utility.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
-sample_simulator: sample_simulator.cpp mem_base.cpp register_base.cpp pipeline_base.cpp type_base.cpp instruction_base.cpp simulator_base.cpp stage_base.cpp sim_dis.y.c sim_dis.l.c
+sample_simulator: sample_simulator.cpp mem_base.cpp register_base.cpp pipeline_base.cpp type_base.cpp instruction_base.cpp simulator_base.cpp stage_base.cpp sim_dis.y.c sim_dis.l.c sim_dis.l.h
 	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS) -lgmp -lgmpxx
 
 mem_gen.o: mem_gen.cpp
@@ -162,7 +162,10 @@ stage_gen.o: stage_gen.cpp
 simulator_gen.o: simulator_gen.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
-simulator_gen_lib.a: mem_gen.o pipeline_gen.o register_gen.o stage_gen.o simulator_gen.o
+instruction_gen.o: instruction_gen.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+simulator_gen_lib.a: mem_gen.o pipeline_gen.o register_gen.o stage_gen.o simulator_gen.o instruction_gen.o
 	ar crv $@ $^
 
 simulator_generator: simulator_generator.cpp ir.o libir.a simulator_gen_lib.a  

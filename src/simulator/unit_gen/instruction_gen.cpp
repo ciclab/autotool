@@ -12,40 +12,31 @@
 #include "instruction_gen.h"
 #include "instruction.h"
 
-std::string InstructionGen::GenInstructionCStr(Instruction& instruction,
-		std::vector<std::string>& needInit)
+std::string InstructionGen::GenInstructionCStr(const std::string& instructionName , const std::vector<do_content>& doContentVec,
+        const std::vector<pss>& argList)
 {
-	// get do content
-	do_content doContent;
-	instruction.GetDoContent(doContent);
 	std::string doCodeStr;
 	// TODO generate code for Do
-
-	// get argument list
-	typedef std::pair<std::string, std::string> pss;
-	std::vector<pss> argList;
-	instruction.get_arglist(argList);
+        
 	// translate variable to class member
-	std::vector<std::string> argumentCodeStr;
+	std::string argumentCodeStr;
 	for_each(argList.begin(), argList.end(), [&](const pss& argument)
 			{
 				argumentCodeStr += boost::lexical_cast<std::string>(
-						boost::format("mpz_int %1%;\n") % argument.first);
+						boost::format("boost::multiprecision::mpz_int %1%;\n") % argument.first);
 			}
 		);
 
-	// name of instruction
-	std::string name = instruction.get_name();
-
 	std::string code = boost::lexical_cast<std::string>(boost::format(
-			"class Instruction T%1%: public InstructionBase"
+			"class instr_%1%: public InstructionBase"
 			"{"
 			"bool Do() override\n{\n"
 			"%2%\n"
+                                                      "return true;\n"
 			"}\n"
 			"protected:\n"
-			"%3"
-			"};") % name % doCodeStr % argumentCodeStr);
+			"%3%"
+			"};") % instructionName % doCodeStr % argumentCodeStr);
 
 	return code;
 }

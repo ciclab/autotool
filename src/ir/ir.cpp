@@ -369,7 +369,7 @@ string Ir::get_mem_name(int i)
 
 int Ir::GetMemory(int i, Memory** ret)
 {
-	if (memory.size() <= i)
+	if ((int)memory.size() <= i)
 		return 1;
 
 	*ret = &memory[i];
@@ -491,7 +491,8 @@ void Ir::get_instr_var_len( int i, vector<int> &vl)
 {
   instruction_set[i].get_var_len(vl);
 }
-void Ir::get_do_content( int i, vector<do_content> &dc)
+
+void Ir::get_instruction_do_content( int i, vector<do_content> &dc)
 {
   vector<int> dl;
   instruction_set[i].get_do_list(dl);
@@ -518,7 +519,7 @@ int Ir::GetStageVec(vector<Stage>** pStage)
 
 int Ir::GetRegister(int idx, Register** pRegister)
 {
-	assert(registers.size() > idx);
+	assert((int)registers.size() > idx);
 
 	*pRegister = &registers[idx];
 
@@ -527,7 +528,7 @@ int Ir::GetRegister(int idx, Register** pRegister)
 
 int Ir::GetPipline(int idx, Pipeline** pPipeline)
 {
-	assert(pipeline.size() > idx);
+	assert((int)pipeline.size() > idx);
 
 	*pPipeline = &pipeline[idx];
 
