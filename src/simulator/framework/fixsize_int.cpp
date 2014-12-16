@@ -9,8 +9,14 @@
 
 void FixsizeInt::round()
 {
-
+  
 }
 
+bool FixsizeInt::Init(int len)
+{
+  length = len;
+
+  return true;
+}
 
 

@@ -60,10 +60,10 @@ private:
 	// map from register file name to register file instance pointer
 //	std::unordered_map<std::string, RegisterBasePtr> mName2RegisterFilePtr;
 
-	std::vector<PipelineBasePtr> pipelineBasePtr;
+//	std::vector<PipelineBasePtr> pipelineBasePtr;
 
 	// pointer to instruction instance on each stage
-	std::vector<InstructionBasePtr> instructionBasePtrVec;
+//	std::vector<InstructionBasePtr> instructionBasePtrVec;
 };
 
 #endif

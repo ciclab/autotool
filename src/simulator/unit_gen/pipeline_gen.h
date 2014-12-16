@@ -10,7 +10,7 @@ class PipelineGen
 {
 public:
   // generate C++ code for pipeline Class
-  std::string GenPipelineCStr(Pipeline& pipeline);
+  std::string GenPipelineCStr(Pipeline& pipeline, std::vector<std::string>& needInit);
 
 };
 

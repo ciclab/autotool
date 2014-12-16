@@ -144,7 +144,34 @@ simGen.o: simGen.cpp
 utility.o: utility.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
-sample_simulator: sample_simulator.cpp mem_base.cpp register_base.cpp pipeline_base.cpp type_base.cpp instruction_base.cpp simulator_base.cpp stage_base.cpp sim_dis.y.c sim_dis.l.c sim_dis.l.h
+fixsize_int.o: fixsize_int.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+mem_base.o: mem_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+register_base.o: register_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+pipeline_base.o: pipeline_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+type_base.o: type_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+instruction_base.o: instruction_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+simulator_base.o: simulator_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+stage_base.o: stage_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+simulator_bases.a:  mem_base.o register_base.o pipeline_base.o type_base.o instruction_base.o simulator_base.o stage_base.o
+	ar crv $@ $^
+
+sample_simulator: sample_simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.l.h fixsize_int.o simulator_bases.a 
 	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS) -lgmp -lgmpxx
 
 mem_gen.o: mem_gen.cpp
@@ -169,7 +196,7 @@ simulator_gen_lib.a: mem_gen.o pipeline_gen.o register_gen.o stage_gen.o simulat
 	ar crv $@ $^
 
 simulator_generator: simulator_generator.cpp ir.o libir.a simulator_gen_lib.a  
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ -o $@
+	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS)
 
 clean:
 	rm *.* rd asgen out pp simulator sample_simulator

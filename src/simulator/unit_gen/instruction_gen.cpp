@@ -18,6 +18,19 @@ std::string InstructionGen::GenInstructionCStr(const std::string& instructionNam
 	std::string doCodeStr;
 	// TODO generate code for Do
         
+                  std::string initCodeStr;
+                  initCodeStr = boost::lexical_cast<std::string>(boost::format(
+                          "bool Init(boost::shared_ptr<SimulatorBase> pSimulatorBase, boost::shared_ptr<StageBase> pStageBase) override\n"
+                          "{\n"
+                          "if (pSimulatorBase.get() == NULL || pStageBase.get() == NULL)"
+                          "{"
+                          "return false;"
+                          "}"
+                          "mpSimulator = pSimulatorBase;\n"
+                          "mpStage = pStageBase;\n"
+                          "return true;\n"
+                          "}\n"));
+                  
 	// translate variable to class member
 	std::string argumentCodeStr;
 	for_each(argList.begin(), argList.end(), [&](const pss& argument)
@@ -26,7 +39,7 @@ std::string InstructionGen::GenInstructionCStr(const std::string& instructionNam
 						boost::format("boost::multiprecision::mpz_int %1%;\n") % argument.first);
 			}
 		);
-
+                 
 	std::string code = boost::lexical_cast<std::string>(boost::format(
 			"class instr_%1%: public InstructionBase"
 			"{"
@@ -34,9 +47,10 @@ std::string InstructionGen::GenInstructionCStr(const std::string& instructionNam
 			"%2%\n"
                                                       "return true;\n"
 			"}\n"
+                                                      "%4%"
 			"protected:\n"
 			"%3%"
-			"};") % instructionName % doCodeStr % argumentCodeStr);
+			"};") % instructionName % doCodeStr % argumentCodeStr % initCodeStr);
 
 	return code;
 }

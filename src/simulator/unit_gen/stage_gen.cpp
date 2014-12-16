@@ -32,6 +32,15 @@ string StageGen::GenStageCStr(vector<Stage>& stage)
 			enumList += "= 0";
 		}
 	}
+        
+                  string inStageFunCodeStr;
+                  inStageFunCodeStr = boost::lexical_cast<string>(
+                          boost::format(
+                          "bool InStage(StageList stage)\n"
+                          "{\n"
+                          "return stage == mStage;\n"
+                          "}\n"
+                          ));
 
 	string code;
 
@@ -44,21 +53,22 @@ string StageGen::GenStageCStr(vector<Stage>& stage)
 					"bool Init() override"
 					"{"
 					"LOG(INFO) << \"Init stage: %1%\";"
-					"stage = StageList(0);"
+					"mStage = StageList(0);"
 					"return true;"
 					"};"
 					"bool NextStage() override"
 					"{"
-					"if (stage != %3%)"
+					"if (mStage != %3%)"
 					"{"
-					"int tmp = (int)stage + 1;"
-					"stage = StageList(tmp);"
+					"int tmp = (int)mStage + 1;"
+					"mStage = StageList(tmp);"
 					"return true;"
 					"}"
 					"return false;"
 					"};"
-					"StageList stage;"
-					"};") % name % enumList % lastStageName);
+                                                                                          "%4%"
+					"StageList mStage;"
+					"};") % name % enumList % lastStageName % inStageFunCodeStr);
 
 	return code;
 }

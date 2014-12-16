@@ -7,7 +7,7 @@ InstructionBase::~InstructionBase()
 	LOG(INFO) << "do nothing";
 }
 
-bool InstructionBase::Init()
+bool InstructionBase::Init(boost::shared_ptr<SimulatorBase> pSimulatorBase, boost::shared_ptr<StageBase> pStageBase)
 {
 	LOG(INFO) << "do nothing";
 

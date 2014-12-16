@@ -11,12 +11,15 @@
 
 typedef void Tfunc();
 
+class SimulatorBase;
+class StageBase;
+
 class InstructionBase
 {
  public:
 	virtual ~InstructionBase();
 
-	virtual bool Init();
+	virtual bool Init(boost::shared_ptr<SimulatorBase> pSimulatorBase, boost::shared_ptr<StageBase> pStageBase);
 
 	/*
 	 * called inside Init, executed first
@@ -35,9 +38,10 @@ class InstructionBase
 	virtual bool Do();
 
  protected:
-	boost::shared_ptr<StageBase> mStage;
+	boost::shared_ptr<StageBase> mpStage;
 	std::vector<boost::shared_ptr<PipelineBase> > mPipeline;
 	std::vector<std::function<Tfunc> > mpDoList;
+                  boost::shared_ptr<SimulatorBase> mpSimulator;
 };
 
 #endif

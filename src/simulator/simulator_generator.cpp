@@ -5,6 +5,12 @@
  *      Author: q
  */
 
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+
+#include <iostream>
+#include <boost/format.hpp>
+
 #include "simulator/unit_gen/mem_gen.h"
 #include "simulator/unit_gen/pipeline_gen.h"
 #include "simulator/unit_gen/register_gen.h"
@@ -12,11 +18,6 @@
 #include "simulator/unit_gen/simulator_gen.h"
 #include "simulator/unit_gen/instruction_gen.h"
 #include "ir.h"
-
-#include <gflags/gflags.h>
-#include <glog/logging.h>
-#include <iostream>
-#include <boost/format.hpp>
 
 DEFINE_string(irFilePath, "out", "ir file");
 DEFINE_string(outputFilePath, "out2", "output file path");
@@ -28,13 +29,14 @@ DEFINE_string(pipelineOutputFilePath, "pipeline_out.h",
 		"pipeline output file path");
 DEFINE_string(simulatorOutputFilePath, "simulator_out.h",
 		"simulator output file path");
-DEFINE_string(instructionOutputFilePath, "instruction_out.h", "simulator output file path");
+DEFINE_string(instructionOutputFilePath, "instruction_out.h",
+		"simulator output file path");
 
-using namespace std;
+using
+namespace std;
 using namespace boost;
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 	google::InitGoogleLogging(argv[0]);
 	google::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -170,6 +172,7 @@ int main(int argc, char* argv[])
 		LOG(INFO) << "code for registers generated";
 	}
 
+	std::vector<std::string> pipelineNeedInit;
 	{
 		/*
 		 * step 4. generate code for pipeline
@@ -198,7 +201,7 @@ int main(int argc, char* argv[])
 			}
 
 			PipelineGen pipelineGenerator;
-			string pipelineCode = pipelineGenerator.GenPipelineCStr(*pPipeline);
+			string pipelineCode = pipelineGenerator.GenPipelineCStr(*pPipeline, pipelineNeedInit);
 
 			LOG(INFO) << "code for " << i << "th pipeline: " << pipelineCode;
 			fout << pipelineCode;
@@ -209,54 +212,53 @@ int main(int argc, char* argv[])
 
 		LOG(INFO) << "code for pipeline generated";
 	}
-        
+
 //                    std::vector<std::string> instructionNeedInit;
-                  {
-                                    /*
-                                     * step 5. generate code for instruction
-                                    */
-                                    LOG(INFO) << "generating code for instructions...";
-                                    
-                                    ofstream fout;
-                                    fout.open(FLAGS_instructionOutputFilePath.c_str());
-                                    
-                                    fout << "#ifndef _instruction_GEN_H_\n";
-                                    fout << "#define _instruction_GEN_H_\n";
+	{
+		/*
+		 * step 5. generate code for instruction
+		 */
+		LOG(INFO)<< "generating code for instructions...";
+
+		ofstream fout;
+		fout.open(FLAGS_instructionOutputFilePath.c_str());
+
+		fout << "#ifndef _instruction_GEN_H_\n";
+		fout << "#define _instruction_GEN_H_\n";
 		fout << "#include \"instruction_base.h\"\n";
-                                    fout << "#include <boost/multiprecision/gmp.hpp>\n";
-                
-                                    int size = ir.get_instr_size();
-                                    LOG(INFO) << "number of instruction: " << size;
-                                    
-                                    InstructionGen instructionGenerator;
-                                    for (int i  = 0; i < size; ++i)
-                                    {
-                                        LOG(INFO) << "generating code for " << i << "th instruction";
-                                        
-                                        std::vector<do_content> doContentVec;
-                                        ir.get_instruction_do_content(i, doContentVec);
-                                        std::string instructionName = ir.get_instr_name(i);
-                                        std::vector<pss> argList;
-                                        ir.get_instr_arglist(i, argList);
-                                        
-                                        std::string instructionCode = instructionGenerator.GenInstructionCStr(instructionName, 
-                                                doContentVec, argList);
-                                        
-                                        fout << instructionCode << endl;;
-                                    }
-                                    
+		fout << "#include <boost/multiprecision/gmp.hpp>\n";
+
+		int size = ir.get_instr_size();
+		LOG(INFO) << "number of instruction: " << size;
+
+		InstructionGen instructionGenerator;
+		for (int i = 0; i < size; ++i)
+		{
+			LOG(INFO) << "generating code for " << i << "th instruction";
+
+			std::vector<do_content> doContentVec;
+			ir.get_instruction_do_content(i, doContentVec);
+			std::string instructionName = ir.get_instr_name(i);
+			std::vector<pss> argList;
+			ir.get_instr_arglist(i, argList);
+
+			std::string instructionCode = instructionGenerator.GenInstructionCStr(instructionName,
+					doContentVec, argList);
+
+			fout << instructionCode << endl;;
+		}
+
 		fout << "\n#endif\n";
 		fout.close();
 
 		LOG(INFO) << "code for instruction generated";
-                  }
+	}
 
 	{
+		/*
+		 * final step. generate code for simulator
+		 */
 
-                                    /*
-                                     * final step. generate code for simulator
-                                     */
-            
 		LOG(INFO)<< "generating code for simulator...";
 
 		ofstream fout;
@@ -265,6 +267,7 @@ int main(int argc, char* argv[])
 		fout << "#ifndef _simulator_GEN_H_\n";
 		fout << "#define _simulator_GEN_H_\n";
 		fout << "#include <glog/logging.h>\n";
+
 		fout << "#include \"simulator_base.h\"\n";
 		fout << format("#include \"%1%\"\n") % FLAGS_memoryOutputFilePath;
 		fout << format("#include \"%1%\"\n") % FLAGS_stageOutputFilePath;
@@ -273,7 +276,7 @@ int main(int argc, char* argv[])
 
 		SimulatorGen simulatorGen;
 		string simulatorCode = simulatorGen.GenSimulatorCStr(memoryNeedInit,
-				registerNeedInit);
+				registerNeedInit, pipelineNeedInit);
 
 		fout << simulatorCode;
 

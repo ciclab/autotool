@@ -15,7 +15,7 @@ class SimulatorGen
 {
 public:
 	std::string GenSimulatorCStr(const std::vector<std::string>& memory,
-			const std::vector<std::string>& registerFile);
+			const std::vector<std::string>& registerFile, const std::vector<std::string>& pipeline);
 };
 
 #endif /* SIMULATOR_GEN_H_ */
