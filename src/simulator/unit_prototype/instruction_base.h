@@ -37,6 +37,21 @@ class InstructionBase
 	 */
 	virtual bool Do();
 
+	/*
+	 * initilize internal variable 
+	 */
+	virtual bool InitVariable(const char* bianry);
+	
+	/*
+	 * 
+	 */
+	virtual bool BeforeInitVariable();
+
+	/*
+	 *
+	 */
+	virtual bool AfterInitVariable();
+	
  protected:
 	boost::shared_ptr<StageBase> mpStage;
 	std::vector<boost::shared_ptr<PipelineBase> > mPipeline;

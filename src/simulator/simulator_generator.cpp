@@ -10,6 +10,10 @@
 
 #include <iostream>
 #include <boost/format.hpp>
+#include <vector>
+#include <string>
+#include <utility>
+#include <unordered_set>
 
 #include "simulator/unit_gen/mem_gen.h"
 #include "simulator/unit_gen/pipeline_gen.h"
@@ -226,25 +230,83 @@ int main(int argc, char* argv[]) {
 		fout << "#ifndef _instruction_GEN_H_\n";
 		fout << "#define _instruction_GEN_H_\n";
 		fout << "#include \"instruction_base.h\"\n";
+		fout << "#include \"sim_dis_as.y.h\"\n";
 		fout << "#include <boost/multiprecision/gmp.hpp>\n";
 
 		int size = ir.get_instr_size();
+		std::string top_rule_name = ir.get_top_rule_name();
+
+		vector<bool> useful(size);
+		{
+			fill(useful.begin(), useful.end(), false);
+			std::unordered_set<std::string> packSubRuleName;
+			for (int i = 0; i < size; ++i)
+			{
+				std::string n = ir.get_instr_name(i);
+				if (n.compare(0, top_rule_name.length(), top_rule_name) == 0)
+				{
+					if (ir.get_instr_type(i) == "e_pack")
+					{
+						std::vector<std::pair<std::string, std::string> > args;
+						ir.get_instr_arglist(i, args);
+						for(auto& i: args)
+						{
+							packSubRuleName.insert(i.first);
+						}
+
+						for(auto& i:args)
+						{
+							for (int j = 0; j < (int) i.second.size(); ++j)
+							{
+								string name;
+								for (;
+										j < (int) i.second.size()
+										&& i.second[j] != c_sep; ++j)
+								name = name + i.second[j];
+								packSubRuleName.insert(name);
+							}
+						}
+					}
+					else
+					{
+						useful[i] = true;
+					}
+				}
+			}
+			for (int i = 0; i < size; ++i)
+			{
+				if (!useful[i])
+				{
+					string n = ir.get_instr_name(i);
+					if (packSubRuleName.find(n) != packSubRuleName.end())
+					{
+						useful[i] = true;
+					}
+				}
+			}
+		}
+
 		LOG(INFO) << "number of instruction: " << size;
 
 		InstructionGen instructionGenerator;
 		for (int i = 0; i < size; ++i)
 		{
+			if (!useful[i])
+			{
+				LOG(INFO) << i << "th instruction not used";
+				continue;
+			}
+
 			LOG(INFO) << "generating code for " << i << "th instruction";
 
 			std::vector<do_content> doContentVec;
 			ir.get_instruction_do_content(i, doContentVec);
 			std::string instructionName = ir.get_instr_name(i);
-			std::vector<pss> argList;
-			ir.get_instr_arglist(i, argList);
+			std::vector<string> argList;
+			ir.get_instr_var_name(i, argList);
 
 			std::string instructionCode = instructionGenerator.GenInstructionCStr(instructionName,
 					doContentVec, argList);
-
 			fout << instructionCode << endl;;
 		}
 

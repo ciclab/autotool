@@ -43,9 +43,11 @@ public:
 		{
 			vector<char> buf;
 			boost::multiprecision::mpz_int nowPc;
+			// read pc
 			pc->Read(0, nowPc);
 			memory1->Read((uint)nowPc, MAX_BINARY_LEN * MAX_SLOT_LEN / 8, buf);
 
+			// decode
 			buf.push_back(0);
 
 			std::vector<char> buffer;

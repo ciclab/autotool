@@ -171,7 +171,7 @@ stage_base.o: stage_base.cpp
 simulator_bases.a:  mem_base.o register_base.o pipeline_base.o type_base.o instruction_base.o simulator_base.o stage_base.o
 	ar crv $@ $^
 
-sample_simulator: sample_simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.l.h fixsize_int.o simulator_bases.a 
+sample_simulator: sim_dis_as.y.c sample_simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.l.h fixsize_int.o simulator_bases.a
 	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS) -lgmp -lgmpxx
 
 mem_gen.o: mem_gen.cpp

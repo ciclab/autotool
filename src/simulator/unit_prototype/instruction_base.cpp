@@ -33,3 +33,22 @@ bool InstructionBase::Do()
 
 	return true;
 }
+
+bool InstructionBase::InitVariable(const char* bianryStr)
+{
+  LOG(INFO) << "do nothing";
+  return true;
+}
+
+bool InstructionBase::BeforeInitVariable()
+{
+  LOG(INFO) << "do nothing";
+  return true;
+}
+
+bool InstructionBase::AfterInitVariable()
+{
+  LOG(INFO) << "do nothing";
+  return true;
+}
+

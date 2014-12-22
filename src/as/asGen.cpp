@@ -8,8 +8,7 @@
 #include <algorithm>
 #include <string>
 using namespace std;
-class bfd_info
-{
+class bfd_info {
 public:
 	string name;
 	int off;
@@ -19,20 +18,17 @@ public:
 	bool pcrel;
 	bfd_info(string n, int o, int ol, int il, int rs, bool p) :
 			name(n), off(o), off_len(ol), instr_len(il), right_shift(rs), pcrel(
-					p)
-	{
+					p) {
 	}
 	;
 };
 
 // check if a token name is type or addr 
-static bool isTypeAddr(const string s)
-{
+static bool isTypeAddr(const string s) {
 	// TODO this may confuse other name definition
 	return (s.compare(0, 5, "type_") == 0 || s.compare(0, 5, "addr_") == 0);
 }
-string funcName2ClassName(string funcName)
-{
+string funcName2ClassName(string funcName) {
 	// assert( funcName.compare( 0, 5, "FUNC_" ) == 0 );
 	string className = "instr_";
 	// className.append( funcName.begin() + 5, funcName.end() );
@@ -40,8 +36,7 @@ string funcName2ClassName(string funcName)
 	return className;
 }
 // now every addr type name is translated to addr_name_true/false_width_rightshift
-static int getRightShiftByName(const string s)
-{
+static int getRightShiftByName(const string s) {
 	assert(isTypeAddr(s));
 	if (s.compare(0, 5, "type_") == 0)
 		return 0;
@@ -52,8 +47,7 @@ static int getRightShiftByName(const string s)
 		r = r + j * (int) (s[i] - '0');
 	return r;
 }
-static bool AddrIsPcrel(const string s)
-{
+static bool AddrIsPcrel(const string s) {
 	int i = s.length() - 1;
 	for (; s[i] != '_'; --i)
 		;
@@ -64,20 +58,17 @@ static bool AddrIsPcrel(const string s)
 }
 static vector<bfd_info> bfd_list;
 static void dfs_gen(ofstream & out, vector<pps> &binary_func, vector<int> &in,
-		int depth)
-{
+		int depth) {
 	if (in.size() == 0)
 		return;
-	if (in.size() == 1)
-	{
+	if (in.size() == 1) {
 		out << "return " << binary_func[in[0]].second << "(info,c,"
 				<< binary_func[in[0]].first.length() << ",pc);\n";
 		return;
 	}
 	//test if all depth bit in existing binary is '-'
 	FRA(i,in)
-		if ((int) binary_func[*i].first.length() <= depth)
-		{
+		if ((int) binary_func[*i].first.length() <= depth) {
 			cerr << "binary ambitious definition\n";
 			FRA(j,in)
 				cerr << binary_func[*j].first << ' ' << binary_func[*j].second
@@ -95,8 +86,7 @@ static void dfs_gen(ofstream & out, vector<pps> &binary_func, vector<int> &in,
 	}
 	if (tmp0.size() == in.size() || tmp1.size() == in.size())
 		dfs_gen(out, binary_func, in, depth + 1);
-	else
-	{
+	else {
 		out << "if(c[" << depth << "]=='0')\n{";
 		dfs_gen(out, binary_func, tmp0, depth + 1);
 		out << "}\n";
@@ -105,8 +95,7 @@ static void dfs_gen(ofstream & out, vector<pps> &binary_func, vector<int> &in,
 		out << "}\n";
 	}
 }
-static string int2string(int v)
-{
+static string int2string(int v) {
 	if (v == 0)
 		return "0";
 	string r;
@@ -114,8 +103,7 @@ static string int2string(int v)
 		r = (char) ('0' + (v % 10)) + r;
 	return r;
 }
-static string int2binary(int w, int v)
-{
+static string int2binary(int w, int v) {
 	string r;
 	r.resize(w);
 	FOR(i,0,w)
@@ -125,16 +113,14 @@ static string int2binary(int w, int v)
 	}
 	return r;
 }
-static bool check_is_int(string c)
-{
+static bool check_is_int(string c) {
 	FRA(i,c)
 		if (*i < '0' || *i > '9')
 			return false;
 	return (int) c.length() > 0;
 }
 static hash_control binaryHash, rule2func;
-struct binary_info
-{
+struct binary_info {
 	vector<string> toks;
 	vector<int> toks_in_binary;
 	vector<ppi> off;
@@ -148,18 +134,15 @@ bool emp_tag;
 static binary_info emp; // no use, just idenify empty binary rule
 static const binary_info* checkBinary(const string rbinary,
 		const vector<string> &toks, const vector<int> &toks_in_binary,
-		const vector<ppi> &off, const string name)
-{
+		const vector<ppi> &off, const string name) {
 	// allow empty binary
-	if (rbinary == "")
-	{
+	if (rbinary == "") {
 		emp_tag = true;
 		rule2func.insert(name, &emp);
 		return &emp;
 	}
 	binary_info *a = (binary_info*) binaryHash.find(rbinary);
-	if (a == NULL)
-	{
+	if (a == NULL) {
 		a = new (binary_info);
 		a->toks = toks, a->toks_in_binary = toks_in_binary;
 		a->off = off;
@@ -171,20 +154,15 @@ static const binary_info* checkBinary(const string rbinary,
 	bool err = false;
 	if (a->toks.size() != toks.size()
 			|| a->toks_in_binary.size() != toks_in_binary.size()
-			|| a->off.size() != off.size())
-	{
+			|| a->off.size() != off.size()) {
 		err = true;
 	}
-	for (int i = 0; !err && i < (int) toks.size(); ++i)
-	{
+	for (int i = 0; !err && i < (int) toks.size(); ++i) {
 		if (a->toks[i] != toks[i])
 			err = true;
-		if (toks_in_binary[i] < 0)
-		{
+		if (toks_in_binary[i] < 0) {
 
-		}
-		else
-		{
+		} else {
 			//if(toks[i].compare(0,5,"type_")!=0 && toks[i].compare(0,5,"addr_")!=0)
 			if (a->off[a->toks_in_binary[i]].second
 					!= off[toks_in_binary[i]].second)
@@ -197,9 +175,8 @@ static const binary_info* checkBinary(const string rbinary,
 		rule2func.insert(name, a);
 	return a;
 }
-int main(int argc, char *argv[])
-{
-	assert(argc==4);
+int main(int argc, char *argv[]) {
+	assert(argc == 4);
 	ifstream fin;
 	fin.open(argv[1], ofstream::in);
 	Ir ir;
@@ -269,7 +246,7 @@ int main(int argc, char *argv[])
 
 	// disassembler file
 	// ofstream dlout;
-	ofstream dcout, dhout, dlout, dyout, dytokout;
+	ofstream dcout, dhout, dlout, dyout, dytokout, simdcout, simdhout;
 	// string dl_file_name=argv[2];
 	// dl_file_name="dis_"+dl_file_name;
 	string dy_file_name = argv[3];
@@ -282,11 +259,18 @@ int main(int argc, char *argv[])
 	dl_file_name = "dis_" + dl_file_name + ".lex";
 	string dytok_file_name = argv[3];
 	dytok_file_name = "dis_" + dytok_file_name + ".tok";
+	string simdcout_file_name(argv[3]);
+	simdcout_file_name = "sim_dis_" + simdcout_file_name + ".c";
+	string simdhout_file_name(argv[3]);
+	simdhout_file_name = "sim_dis_" + simdhout_file_name + ".h";
 
 	dhout.open(dh_file_name.c_str(), ofstream::out);
 	dcout.open(dc_file_name.c_str(), ofstream::out);
 	dlout.open(dl_file_name.c_str(), ofstream::out);
 	dyout.open(dy_file_name.c_str(), ofstream::out);
+	simdcout.open(simdcout_file_name.c_str(), ofstream::out);
+	simdhout.open(simdhout_file_name.c_str(), ofstream::out);
+
 	// out bison file for disassembler of simulator
 	ofstream syout, sytokout, shout, slout;
 	// TODO configurable name
@@ -317,7 +301,7 @@ int main(int argc, char *argv[])
 	sytokout << "#include \"instruction_out.h\"\n";
 	// TODO configurable file name
 	sytokout << "#include \"sim_dis.h\"\n";
-                  sytokout << "#include \"instruction_base.h\"\n";
+	sytokout << "#include \"instruction_base.h\"\n";
 	// TODO a configurable number instead of 100
 	sytokout << " int sim_dis_list_len[100];\n";
 	sytokout << " int sim_dis_list_cnt;\n";
@@ -326,10 +310,48 @@ int main(int argc, char *argv[])
 
 	dhout << "#ifndef DH_H" << endl;
 	dhout << "#define DH_H" << endl;
+	simdhout << "#ifndef SIM_DH_H" << endl;
+	simdhout << "#define SIM_DH_H" << endl;
 	shout << "#ifndef SH_H " << endl;
 	shout << "#define SH_H " << endl;
 	dhout
 			<< "extern int (*dis_list[100])(char *);\nint dis_list_len[100],dis_list_cnt;\n";
+
+	simdhout << "#include <boost/multiprecision/gmp.hpp>\n";
+	simdcout << "#include \"" << simdhout_file_name << "\"\n";
+
+	simdcout << "static boost::multiprecision::mpz_int BinaryStr2MpzInt(const char* binary)\n"
+			<< "{\nboost::multiprecision::mpz_int ret(0);\n"
+			<< "for(const char *c = binary; *c; ++c)\n"
+			<< "{\nret = ret * 2 + (*c == '1' ? 1 : 0);\n}\nreturn ret;}\n";
+	simdcout <<"static int s2int(const char *buf,int len)\n\
+	{\n\
+	  int r=0,i=0;\n\
+	  for(;i<len;++i)\n\
+	    r=(r<<1)|(buf[i]=='1'?1:0);\n\
+	  int j=0;\n\
+	  // negative number, complete leading 1s\n\
+	  if(r&(1<<(len-1)))\n\
+	    {\n\
+	      for(;j<(int)sizeof(int)*8-len;++j)\n\
+		r|=(1<<(j+len));\n\
+	    }\n\
+	  return r;\n\
+	}\n";
+
+	simdcout << "static const char * get_entry(const char * a[],const char * b,int num)\n\
+	{\n\
+	  int i,j;\n\
+	  for(i=0;i<num;++i)\n\
+	    {\n\
+	      for(j=0;a[i<<1][j];++j)\n\
+		if(a[i<<1][j]!=b[j])\n\
+		  break;\n\
+	      if(a[i<<1][j]=='\\0')\n\
+		return a[(i<<1)+1];\n\
+	    }\n\
+	  return NULL;\n\
+	}\n";
 
 	// dtokout<<"%{\n";
 	// dtokout<<"#include <stdio.h>\n";
@@ -365,20 +387,24 @@ int main(int argc, char *argv[])
 		// hc_len.insert(enum_name,(void*)width);
 
 		dcout << "const char * FUNC_" << enum_name << "(char *c)\n";
+		simdcout << "void _FUNC_" << enum_name
+				<< "(const char *c, boost::multiprecision::mpz_int& val)\n";
 		dhout << "const char * FUNC_" << enum_name << "(char *c);\n";
+		simdhout << "void _FUNC_" << enum_name
+				<< "(const char *c, boost::multiprecision::mpz_int& val);\n";
 		dcout << "{\n";
 		dcout << "static const char * tmp[]={";
+		simdcout << "{\n";
+		simdcout << "static const char *tmp[]={";
 
 		FOR(j,0,enum_ent_size)
 		{
-			if (j)
-			{
+			if (j) {
 				yout << "|" << endl;
 			}
 			string ent_code = enu.ent_code(j);
 			char *en = (char*) hc.find(ent_code);
-			if (en == NULL)
-			{
+			if (en == NULL) {
 				//token generated from enum
 				en = ++cnt;
 				hc.insert(ent_code, en);
@@ -392,19 +418,31 @@ int main(int argc, char *argv[])
 			}
 			yout << "TOK_" << (ll) en << " {$$=(char*)\""
 					<< int2binary(width, enu.ent_value(j)) << "\";}";
-			if (j != 0)
+			if (j != 0) {
 				dcout << ",";
+				simdcout << ",";
+			}
 			dcout << '"' << int2binary(width, enu.ent_value(j)) << '"';
 			dcout << ",";
 			dcout << '"' << ent_code << '"';
+
+			simdcout << '"' << int2binary(width, enu.ent_value(j)) << '"';
+			simdcout << ",";
+			simdcout << '"' << ent_code << '"';
 		}
 		yout << ";" << endl;
 		dcout << "};\n";
+		simdcout << "};\n";
 
 		dcout << "assert(tmp!=0);\n"; // suppress compiler warning:  unused variable ���tmp��� [-Werror=unused-variable]
 		dcout << "assert(c!=NULL);\n"; // suppress compiler warning:  unused variable ���c��� [-Werror=unused-variable]
 
-		dcout << "return get_entry(tmp,c," << enum_ent_size << ");\n}\n";
+		simdcout << "assert(tmp!=0);\n";
+		simdcout << "assert(c!=NULL);\n";
+
+		dcout << "return get_entry(tmp, c," << enum_ent_size << ");\n}\n";
+		simdcout << "val = BinaryStr2MpzInt(get_entry(tmp, c," << enum_ent_size
+				<< "));\n}\n";
 	}
 	tokout << "%start " << top_rule_name << endl;
 	// dtokout<<"%start "<<top_rule_name<<endl;
@@ -414,13 +452,10 @@ int main(int argc, char *argv[])
 	dyout << top_rule_name << ": " << endl;
 	syout << top_rule_name << ":" << endl;
 	// dyout<<top_rule_name<<": "<<endl;
-	for (int i = 0, j = 0; i < instr_size; ++i)
-	{
+	for (int i = 0, j = 0; i < instr_size; ++i) {
 		string n = ir.get_instr_name(i);
-		if (n.compare(0, top_rule_name.length(), top_rule_name) == 0)
-		{
-			if (j)
-			{
+		if (n.compare(0, top_rule_name.length(), top_rule_name) == 0) {
+			if (j) {
 				yout << "|" << endl;
 				dyout << "|" << endl;
 				syout << "|" << endl;
@@ -440,22 +475,18 @@ int main(int argc, char *argv[])
 	useful.resize(instr_size);
 	fill(useful.begin(), useful.end(), false);
 	hash_control packSubRuleName;
-	for (int i = 0; i < instr_size; ++i)
-	{
+	for (int i = 0; i < instr_size; ++i) {
 		string n = ir.get_instr_name(i);
-		if (n.compare(0, top_rule_name.length(), top_rule_name) == 0)
-		{
+		if (n.compare(0, top_rule_name.length(), top_rule_name) == 0) {
 			useful[i] = true;
-			if (ir.get_instr_type(i) == "e_pack")
-			{
+			if (ir.get_instr_type(i) == "e_pack") {
 				vector<pair<string, string> > args;
 				ir.get_instr_arglist(i, args);
 				FRA(i,args)
 					packSubRuleName.insert(i->first, (void*) 1);
 				FRA(i,args)
 				{
-					for (int j = 0; j < (int) i->second.size(); ++j)
-					{
+					for (int j = 0; j < (int) i->second.size(); ++j) {
 						string name;
 						for (;
 								j < (int) i->second.size()
@@ -468,8 +499,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	for (int i = 0; i < instr_size; ++i)
-		if (!useful[i])
-		{
+		if (!useful[i]) {
 			string n = ir.get_instr_name(i);
 			if (packSubRuleName.find(n))
 				useful[i] = true;
@@ -488,9 +518,13 @@ int main(int argc, char *argv[])
 			continue;
 		string n = ir.get_instr_name(i);
 		string type = ir.get_instr_type(i);
+		vector<string> varNameList;
+		ir.get_instr_var_name(i, varNameList);
+		vector<pair<string, string> > argList;
+		ir.get_instr_arglist(i, argList);
+
 		// if(n.compare(0,top_rule_name.length(),top_rule_name)==0)
-		if (type == "e_notpack")
-		{
+		if (type == "e_notpack") {
 #if ASGEN_COUT==1
 			FRA(j,off)
 			cout<<j->first<<' '<<j->second<<endl;
@@ -513,6 +547,16 @@ int main(int argc, char *argv[])
 			for (int i = 0; i < (int) tmp.size(); ++i)
 				reloc_info[i] = tmp[i].second;
 
+			vector<int> originalIdx;
+			for (int i = 0; i < off.size(); ++i) {
+				originalIdx.push_back(i);
+			}
+			sort(originalIdx.begin(), originalIdx.end(),
+					[&](const int&a, const int&b)
+					{
+						return off[a] < off[b];
+					});
+
 			sort(off.begin(), off.end());
 			yout << n << ": ";
 			// dytokout<<"%token "<<n<<endl;
@@ -525,15 +569,12 @@ int main(int argc, char *argv[])
 			// right_shift.resize(off.size());
 			vector<string> toks;	  //record string tokens in code
 			vector<int> toks_in_binary;
-			for (auto j = code.begin(); j != code.end();)
-			{
+			for (auto j = code.begin(); j != code.end();) {
 				++seg;
-				switch (*j)
-				{
+				switch (*j) {
 				case c_sep:
 					++j, ++off_in_code;
-					if (*j == ' ')
-					{
+					if (*j == ' ') {
 						for (; j != code.end() && *j == ' '; ++j, ++off_in_code)
 							;
 						yout << "TOK_BLANK ";
@@ -550,15 +591,13 @@ int main(int argc, char *argv[])
 						;
 					bool is_string = true;
 					if (offi < (int) off.size()
-							&& off[offi].first == off_in_code - 1)
-					{
+							&& off[offi].first == off_in_code - 1) {
 						//may be a type or enum;
 						off[offi].first = seg;
 						++offi;
 						is_string = false;
 					}
-					if (!is_string)
-					{
+					if (!is_string) {
 						// //cout<<*j<<endl;
 						// if(!(*j==c_type_beg || *j==c_enum_beg))
 						// 	{
@@ -568,12 +607,11 @@ int main(int argc, char *argv[])
 						// 	    yout<<i->first<<' '<<i->second<<endl;
 						// 	}
 						assert(
-								*j==c_type_beg || *j==c_enum_beg || *j==c_addr_beg);
+								*j == c_type_beg || *j == c_enum_beg
+										|| *j == c_addr_beg);
 						++off_in_code;
 						++j;
-					}
-					else
-					{
+					} else {
 						//cout<<*j<<endl;
 						// if((*j==c_type_beg || *j==c_enum_beg))
 						// 	{
@@ -584,16 +622,15 @@ int main(int argc, char *argv[])
 						// 	  cout<<binary<<endl;
 						// 	}
 						assert(
-								!(*j==c_type_beg || *j==c_enum_beg || *j==c_addr_beg));
+								!(*j == c_type_beg || *j == c_enum_beg
+										|| *j == c_addr_beg));
 					}
 					for (; j != code.end() && *j != ' ' && *j != '\1';
 							++j, ++off_in_code)
 						token += *j;
-					if (is_string)
-					{
+					if (is_string) {
 						char *tmp = (char*) hc.find(token);
-						if (tmp == NULL)
-						{
+						if (tmp == NULL) {
 							//output token from instruction
 							tmp = ++cnt;
 							hc.insert(token, tmp);
@@ -611,17 +648,13 @@ int main(int argc, char *argv[])
 						yout << "TOK_" << (ll) tmp << " ";
 						toks.push_back(token);
 						toks_in_binary.push_back(-1);
-					}
-					else
-					{
+					} else {
 						yout << token << ' ';
 
 						// if(token.compare(0,5,"type_")==0 || token.compare(0,5,"addr_")==0)
-						if (isTypeAddr(token))
-						{		      // is type or addr
+						if (isTypeAddr(token)) {		      // is type or addr
 							for (auto i = token.rbegin();; ++i)
-								if (*i == '_')
-								{
+								if (*i == '_') {
 									++i;
 									int num(0);
 									for (int j = 1; *i != '_'; ++i, j *= 10)
@@ -630,9 +663,7 @@ int main(int argc, char *argv[])
 									need_bfd[offi - 1] = true;
 									break;
 								}
-						}
-						else
-						{		      //is enum
+						} else {		      //is enum
 							Enum tmp = ir.find_enum(token);
 							//cout<<n<<endl;
 							len[offi - 1] = tmp.width();
@@ -643,7 +674,7 @@ int main(int argc, char *argv[])
 					break;
 				}
 			}
-			assert(offi==(int)off.size());
+			assert(offi == (int )off.size());
 			yout << endl << "{static char tmp[]=\"" << binary << "\";" << endl;
 
 			//output disassembler rules
@@ -655,23 +686,20 @@ int main(int argc, char *argv[])
 			// string rbinary_beg=binary;
 			string rbinary_end = binary;
 			// same as simGen.cpp, this control the vliw mode generated
-			if (vliw_mode_set)
-			{
-				assert(vliw_mode_sig==1);
-				if (binary.length())
-				{
-					assert(binary.length()>vliw_mode_off);
-					assert(vliw_mode_sig==1);
+			if (vliw_mode_set) {
+				assert(vliw_mode_sig == 1);
+				if (binary.length()) {
+					assert(binary.length() > vliw_mode_off);
+					assert(vliw_mode_sig == 1);
 					assert(binary[vliw_mode_off] == '0');
 					// rbinary_beg[vliw_mode_off]='1';
 					rbinary_end[vliw_mode_off] = '1';
 				}
 			}
-			assert((rbinary.length()%8)==0);
+			assert((rbinary.length() % 8) == 0);
 #ifdef LITTLE_END
 			for (int i = 0, j = rbinary.length() - 8; i < j; i += 8, j -= 8)
-				for (int k = 0; k < 8; ++k)
-				{
+				for (int k = 0; k < 8; ++k) {
 					swap(rbinary[i + k], rbinary[j + k]);
 					// swap(rbinary_beg[i+k],rbinary_beg[j+k]);
 					swap(rbinary_end[i + k], rbinary_end[j + k]);
@@ -681,14 +709,28 @@ int main(int argc, char *argv[])
 			const binary_info *genDecInfo = checkBinary(rbinary, toks,
 					toks_in_binary, off, n);
 			// cout<<n<<' '<<rbinary.length()<<' '<<genDecInfo<<endl;
-			if (genDecInfo == NULL)
-			{
+			if (genDecInfo == NULL) {
 
 				// dhout<<"int "<<n<<"(struct disassemble_info *,char *,int insnLen,bfd_vma pc);\n";
 				dhout << "int FUNC_" << n << "(char *);\n";
+				simdhout << "void _FUNC_" << n << "(const char *c";
+				for (auto varNameI : varNameList) {
+					simdhout << ", boost::multiprecision::mpz_int& "
+							<< varNameI;
+				}
+				simdhout << ", boost::multiprecision::mpz_int& mPc);\n";
+
 				// dcout<<"int "<<n<<"(struct disassemble_info *info,char *c,int insnLen,bfd_vma pc){\n";
 				dcout << "int FUNC_" << n << "(char *c){\n";
 				dcout << "WST(c);\n";
+
+				simdcout << "void _FUNC_" << n << "(const char *c";
+				for (auto varNameI : varNameList) {
+					simdcout << ", boost::multiprecision::mpz_int& "
+							<< varNameI;
+				}
+				simdcout << ", boost::multiprecision::mpz_int& mPc){\n";
+				simdcout << "(c) = (c);\n";
 
 				binary_func.push_back(pps(rbinary, n));
 
@@ -699,12 +741,10 @@ int main(int argc, char *argv[])
 						else
 							dlout << '\"' << *i << '\"';
 				dlout << " {return " << n << ";}\n";
-				if (vliw_mode_set)
-				{
+				if (vliw_mode_set) {
 					assert(vliw_mode_sig);
 					// if(rbinary_beg.length())
-					if (rbinary_end.length())
-					{
+					if (rbinary_end.length()) {
 						// FRA(i,rbinary_beg)
 						FRA( i, rbinary_end )
 							if (*i == '-')
@@ -720,65 +760,93 @@ int main(int argc, char *argv[])
 				dcout << "assert(tmp!=0);\n";// suppress compiler warning:  unused variable ���tmp��� [-Werror=unused-variable]
 				dcout << "assert(c!=NULL);\n";// suppress compiler warning:  unused variable ���c��� [-Werror=unused-variable]
 
+				simdcout << "static char tmp[]=" << '"' << binary << "\";\n";
+
+				simdcout << "assert(tmp!=0);\n";// suppress compiler warning:  unused variable ���tmp��� [-Werror=unused-variable]
+				simdcout << "assert(c!=NULL);\n";// suppress compiler warning:  unused variable ���c��� [-Werror=unused-variable]
+
 				max_binary_len = max(max_binary_len, (int) binary.length());
 				for (int i = 0; i < (int) rbinary.length(); ++i)
-					if (rbinary[i] == '-')
-					{
+					if (rbinary[i] == '-') {
 						dcout << "tmp[";
 						int z = (rbinary.length() / 8 - 1 - i / 8) * 8
 								+ (i % 8);
 						dcout << z;
 						dcout << "]=c[" << i << "];\n";
+
+						simdcout << "tmp[";
+						simdcout << z;
+						simdcout << "]=c[" << i << "];\n";
 					}
-				for (int i = 0; i < (int) toks.size(); ++i)
-				{
-					if (toks_in_binary[i] < 0)
-					{
+				for (int i = 0; i < (int) toks.size(); ++i) {
+					if (toks_in_binary[i] < 0) {
 						dcout << "output(\"%s\",\"" << toks[i] << "\");\n";
-					}
-					else
-					{
+					} else {
 						//if(toks[i].compare(0,5,"type_")!=0 && toks[i].compare(0,5,"addr_")!=0)
-						if (!isTypeAddr(toks[i]))
+						if (!isTypeAddr(toks[i])) {
 							dcout << "output(\"%s\",FUNC_" << toks[i] << "(tmp+"
 									<< off[toks_in_binary[i]].second << "));\n";
-						else // is an addr
+
+							assert(varNameList.size() == off.size());
+							simdcout << "_FUNC_" << toks[i] << "(tmp + "
+									<< off[toks_in_binary[i]].second << ", "
+									<< varNameList[originalIdx[toks_in_binary[i]]]
+									<< ");\n";
+						} else // is an addr
 						{
 							// (*info->print_address_func) (info->target, info);
 							// info->target = (GET_OP_S (l, DELTA) << 2) + pc + INSNLEN;
-							if (AddrIsPcrel(toks[i]))
+							if (AddrIsPcrel(toks[i])) {
 								dcout << "outputAddr((FUNC_" << toks[i]
 										<< "(tmp+"
 										<< off[toks_in_binary[i]].second
 										<< ")<<" << getRightShiftByName(toks[i])
 										<< ")+dis_pc" << ");\n";
-							else
+
+								const string& varName = varNameList[originalIdx[toks_in_binary[i]]];
+								simdcout << "_FUNC_" << toks[i] << "(tmp+"
+										<< off[toks_in_binary[i]].second << ", "
+										<< varName
+										<< ");\n";
+								simdcout << varName << " = (" << varName << " << "
+										<< getRightShiftByName(toks[i]) << ") + "
+										<< "mPc;\n";
+							} else {
 								dcout << "outputAddr((FUNC_" << toks[i]
 										<< "(tmp+"
 										<< off[toks_in_binary[i]].second
 										<< ")<<" << getRightShiftByName(toks[i])
 										<< "));\n";
+
+								const string& varName = varNameList[originalIdx[toks_in_binary[i]]];
+								simdcout << "_FUNC_" << toks[i] << "(tmp+"
+										<< off[toks_in_binary[i]].second << ", "
+										<< varName
+										<< ");\n";
+								simdcout << varName << " = (" << varName << " << "
+										<< 0 << ") + "
+										<< "mPc;\n";
+							}
 						}
 					}
 				}
 				dcout << "return " << rbinary.length() / 8 << ";\n";
 				dcout << "}\n";
-			}
-			else
-			{
+
+				simdcout << "}\n";
+			} else {
 				// TODO
 				// if(rbinary.length())
 				// 	dcout<<"int(*"<<n<<")(char *)="<<genDecInfo->func_name<<";\n";
 			}
 			dhout << "#define " << n << "_LEN " << rbinary.length() << endl;
+			simdhout << "#define " << n << "_LEN " << rbinary.length() << endl;
 			shout << "#define " << n << "_LEN " << rbinary.length() << endl;
 
 			binary_info *bi = (binary_info*) binaryHash.find(rbinary);
 			// allow empty binary
-			if (bi != NULL)
-			{
-				if (bi->func_name != n)
-				{
+			if (bi != NULL) {
+				if (bi->func_name != n) {
 					dyout << n << " : " << bi->func_name
 							<< "{dis_list_len[dis_list_cnt]="
 							<< rbinary.length()
@@ -790,17 +858,13 @@ int main(int argc, char *argv[])
 							<< rbinary.length()
 							<< ";sim_dis_list[sim_dis_list_cnt]= new "
 							<< className << ";++sim_dis_list_cnt;};\n";
-				}
-				else
-				{
+				} else {
 					dytokout << "%token " << n << endl;
 					dytokout << "%token " << n << "_end" << endl;
 					sytokout << "%token " << n << endl;
 					sytokout << "%token " << n << "_end" << endl;
 				}
-			}
-			else
-			{
+			} else {
 				// TODO defalut to vliw seperator
 				dyout << n << ":{};\n";
 				syout << n << ":{};\n";
@@ -811,8 +875,7 @@ int main(int argc, char *argv[])
 			FRA(i,off)
 			{
 				//yout<<"for(i=0"<<";$"<<(i->first)<<"[i];"<<"++i)"<<endl;
-				if (need_bfd[(int) (i - off.begin())])
-				{
+				if (need_bfd[(int) (i - off.begin())]) {
 					// instr_bfd_info.push_back(ppi(i->second,len[(int)(i-off.begin())]));
 					yout << "if(isnumber($" << (i->first) << "))" << endl;
 					yout << "{" << endl;
@@ -821,8 +884,7 @@ int main(int argc, char *argv[])
 						<< ";" << "++i)" << endl;
 				yout << "tmp[i+" << i->second << "]=$" << (i->first) << "[i];"
 						<< endl;
-				if (need_bfd[(int) (i - off.begin())])
-				{
+				if (need_bfd[(int) (i - off.begin())]) {
 					int l = len[(int) (i - off.begin())];
 					int o = binary.length() - (i->second + l);
 					yout << "}" << endl;
@@ -849,8 +911,7 @@ int main(int argc, char *argv[])
 			}
 			// for those instruction in vliw, we don't gather bfd info.
 			// we assume it already appeared in solo slot instructions
-			if (genDecInfo == NULL)
-			{
+			if (genDecInfo == NULL) {
 				//gether bfd_info for bfd
 				FRA(i,instr_bfd_info)
 				{
@@ -862,8 +923,7 @@ int main(int argc, char *argv[])
 					// string bfd_name="BFD_DUMMY_"+int2string(o)+"_"+int2string(l)+"_"+int2string((int)binary.length())+"_"+
 					// 	(pcrel?"true":"false")+"_"+
 					// 	int2string(rs);
-					if (hc_bfd.find(i->name) == NULL)
-					{
+					if (hc_bfd.find(i->name) == NULL) {
 						hc_bfd.insert(i->name, (void*) (bfd_list.size() + 1));
 						bfd_list.push_back(*i);
 					}
@@ -875,10 +935,8 @@ int main(int argc, char *argv[])
 			yout << "offset_cnt[++instr_cnt]=0;\n";
 			yout << "}" << endl;
 			yout << ";" << endl;
-		}
-		else if (type == "e_pack"
-				&& n.compare(0, top_rule_name.length(), top_rule_name) == 0)
-		{
+		} else if (type == "e_pack"
+				&& n.compare(0, top_rule_name.length(), top_rule_name) == 0) {
 			vector<pair<string, string> > args;
 			ir.get_instr_arglist(i, args);
 			yout << n << " : ";
@@ -891,18 +949,14 @@ int main(int argc, char *argv[])
 				yout << i->first;
 				// dyout << i->first << ' ';
 			}
-			for (auto i = args.begin(); i != args.end(); ++i)
-			{
+			for (auto i = args.begin(); i != args.end(); ++i) {
 				// dyout << i->first << ' ' ;
-				if (i != args.begin())
-				{
+				if (i != args.begin()) {
 					dyout << " | ";
 					syout << " | ";
 				}
-				for (auto j = args.begin();; ++j)
-				{
-					if (j != args.begin())
-					{
+				for (auto j = args.begin();; ++j) {
+					if (j != args.begin()) {
 						dyout << ' ';
 						syout << ' ';
 					}
@@ -918,30 +972,25 @@ int main(int argc, char *argv[])
 			dyout << ";" << endl;
 			syout << ";" << endl;
 			max_slot_len = max(max_slot_len, (int) args.size());
-			for (auto i = args.begin(); i != args.end(); ++i)
-			{
+			for (auto i = args.begin(); i != args.end(); ++i) {
 				yout << i->first << " : ";
 				dyout << i->first << " : ";
 				syout << i->first << " : ";
-				for (int j = 0; j < (int) i->second.size(); ++j)
-				{
-					if (j)
-					{
+				for (int j = 0; j < (int) i->second.size(); ++j) {
+					if (j) {
 						yout << " | \n";
 						dyout << " | \n";
 						syout << " | \n";
 					}
 					string name;
 					for (; j < (int) i->second.size() && i->second[j] != c_sep;
-							++j)
-					{
+							++j) {
 						yout << i->second[j];
 						name.push_back(i->second[j]);
 					}
 
 					binary_info *bi = (binary_info*) rule2func.find(name);
-					if (bi != &emp)
-					{
+					if (bi != &emp) {
 						dyout << name;
 						syout << name;
 						auto ii = i;
@@ -954,12 +1003,12 @@ int main(int argc, char *argv[])
 								<< " ;sim_dis_list[sim_dis_list_cnt]= new "
 								<< funcName2ClassName(bi->func_name)
 								<< "; ++sim_dis_list_cnt;}\n";
-					}
-					else
-					{
+					} else {
 						dyout << "{}" << endl;
-						syout << "{sim_dis_list_len[sim_dis_list_cnt] = 0,\
-sim_dis_list[sim_dis_list_cnt] = NULL, ++sim_dis_list_cnt;}" << endl;
+						syout
+								<< "{sim_dis_list_len[sim_dis_list_cnt] = 0,\
+sim_dis_list[sim_dis_list_cnt] = NULL, ++sim_dis_list_cnt;}"
+								<< endl;
 					}
 				}
 				yout << " ; " << endl;
@@ -967,20 +1016,16 @@ sim_dis_list[sim_dis_list_cnt] = NULL, ++sim_dis_list_cnt;}" << endl;
 				syout << " ; " << endl;
 				dyout << i->first << "_end" << " : ";
 				syout << i->first << "_end" << " : ";
-				for (int j = 0, output = 0; j < (int) i->second.size(); ++j)
-				{
+				for (int j = 0, output = 0; j < (int) i->second.size(); ++j) {
 					string name;
 					for (; j < (int) i->second.size() && i->second[j] != c_sep;
-							++j)
-					{
+							++j) {
 						name.push_back(i->second[j]);
 					}
 
 					binary_info *bi = (binary_info*) rule2func.find(name);
-					if (bi != &emp)
-					{
-						if (output)
-						{
+					if (bi != &emp) {
+						if (output) {
 							dyout << " | \n";
 							syout << " | \n";
 						}
@@ -988,8 +1033,7 @@ sim_dis_list[sim_dis_list_cnt] = NULL, ++sim_dis_list_cnt;}" << endl;
 						syout << name;
 						output = 1;
 					}
-					if (bi != &emp)
-					{
+					if (bi != &emp) {
 						dyout << "_end";
 						syout << "_end";
 						dyout << " {dis_list_len[dis_list_cnt]=" << name
@@ -1000,9 +1044,7 @@ sim_dis_list[sim_dis_list_cnt] = NULL, ++sim_dis_list_cnt;}" << endl;
 								<< " ;sim_dis_list[sim_dis_list_cnt]= new "
 								<< funcName2ClassName(bi->func_name)
 								<< "; ++sim_dis_list_cnt;}\n";
-					}
-					else
-					{
+					} else {
 						// we do not allow end with empty binary
 						// dyout<<"{}"<<endl;
 						// syout << "{}" << endl;
@@ -1015,6 +1057,8 @@ sim_dis_list[sim_dis_list_cnt] = NULL, ++sim_dis_list_cnt;}" << endl;
 	}
 	dhout << "#define MAX_BINARY_LEN " << max_binary_len << endl;// !!TODO max_binary_len should recalculated with vliw info
 	dhout << "#define MAX_SLOT_LEN " << max_slot_len << endl;
+	simdhout << "#define MAX_BINARY_LEN " << max_binary_len << endl;// !!TODO max_binary_len should recalculated with vliw info
+	simdhout << "#define MAX_SLOT_LEN " << max_slot_len << endl;
 	shout << "#define MAX_BINARY_LEN " << max_binary_len << endl;// !!TODO max_binary_len should recalculated with vliw info
 	shout << "#define MAX_SLOT_LEN " << max_slot_len << endl;
 	// dhout<<"int dis(struct disassemble_info *,char *c,bfd_vma pc);\n";
@@ -1085,16 +1129,14 @@ sim_dis_list[sim_dis_list_cnt] = NULL, ++sim_dis_list_cnt;}" << endl;
 	// calculate total length (including vliw)
 	tout << "for(cnt=0;cnt<instr_cnt;++cnt)\n\n";
 	tout << "{int i=0;\n";
-	if (vliw_mode_set)
-	{
-		assert(vliw_mode_sig==1);
+	if (vliw_mode_set) {
+		assert(vliw_mode_sig == 1);
 		// tout<<"if(cnt==0) yyret[cnt]["<<vliw_mode_off<<"]='1';\n";
 		tout << "if( yyret[cnt][0] ) lastSlotIdx = cnt;\n";
 	}
 	tout << "for(;yyret[cnt][i];++len_left,++i)\n;\n";
 	tout << "}\n";
-	if (vliw_mode_set)
-	{
+	if (vliw_mode_set) {
 		tout << " if( lastSlotIdx >= 0 ) \n";
 		tout << " assert( yyret[lastSlotIdx][0] == '0' );\n";
 		tout << " if( lastSlotIdx >= 0 ) yyret[lastSlotIdx][0] = '1';\n";
@@ -1257,8 +1299,7 @@ bfd_reloc_code_real_type code)\n{";
   return NULL;\n}\n";
 
 	ofstream rout("reloc2");
-	if (bfd_list.size() > 0)
-	{
+	if (bfd_list.size() > 0) {
 		// for content in bfd/doc/reloc.c
 		FRA(i,bfd_list)
 		{
@@ -1275,8 +1316,7 @@ bfd_reloc_code_real_type code)\n{";
 indent ./reloc.c");
 
 	ofstream rtout("reloct2");
-	if (bfd_list.size() > 0)
-	{
+	if (bfd_list.size() > 0) {
 		// for content in bfd/doc/reloc.texi
 		FRA(i,bfd_list)
 		{
@@ -1316,17 +1356,26 @@ indent ./reloc.c");
 		yout << "$$=$1;}\n";
 		yout << ";" << endl;
 
-		if (isTypeAddr(name))
-		{
+		if (isTypeAddr(name)) {
 			dcout << "int FUNC_" << name << "(char * c)\n{return s2int(c,"
 					<< len << ");}\n";
 			dhout << "int FUNC_" << name << "(char * c);\n";
-		}
-		else
-		{
+
+			simdcout << "void _FUNC_" << name
+					<< "(const char* c, boost::multiprecision::mpz_int& val)\n"
+					<< "{val = s2int(c," << len << ");}\n";
+			simdhout << "void _FUNC_" << name
+					<< "(const char * c, boost::multiprecision::mpz_int& val);\n";
+		} else {
 			dcout << "const char * FUNC_" << name
 					<< "(char * c)\n{return s2hex(c," << len << ");}\n";
 			dhout << "const char * FUNC_" << name << "(char * c);\n";
+
+			simdcout << "void _FUNC_" << name
+					<< "(const char * c, boost::multiprecision::mpz_int& val)\n"
+					<< "{val = HexStr2MpzInt(s2hex(c," << len << "));}\n";
+			simdhout << "void _FUNC_" << name
+					<< "(const char * c, boost::multiprecision::mpz_int& val);\n";
 		}
 	}
 	//output rules for addr
@@ -1356,17 +1405,28 @@ indent ./reloc.c");
 		yout << "$$=$1;}\n";
 		yout << ";" << endl;
 
-		if (isTypeAddr(name))
-		{
+		if (isTypeAddr(name)) {
 			dcout << "int FUNC_" << name << "(char * c)\n{return s2int(c,"
 					<< width << ");}\n";
 			dhout << "int FUNC_" << name << "(char * c);\n";
-		}
-		else
-		{
+
+			simdcout << "void _FUNC_" << name
+					<< "(char * c, boost::multiprecision::mpz_int& val)"
+					<< "\n{val = (boost::multiprecision::mpz_int)(s2int(c,"
+					<< width << "));}\n";
+			simdhout << "void _FUNC_" << name
+					<< "(char * c, boost::multiprecision::mpz_int& val);\n";
+
+		} else {
 			dcout << "const char * FUNC_" << name
 					<< "(char * c)\n{return s2hex(c," << width << ");}\n";
 			dhout << "const char * FUNC_" << name << "(char * c);\n";
+
+			simdcout << "void _FUNC_" << name
+					<< "(char * c, boost::multiprecision::mpz_int& val)\n{return s2int(c,"
+					<< width << ");}\n";
+			simdhout << "void _FUNC_" << name
+					<< "(char * c, boost::multiprecision::mpz_int& val);\n";
 		}
 		//   dcout<<"const char *"<<name<<"(char * c,int insnLen,bfd_vma pc)\n{WST(insnLen);WST(pc);return s2hex(c,"<<width<<");}\n";
 		//   dhout<<"const char *"<<name<<"(char * c,int insnLen,bfd_vma pc);\n";
@@ -1419,9 +1479,12 @@ int yywrap()\n\
 	// dcout<<"}\n";
 
 	dcout.close();
+	simdcout.close();
 	dhout << "\n#endif" << endl;
+	simdhout << "\n#endif" << endl;
 	shout << "\n#endif" << endl;
 	dhout.close();
+	simdhout.close();
 	shout.close();
 	cmd = (string) "cat " + (string) "../src/as/dummy-dis1.c" + (string) " "
 			+ dh_file_name + " " + "../src/as/dummy-dis2.c" + " " + dc_file_name

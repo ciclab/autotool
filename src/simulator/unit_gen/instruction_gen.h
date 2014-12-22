@@ -18,7 +18,7 @@ class InstructionGen
    * generate C++ code for instruction class
    */
   std::string GenInstructionCStr(const std::string& instructionName , const std::vector<do_content>& doContentVec, 
-          const std::vector<pss>& argList);
+          const std::vector<std::string>& varList);
 };
 
 #endif
