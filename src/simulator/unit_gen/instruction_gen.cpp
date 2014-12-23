@@ -23,9 +23,9 @@ std::string InstructionGen::GenInstructionCStr(
 	initCodeStr =
 			boost::lexical_cast<std::string>(
 					boost::format(
-							"bool Init(boost::shared_ptr<SimulatorBase> pSimulatorBase, boost::shared_ptr<StageBase> pStageBase) override\n"
+							"bool Init(SimulatorBase* pSimulatorBase, boost::shared_ptr<StageBase> pStageBase) override\n"
 									"{\n"
-									"if (pSimulatorBase.get() == NULL || pStageBase.get() == NULL)"
+									"if (pSimulatorBase == NULL || pStageBase.get() == NULL)"
 									"{"
 									"return false;"
 									"}"
@@ -45,12 +45,28 @@ std::string InstructionGen::GenInstructionCStr(
 
 		initVariableCodeStr = boost::lexical_cast<std::string>(
 				boost::format(
-						"bool InitVariable (const char* binaryStr) override"
+						"bool InitVariable (const char* binaryStr, const boost::multiprecision::mpz_int& nowPc) override"
 								"{\n"
+								"if (!BeforeInitVariable()) return false;\n"
+								"mPc = nowPc;\n"
 								"_FUNC_%1%(binaryStr %2%, mPc);\n"
+								"if (!AfterInitVariable()) return false;\n"
 								"return true;\n"
 								"}\n") % instructionName % varListStr);
 	}
+
+	std::string nextStageCodestr;
+	nextStageCodestr = boost::lexical_cast<std::string>(
+			boost::format(
+					"bool NextStage() override\n"
+					"{\n"
+					"if (mpStage.get() == NULL)\n"
+					"{\n"
+					"LOG(WARNING) << \"mpStage is NULL\";\n"
+					"return false;\n"
+					"}\n"
+					"return mpStage->NextStage();\n}"
+					));
 
 	// translate variable to class member
 	std::string argumentCodeStr;
@@ -69,11 +85,12 @@ std::string InstructionGen::GenInstructionCStr(
 					"}\n"
 					"%4%\n"
 					"%5%\n"
+					"%6%\n"
 					"protected:\n"
 					"boost::multiprecision::mpz_int mPc;\n"
 					"%3%"
 					"};") % instructionName % doCodeStr % argumentCodeStr
-					% initCodeStr % initVariableCodeStr);
+					% initCodeStr % initVariableCodeStr % nextStageCodestr);
 
 	return code;
 }

@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <boost/shared_ptr.hpp>
+#include <boost/multiprecision/gmp.hpp>
 
 #include "pipeline_base.h"
 #include "stage_base.h"
@@ -14,12 +15,12 @@ typedef void Tfunc();
 class SimulatorBase;
 class StageBase;
 
-class InstructionBase
-{
- public:
+class InstructionBase {
+public:
 	virtual ~InstructionBase();
 
-	virtual bool Init(boost::shared_ptr<SimulatorBase> pSimulatorBase, boost::shared_ptr<StageBase> pStageBase);
+	virtual bool Init(SimulatorBase* pSimulatorBase,
+			boost::shared_ptr<StageBase> pStageBase);
 
 	/*
 	 * called inside Init, executed first
@@ -40,23 +41,30 @@ class InstructionBase
 	/*
 	 * initilize internal variable 
 	 */
-	virtual bool InitVariable(const char* bianry);
-	
+	virtual bool InitVariable(const char* bianry,
+			const boost::multiprecision::mpz_int& nowPc);
+
 	/*
-	 * 
+	 * called before InitVariable is called
+	 * if return false, InitVariable will not executed
 	 */
 	virtual bool BeforeInitVariable();
 
 	/*
-	 *
+	 * called after InitVariable is called
 	 */
 	virtual bool AfterInitVariable();
-	
- protected:
+
+	/*
+	 * go to next stage
+	 * return false if there is no next stage left
+	 */
+	virtual bool NextStage();
+
 	boost::shared_ptr<StageBase> mpStage;
-	std::vector<boost::shared_ptr<PipelineBase> > mPipeline;
-	std::vector<std::function<Tfunc> > mpDoList;
-                  boost::shared_ptr<SimulatorBase> mpSimulator;
+//	std::vector<boost::shared_ptr<PipelineBase> > mPipeline;
+//	std::vector<std::function<Tfunc> > mpDoList;
+	SimulatorBase* mpSimulator = NULL;
 };
 
 #endif

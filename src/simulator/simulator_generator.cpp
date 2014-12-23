@@ -232,6 +232,7 @@ int main(int argc, char* argv[]) {
 		fout << "#include \"instruction_base.h\"\n";
 		fout << "#include \"sim_dis_as.y.h\"\n";
 		fout << "#include <boost/multiprecision/gmp.hpp>\n";
+		fout << "#include <glog/logging.h>\n";
 
 		int size = ir.get_instr_size();
 		std::string top_rule_name = ir.get_top_rule_name();
