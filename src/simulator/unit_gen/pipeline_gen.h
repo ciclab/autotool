@@ -4,12 +4,13 @@
 #include <string>
 
 #include "pipeline.h"
+#include <vector>
 
 class PipelineGen
 {
 public:
   // generate C++ code for pipeline Class
-  static std::string GenPipelineCStr(Pipeline& pipeline);
+  std::string GenPipelineCStr(Pipeline& pipeline, std::vector<std::string>& needInit);
 
 };
 

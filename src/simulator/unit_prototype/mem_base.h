@@ -1,37 +1,44 @@
 #ifndef _MEM_BASE_H_
 #define _MEM_BASE_H_
 
+#include <algorithm>
 #include <functional>
-#incldue <string>
+#include <string>
+#include <vector>
 
 class MemoryBase
 {
- public:
-  const static std::string name = "MemoryBase";
-  const static uint size = 0;
+public:
+//	const static std::string cName;
+//	const static uint cSize;
 
-  // called before ReadMemory
-  // return 0 if ok, else ReadMemory won't be called
-  virtual int BeforeRead(std::function func);
-  virtual int AfterRead(std::function func);
+	virtual ~MemoryBase();
 
-  // called before WriteMemory is called
-  // return 0 if ok, else WriteMemory won't be called
-  virtual int BeforeWrite(std::function func);
-  virtual int AfterWrite(std::function func);
+	// called before ReadMemory
+	// return 0 if ok, else ReadMemory won't be called
+	virtual bool BeforeRead();
+	virtual bool AfterRead();
 
- private:
-  // return true if placeHoder is valid address in offset
-  int CheckAddressValidity(uint offset, uint size);
+	// called before WriteMemory is called
+	// return 0 if ok, else WriteMemory won't be called
+	virtual bool BeforeWrite();
+	virtual bool AfterWrite();
 
-  // read value from memory
-  int ReadMemory(uint offset, uint size, vector<char>& value);
+	// read value from memory, return true if success
+	bool Read(uint offset, uint size, std::vector<char>& value);
 
-  // write value from memory
-  int WriteMemory(uint offset, uint size, const vector<char>& value);
+	// write value from memory, return true if success
+	bool Write(uint offset, uint size, const std::vector<char>& value);
 
-  // Initialize memory default to set memory zero 
-  virtual int Init();
+	// Initialize memory default to set memory zero
+	virtual bool Init();
+
+protected:
+	// return true if placeHoder is valid address in offset
+	bool CheckAddressValidity(uint offset, uint size);
+
+	// memory data
+	std::vector<char> mContent;
 };
 
 #endif

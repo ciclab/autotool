@@ -10,7 +10,7 @@ class Memory
   int size;
   int width;
  public:
-  Memory(){};
+  Memory(){ width = 0;};
  Memory(string n,int s, int w):name(n),size(s),width(w){};
   void read(ifstream &fin);
   void output(ofstream &fout);

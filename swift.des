@@ -1,5 +1,5 @@
 (
-  (enum
+ (enum
     (GR_E 
       'GR0' 'GR1' 'GR2' 'GR3' 'GR4' 'GR5' 'GR6' 'GR7'
       'GR8' 'GR9' 'GR10' 'GR11' 'GR12' 'GR13' 'GR14' 'GR15'
@@ -190,19 +190,19 @@
   (wire
   )
   (stage
-/*    ( fetch1_s )
-    ( fetch2_s
+    ( fetch1_s )
+    ( fetch2_s )
     ( decode_s )
     ( execute_s )
     ( mem1_s )
     ( mem2_s )
     ( vex2_s )
     ( vex3_s )
-    ( writeback_s ) */
+    ( writeback_s ) 
   )
   (memory
-    ( mem1
-      // define a memory with 4096 * 8 bytes
+    ( memory1
+      // define a memory with 5000000 bytes
       ( size 5000000 )
       ( width 8 )
     )
@@ -373,24 +373,6 @@
     (instrs
       (= i slots_4 )
       (do
-        (seq 1
-	  (decode_s
-	    (if (not decode_s.doOk /* doOk is buildin variable */ )
-	      (
-	        (frozen
-		  fetch1_s fetch2_s decode_s )
-		(flush execute_s)
-	      )
-	    )
-	  )
-	  (execute_s
- 	    (if (not execute_s.doOk)
-	      (frozen fetch1_s
-	        fetch2_s decode_s execute_s)
-	      (flush mem1_s)
-	    )
-	  )
-	)
       )
       (code i)
       (binary i)
@@ -465,19 +447,6 @@
     )
     (RET
       (do
-        (decode_s
-	  /*user implemented function readReg,
-	  return true if funished*/
-	  (gr31_val)
-	  (call readReg 'gr' 31 (& gr31_val) )
-	  (= execute.rd gr31_val)
-	)
-        (execute_s
-	  (
-	    (assign decode.pc gr31_val)
-	   /*TODO we don't flush decode, fetch1, fetch2*/
-	  )
-	)
       )
       (code 'ret')
       (binary '000' '000000' '000000' '000000' '000001' '00')
@@ -496,21 +465,13 @@
     )
     (MOVV2L
       (do
-        (mem1_s
-	  (rs_t)
-	  (call getReg 'vr' (& rs_t ) )
-	)
-	(mem2_s
-	  (call setReg 'vr' rt rs_t)))
+      )
       (= rs VR_E)
       (code 'movv2l' ' ' rs)
       (binary '000' '000000' rs '000000' '000110' '11')
     )
     (MOVL2V
       (do
-        (mem1_s
-	  (call setReg 'vr' loopReg)/* loopReg is selfdefined var*/
-	  )
       )
       (= rd VR_E)
       (code 'movl2v' ' ' rd)
@@ -522,14 +483,6 @@
       (= rt VR_E)
       (= rt1 VR_E)
       (do
-        (mem1_s
-          (call readReg 'GR' rs (& rs_t) )
-          (call readReg 'VR' rt (& rt_t) )
-          (call readReg 'VR' rt1 (& rt1 ) ))
-	(mem2_s
-	  (call vsel20 (& rd_t) rs_t rt_t ))
-	(vex3_s
-	  (call setReg 'VR' rd rd_t))
       )
       (code 'vsel20' ' ' rd ' ' rs ' ' rt ' ' rt1)
       (binary '000' rd '0' rs rt rt1 '10')
@@ -537,9 +490,6 @@
     (JMP
       (= a addr21Rel)
       (do
-        (execute_s
-	  (= pc (+ pc ( * a 4) ) )
-	)
       )
       (code 'jmp' ' ' a)
       (binary '000' a '0' '00' '01')
@@ -547,11 +497,6 @@
     (JC
       (= a addr21Rel)
       (do
-        (execute_s
-	  (if (call jc)
-	    (= pc (+ pc (* a 4) ) )
-	    )
-	)
       )
       (code 'jc' ' ' a)
       (binary '000' a '0' '01' '01')
@@ -559,8 +504,6 @@
     (JNC
       (= a addr21Rel)
       (do
-        (if (call jnc)
-	  (= pc a))
       )
       (code 'jnc' ' ' a)
       (binary '000' a '0' '10' '01')
@@ -568,21 +511,12 @@
     (CALL
       (= a addr21Rel)
       (do
-        (execute_s
-	  (call setReg 'GR' 31)
-	  (= pc a)
-	)
       )
       (code 'call' ' ' a)
       (binary '000' a '0' '11' '01')
     )
     (JMPR
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) ))
-	(execute_s
-	  (= pc rs_t)
-	)
       )
       (= rs GR_E)
       (code 'jmpr' ' '  rs)
@@ -590,10 +524,6 @@
     )
     (CALLR
       (do
-        (decode_s
-	  (call readReg 'GR' 31 (& rs_t) ))
-	(execute_s
-	  (= pc rs_t))
       )
       (= rs GR_E)
       (code 'callr' ' ' rs)
@@ -601,11 +531,6 @@
     )
     (MOVG2C
       (do
-        (decode_s
-	  (call readReg 'GR' rs (&rs_t) )
-	)
-	(execute_s
-          (call setCondReg rs_t))
       )
       (= rs GR_E)
       (code 'movg2c' ' ' rs)
@@ -613,10 +538,6 @@
     )
     (MOVC2G
       (do
-        (execute_s
-	  (call readCondReg (&rd_t) ))
-	(writeback_s
-	  (call setReg 'GR' rd rd_t ) )
       )
       (= rd GR_E)
       (code 'movc2g' ' ' rd)
@@ -624,14 +545,6 @@
     )
     (SCALER
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs) )
-	  (call readReg 'GR' rt (& rt) ))
-	(execute_s
-	  (call scaler i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'GR' rt rt_t))
       )
       (= i SCALER_E)
       (= rd GR_E)
@@ -642,13 +555,6 @@
     )
     (V10BIT
       (do
-        (execute_s
-	  (call readReg 'VR' (& rt_t) )
-	  (call readReg 'VR' (& rs_t) ))
-	(mem2_s
-	  (call v10bit (& rd_t) rs_t rd_t ))
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i V10BIT_E)
       (= rd GR_E)
@@ -659,13 +565,6 @@
     )
     (V20BIT
       (do
-        (execute_s
-	  (call readReg 'VR' (& rt_t) )
-	  (call readReg 'VR' (& rs_t) ))
-	(mem2_s
-	  (call v20bit (& rd_t) rs_t rd_t ))
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i V20BIT_E)
       (= rd GR_E)
@@ -676,14 +575,8 @@
     )
     (V40BIT
       (do
-        (execute_s
-	  (call readReg 'VR' (& rt_t) )
-	  (call readReg 'VR' (& rs_t) ))
-	(mem2_s
-	  (call v40bit (& rd_t) rs_t rd_t ))
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
-      )      (= i V40BIT_E)
+      )
+      (= i V40BIT_E)
       (= rd GR_E)
       (= rs VR_E)
       (= rt VR_E)
@@ -692,15 +585,6 @@
     )
     (VMOVCV2V
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'GR' rt (& rt_t) )
-	)
-	(mem2_s
-	  (call vmovcv2v (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t ))
       )
       (= rd VR_E)
       (= rs VR_E)
@@ -710,15 +594,6 @@
     )
     (V10BIT11
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	)
-	(mem2_s
-	  (call v10bit11 i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i V10BIT11_E)
       (= rd VR_E)
@@ -729,15 +604,6 @@
     )
     (V20BIT10
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	)
-	(mem2_s
-	  (call v20bit11 i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i V20BIT10_E)
       (= rd VR_E)
@@ -748,15 +614,6 @@
     )
     (V40BIT01
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	)
-	(mem2_s
-	  (call v40bit11 i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i V40BIT01_E)
       (= rd VR_E)
@@ -767,15 +624,6 @@
     )
     (V11
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	)
-	(mem2_s
-	  (call v11 i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i V11_E)
       (= rd VR_E)
@@ -786,16 +634,6 @@
     )
     (VFMUL
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	  (call readReg 'VR' rd (& rd_t) )
-	)
-	(mem2_s
-	  (call vfmul i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i VFMUL_E)
       (= rd VR_E)
@@ -806,16 +644,6 @@
     )
     (VMAC
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	  (call readReg 'VR' rd (& rd_t) )
-	)
-	(mem2_s
-	  (call vmac i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i VMAC_E)
       (= rd VR_E)
@@ -826,16 +654,6 @@
     )
     (VCMUL
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	  (call readReg 'VR' rd (& rd_t) )
-	)
-	(mem2_s
-	  (call vcmul i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i VCMUL_E)
       (= rd VR_E)
@@ -846,16 +664,6 @@
     )
     (VCMULI40
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	  (call readReg 'VR' rd (& rd_t) )
-	)
-	(mem2_s
-	  (call vcmuli40 i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= rd VR_E)
       (= rs VR_E)
@@ -865,16 +673,6 @@
     )
     (VCMAC
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	  (call readReg 'VR' rd (& rd_t) )
-	)
-	(mem2_s
-	  (call vcmac i (& rd_t) rs_t rt_t )
-	)
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i VCMAC_E)
       (= rd VR_E)
@@ -885,19 +683,6 @@
     )
     (VLOADO
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) )
-	  (call readReg 'VR' rt (& rt_t) )
-	  (call readReg 'VR' rd (& rd_t) )
-	)
-	(mem1_s
-	  (call readMem 'rd' (& rd_t ) rd_t rs_t rt_t )
-	)
-	(vex2_s
-	  (call updateVloadoRd i (& rd_t) ) 
-	  (call updateVloadRs (& rs_t) ) )
-	(writeback_s
-	  (call setReg 'VR' rd_t) )
       )
       (= i VLOADO_E)
       (= rd VR_E)
@@ -908,19 +693,6 @@
     )
     (SLOADO
       (do
-        (execute_s
-	  (call readReg 'GR' rs (& rs_t) )
-	  (call readReg 'BAR_OFF_MR' rt (& rt_t) )
-	  (call readReg 'GR' rd (& rd_t) )
-	)
-	(mem2_s
-	  (call sloado i (& rd_t) rd_t rs_t rt_t )
-	  (call updateSloadRs (& rs_t ) )
-	)
-	(writeback_s
-	  (call setReg 'GR' rd rd_t)
-	  (call setReg 'GR' rs rs_t)
-        )
       )
       (= i SLOADO_E)
       (= rd GR_E)
@@ -931,19 +703,6 @@
     )
     (VSTOREO
       (do
-        (execute_s
-	  (call readReg 'VR' rd (& rd_t) )
-	  (call readReg 'GR' rs (& rs_t) )
-	  (call readReg 'BAR_OFF_MR' rt (& rt_t) )
-	)
-	(mem1_s
-	  (call vstoreo i rd_t (& rd_t) ) )
-	(mem2_s
-	  (call setMem (call calAddVstoreo rs_t rt_t) ) rd_t )
-	(vex2_s
-	  (call updateVstoreoRs (& rs_t) ) )
-	(writeback_s
-	  (call setReg 'GR' rs rs_t ) )
       )
       (= i VSTOREO_E)
       (= rd VR_E)
@@ -954,17 +713,6 @@
     )
     (SSTOREO
       (do
-        (decode_s
-	  (call readReg 'GR' rd (& rd_t) )
-	  (call readReg 'GR' rs (& rs_t) )
-	  (call readReg 'BAR_OFF_MR' rt (& rt_t) ) )
-	(execute_s
-	  (call sstoreo i rd_t (& rd_t) )
-	  (call updateRs i (& rs_t ) ) )
-	(mem1_s
-	  (call setMem calAddrSstoreo i rs_t rt_t) )
-	(writeback_s
-	  (call setReg 'GR' rs rs_t ) )
       )
       (= i SSTOREO_E)
       (= rd GR_E)
@@ -975,15 +723,6 @@
     )
     (LOAD
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(execute_s
-	  (call readMem (call calAddrLoad rs_t imm) (& rd_t) ) 
-	  (call updateLoadRs (& rs_t) imm ) 
-	  (call updateLoadRd i (& rd_t) ) )
-	(writeback_s
-	  (call setReg 'GR' rd rd_t ) 
-	  (call setReg 'GR' rs rs_t ) )
       )
       (= i LOAD_E)
       (= rd GR_E)
@@ -995,15 +734,6 @@
     )
     (LOADU
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(execute_s
-	  (call readMem (call calAddrLoadU rs_t imm) (& rd_t) ) 
-	  (call updateLoadURs rs_t imm ) 
-	  (call updateLoadURd i (& rd_t) ) )
-	(writeback_s
-	  (call setReg 'GR' rd rd_t ) 
-	  (call setReg 'GR' rs rs_t ) )
       )
       (= i LOADU_E)
       (= rd GR_E)
@@ -1014,16 +744,6 @@
     )
     (VLOAD
       (do
-        (execute_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(mem1_s
-	  (call readMem (call calAddrVload rs_t imm) (& rd_t ) ) )
-	(vex2_s
-	  (call (call updateVloadRs i (& rd_t) ) ) 
-	  (call updateVloadRs (& rs_t) imm) )
-	(writeback_s 
-	  (call setReg 'VR' rd rd_t) 
-	  (call setReg 'GR' rs rs_t ) )
       )
       (= i VLOAD_E)
       (= rd VR_E)
@@ -1034,16 +754,6 @@
     )
     (VLOADR
       (do
-        (execute_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(mem1_s
-	  (call readMem (call calAddrVload rs_t imm) (& rd_t ) ) )
-	(vex2_s
-	  (call (call calVloadRRd i (& rd_t) ) ) 
-	  (call updateVloadRRs (& rs_t) imm ) )
-	(writeback_s 
-	  (call setReg 'VR' rd rd_t) 
-	  (call setReg 'GR' rs rs_t ) )
       )
       (= i VLOADR_E)
       (= rd VR_E)
@@ -1054,16 +764,6 @@
     )
     (VLOADU
       (do
-        (execute_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(mem1_s
-	  (call readMem (call calAddrVload rs_t imm) (& rd_t ) ) )
-	(vex2_s
-	  (call (call calVloadURd i (& rd_t) ) ) 
-	  (call updateVloadU (& rs_t ) imm ) )
-	(writeback_s 
-	  (call setReg 'VR' rd rd_t) 
-	  (call setReg 'GR' rs rs_t) )
       )
       (= i VLOADU_E)
       (= rd VR_E)
@@ -1074,16 +774,6 @@
     )
     (VLOADUR
       (do
-        (execute_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(mem1_s
-	  (call readMem (call calAddrVloadUR rs_t imm) (& rd_t ) ) )
-	(vex2_s
-	  (call (call updateVloadURRd i (& rd_t) ) ) 
-	  (call updateVloadURRs (& rs_t ) imm ) )
-	(writeback_s 
-	  (call setReg 'VR' rd rd_t) 
-	  (call setReg 'GR' rs rs_t) )
       )
       (= i VLOADUR_E)
       (= rd VR_E)
@@ -1094,15 +784,6 @@
     )
     (STORE
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) ) 
-	  (call readReg 'GR' rd (& rd_t) ) )
-        (execute_s
-	  (call updateStoreRd i (& rd_t) )
-	  (call setMem (call calAddrStore rs_t imm) (& rd_t ) ) 
-	  (call updateStoreRs (& rs_t) imm ) )
-	(writeback_s
-	  (call setReg 'GR' rs rs_t) )
       )
       (= i STORE_E)
       (= rd GR_E)
@@ -1113,15 +794,6 @@
     )
     (STOREU
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) ) 
-	  (call readReg 'GR' rd (& rd_t) ) )
-        (execute_s
-	  (call updateStoreURd i (& rd_t) )
-	  (call setMem (call calAddrStoreU rs_t imm) (& rd_t ) ) 
-	  (call updateStoreURs (& rs_t) imm ) )
-	(writeback_s
-	  (call setReg 'GR' rs rs_t) )
       )
       (= i STOREU_E)
       (= rd GR_E)
@@ -1132,15 +804,6 @@
     )
     (STOREI
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) ) 
-	  (call readReg 'VR' rd (& rd_t) ) )
-        (execute_s
-	  (call updateStoreIRd i (& rd_t) )
-	  (call setMem (call calAddrStoreI rs_t imm) (& rd_t ) ) 
-	  (call updateStoreURs (& rs_t) imm ) )
-	(writeback_s
-	  (call setReg 'GR' rs rs_t) )
       )      
       (= i STOREI_E)
       (= rd VR_E)
@@ -1151,13 +814,6 @@
     )
     (VSTORE
       (do
-        (execute_s
-	  (call readReg 'VR' rd (& rd_t) )
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(mem1_s
-	  (call updateVstoreRd i (& rd_t) ) )
-	(mem2_s
-	  (call setMem (call calAddrVstore rs_t imm) rd_t) )
       )
       (= i VSTORE_E)
       (= rd VR_E)
@@ -1168,18 +824,6 @@
     )
     (STOREUU
       (do
-        (execute_s
-	  (call readReg 'VR' rd (& rd_t) )
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(mem1_s
-	  (call updateStoreUURd i (& rd_t) ) )
-	(mem2_s
-	  (call setMem (call calAddrStoreUU rs_t imm )
-	  	       (call calSizeStoreUU i ) rd_t ) )
-	(vex2_s
-	  (call updateStoreUURs (& rs_t) imm ) )
-	(writeback_s
-	  (call setReg 'GR' rs rs_t ) )
       )
       (= i STOREUU_E)
       (= rd VR_E)
@@ -1190,18 +834,6 @@
     )
     (VSTOREEU
       (do
-        (execute_s
-	  (call readReg 'GR' rs (& rs_t) )
-	  (call readReg 'VR' rd (& rd_t) ) )
-	(mem1_s
-	  (call updateVsorEEURd i (& rd_t) ) )
-	(mem2_s
-	  (call setMem (call calAddrVstorEEU rs_t imm)
-	  	       (call calSizeVstorEEU i) rd_t) )
-	(vex2_s
-	  (call updateVstorEEU (& rs_t) imm ) )
-	(writeback_s
-	  (call setReg 'GR' rs rs_t) )
       )
       (= i VSTOREEU_E)
       (= rd VR_E)
@@ -1212,12 +844,6 @@
     )
     (CMP
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t ) )
-	  (call readReg 'GR' rt (& rt_t) )
-	)
-	(execute_s
-	  (call updateCmp i rs_t rd_t) )
       )
       (= i CMP_E)
       (= rs GR_E)
@@ -1227,12 +853,6 @@
     )
     (CMPU
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t ) )
-	  (call readReg 'GR' rt (& rt_t) )
-	)
-	(execute_s
-	  (call updateCmpU i rs_t rd_t) )
       )
       (= i CMPU_E)
       (= rs GR_E)
@@ -1242,13 +862,6 @@
     )
     (CH
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) )
-	  (call readReg 'GR' rt (& rd_t) ) )
-	(execute_s
-	  (call updateCh (& rd_t) rs_t) )
-	(writeback_s
-	  (call setReg rd rd_t) )
       )
       (= i CH_E)
       (= rd GR_E)
@@ -1258,13 +871,6 @@
     )
     (MOVG2G
       (do
-        (decode_s
-	  (call readReg 'GR_OFF_BAR_MR' rd (& rd_t) )
-	  (call readReg 'GR_OFF_BAR_MR' rs (& rs_t) ) )
-	(execute_s
-	  (call updateMovg2g (& rd_t) rs_t) )
-	(writeback_s
-	  (call setReg rd rd_t) )
       )
       (= rd GR_OFF_BAR_MR_E)
       (= rs GR_OFF_BAR_MR_E)
@@ -1273,13 +879,6 @@
     )
     (MOVV2V
       (do
-        (execute_s
-	  (call readReg 'VR' rd (& rd_t) )
-	  (call readReg 'VR' rs (& rs_t) ) )
-	(mem1_s
-	  (call updateMovv2v (& rd_t) rs_t) )
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= rd VR_E)
       (= rs VR_E)
@@ -1288,13 +887,6 @@
     )
     (VMOVR
       (do
-        (execute_s
-	  (call readReg 'VR' rd (& rd_t) )
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(mem1_s
-	  (call updateVmovr (& rd_t) rs_t) )
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i VMOVR_E)
       (= rd VR_E)
@@ -1304,13 +896,6 @@
     )
     (VNOT
       (do
-        (decode_s
-	  (call readReg 'VR' rd (& rd_t) )
-	  (call readReg 'VR' rs (& rs_t) ) )
-	(mem1_s
-	  (call updateVnot (& rd_t) rs_t) )
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= rd VR_E)
       (= rs VR_E)
@@ -1327,13 +912,6 @@
     )
     (VSUM
       (do
-        (execute_s
-	  (call readReg 'VR' rd (& rd_t) )
-	  (call readReg 'VR' rs (& rs_t) ) )
-	(mem1_s
-	  (call updateVsum (& rd_t) rs_t) )
-	(writeback_s
-	  (call setReg 'VR' rd rd_t) )
       )
       (= i VSUM_E)
       (= rd VR_E)
@@ -1343,10 +921,6 @@
     )
     (LOOP
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(execute_s
-	  (call updateLoop rs_t imm) )
       )
       (= imm addr16Rel)
       (= rd GR_E)
@@ -1358,12 +932,6 @@
       (= rd GR_OFF_BAR_MR_E )
       (= imm imm16)
       (do
-        (decode_s
-	  (call readReg 'GR_OFF_BAR_MR' rd (& rd_t) ) )
-	(execute_s
-	  (call updateMovi (& rd_t) imm) )
-	(writeback_s
-	  (call setReg 'GR_OFF_BAR_MR' rd rd_t) )
       )
       (code i ' ' rd ' ' imm )
       (binary '101' rd imm '0' i '01' )
@@ -1373,10 +941,6 @@
       (= rs GR_E)
       (= imm imm9)
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(execute_s
-	  (call updateTest rs_t imm) )
       )
       (code i ' ' rs ' ' imm )
       (binary '101' '000000' '0' rs imm i '10' )
@@ -1386,12 +950,6 @@
       (= rd GR_E)
       (= imm imm5)
       (do
-        (decode_s
-	  (call readReg 'GR' rd (& rd_t) ) )
-	(execute_s
-	  (call updateBst (& rd_t ) imm ) )
-	(writeback_s
-	  (call setReg rd rd_t ) )
       )
       (code i ' ' rd ' ' imm )
       (binary '101' '0' rd '000000' imm '0000' '00' i '11' )
@@ -1402,12 +960,13 @@
       (= rs GR_E)
       (= imm imm11)
       (do
-        (decode_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(execute_s
-	  (call updateAddi (& rd_t ) rs_t imm) )
-	(writeback_s
-	  (call setReg rd rd_t ) ) )
+        (if (call InStage decode_s)
+	  (call Readgr_r rs (& rs_val) ) )
+	(if (call InStage execute_s)
+	  (call (= rd_val (+ rs_val imm) ) ) )
+	(if (call InStage writeback_s
+	  (call writegr_r rd rd_val ) ) )
+      )
       (code i ' ' rd ' ' rs ' ' imm )
       (binary '110' '0' rd '0' rs imm i '00' )
     )
@@ -1418,12 +977,6 @@
       (= imm0 imm5)
       (= imm1 imm5)
       (do
-        (deocde_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(execute_s
-	  (call updateBfext i (& rd_t) rs_t imm0 imm1 ) )
-	(writeback_s
-	  (call setReg 'GR' rd rd_t ) )
       )
       (code i ' ' rd ' ' rs ' ' imm0 ' ' imm1)
       (binary '110' '0' rd '0' rs imm0 imm1 '0' i '01' )
@@ -1434,12 +987,6 @@
       (= imm0 imm5)
       (= imm1 imm5)
       (do
-        (deocde_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(execute_s
-	  (call updateBfst (& rd_t) rs_t imm0 imm1 ) )
-	(writeback_s
-	  (call setReg 'GR' rd rd_t ) )
       )
       (code 'bfst' ' ' rd ' ' rs ' ' imm0 ' ' imm1 )
       (binary '110' '0' rd '0' rs imm0 imm1 '00' '10' )
@@ -1450,12 +997,6 @@
       (= rs VR_E)
       (= imm imm4)
       (do
-        (execute_s
-	  (call readReg 'VR' rs (& rs_t) ) )
-	(mem1_s
-	  (call updateMovv2g i (& rd_t) rs imm) )
-	(writeback_s
-	  (call setReg 'GR' rd rd_t ) )
       )
       (code i ' ' rd ' ' rs ' ' imm )
       (binary '110' '0' rd rs imm '0000' '01' i '11' )
@@ -1466,13 +1007,7 @@
       (= rs GR_E)
       (= imm imm4)
       (do
-        (execute_s
-	  (call readReg 'GR' rs (& rs_t) ) )
-	(mem1_s
-	  (call updateMovg2v i (& rd_t) rs imm) )
-	(writeback_s
-	  (call setReg 'VR' rd rd_t ) )
-      )      
+      )
       (code i ' ' rd ' ' rs ' ' imm )
       (binary '110' rd '0' rs imm '0000' '10' i '11' )
     )

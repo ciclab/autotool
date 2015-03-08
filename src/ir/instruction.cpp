@@ -301,3 +301,8 @@ void Instruction::get_var_len(vector<int> &vl)
 {
   vl = var_len;
 }
+
+void Instruction::GetDoContent(do_content& doContent)
+{
+	doContent = doo;
+}

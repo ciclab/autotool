@@ -5,10 +5,17 @@ CXXFLAGS=-g -Wall \
 	-DINSTR_COUT=0 \
 	-DASGEN_COUT=0 \
 	-DIGNORE_CASE\
-	-std=c++11
+	-std=c++11\
+	-lglog\
+	-lgflags\
+	-lboost_system\
+	-lboost_filesystem
+
 SRC=../src
-VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor:../src/simulator:../src/simulator/common
-INCLUDE=-I../src/include -I.
+
+VPATH=../src/frontend:../src/lib:../src/ir:../src/as:../src/preprocessor:../src/simulator:../src/simulator/common:../src/simulator/unit_prototype:../src/simulator/framework:../src/simulator/unit_gen
+
+INCLUDE=-I../src/include -I. -I.. -I../src -I../src -I../src/simulator/unit_prototype -I../src/simulator/framework
 LEX = flex -v
 YACC = bison -dv
 BINUTILS_DIR = ../../z/binutils-2.23-r
@@ -137,7 +144,59 @@ simGen.o: simGen.cpp
 utility.o: utility.cpp
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
 
+fixsize_int.o: fixsize_int.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+mem_base.o: mem_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+register_base.o: register_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+pipeline_base.o: pipeline_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+type_base.o: type_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+instruction_base.o: instruction_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+simulator_base.o: simulator_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+stage_base.o: stage_base.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+simulator_bases.a:  mem_base.o register_base.o pipeline_base.o type_base.o instruction_base.o simulator_base.o stage_base.o
+	ar crv $@ $^
+
+sample_simulator: sim_dis_as.y.c sample_simulator.cpp sim_dis.y.c sim_dis.l.c sim_dis.l.h fixsize_int.o simulator_bases.a
+	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS) -lgmp -lgmpxx
+
+mem_gen.o: mem_gen.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+pipeline_gen.o: pipeline_gen.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+register_gen.o: register_gen.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+stage_gen.o: stage_gen.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+simulator_gen.o: simulator_gen.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+instruction_gen.o: instruction_gen.cpp
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $^ -o $@
+
+simulator_gen_lib.a: mem_gen.o pipeline_gen.o register_gen.o stage_gen.o simulator_gen.o instruction_gen.o
+	ar crv $@ $^
+
+simulator_generator: simulator_generator.cpp ir.o libir.a simulator_gen_lib.a  
+	$(CXX) $(INCLUDE) $^ -o $@ $(CXXFLAGS)
+
 clean:
-	rm *.* rd asgen out pp simulator
-
-
+	rm *.* rd asgen out pp simulator sample_simulator
